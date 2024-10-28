@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { DedotClient, WsProvider } from "dedot";
 import type { PolkadotApi } from "@dedot/chaintypes";
 import ExtrinsicBuilder from "@/components/builder/extrinsic-builder";
@@ -8,26 +8,31 @@ import InformationPane from "@/components/builder/information-pane";
 import { Metadata } from "dedot/codecs";
 import { ClientMethod } from "@/lib/parser";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PolkadotRuntimeRuntimeCallLike } from "@dedot/chaintypes/polkadot";
+import { ChainSubmittableExtrinsic } from "@dedot/chaintypes/polkadot/tx";
+import { GenericTxCall } from "dedot/types";
 
 const BuilderPage: React.FC = () => {
   const [client, setClient] = useState<DedotClient<PolkadotApi> | null>(null);
-  const [metadata, setMetadata] = useState<Metadata["latest"] | null>(null);
-  const [extrinsic, setExtrinsic] = useState<ClientMethod | null>(null);
+  const [tx, setTx] = useState<GenericTxCall<"v2"> | null>(null);
+  const [section, setSection] = useState<{
+    text: string;
+    value: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  async function getClient() {
+  const getClient = useCallback(async () => {
     try {
       const client = await DedotClient.new<PolkadotApi>(
         new WsProvider("wss://rpc.polkadot.io")
       );
       setClient(client);
-      setMetadata(client.metadata.latest);
     } catch (error) {
       console.error("Error connecting to Polkadot node:", error);
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     getClient();
@@ -36,9 +41,19 @@ const BuilderPage: React.FC = () => {
     };
   }, []);
 
-  function handleExtrinsicChange(extrinsic: ClientMethod) {
-    setExtrinsic(extrinsic);
+  const handleTxChange = (tx: GenericTxCall<"v2">) => {
+    console.log("tx changed", tx);
+    console.log("metadata", tx?.meta);
+    setTx(() => tx);
+  };
+
+  function handleSectionChange(
+    section: { text: string; value: number } | null
+  ) {
+    setSection(section);
   }
+
+  console.log("transaction", tx);
 
   const SkeletonUI = () => (
     <>
@@ -60,6 +75,8 @@ const BuilderPage: React.FC = () => {
     </>
   );
 
+  console.log("tx in page body", tx);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
@@ -76,18 +93,13 @@ const BuilderPage: React.FC = () => {
             <div className="w-full lg:w-1/2">
               <ExtrinsicBuilder
                 client={client}
-                extrinsic={extrinsic}
-                metadata={metadata}
-                onExtrinsicChange={handleExtrinsicChange}
+                tx={tx}
+                onTxChange={handleTxChange}
+                onSectionChange={handleSectionChange}
               />
             </div>
             <div className="w-full lg:w-1/2 bg-gray-100 rounded-lg p-6">
-              <InformationPane
-                extrinsic={extrinsic}
-                client={client}
-                metadata={metadata}
-                onExtrinsicChange={handleExtrinsicChange}
-              />
+              <InformationPane client={client} tx={tx} section={section} />
             </div>
           </>
         )}

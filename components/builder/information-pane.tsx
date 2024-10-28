@@ -1,18 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { $, DedotClient } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
-import { Metadata } from "dedot/codecs";
 import {
-  assert,
   HexString,
   stringCamelCase,
-  stringPascalCase,
-  stringToU8a,
   toHex,
   u8aToHex,
-  u8aToString,
-  xxhashAsU8a,
-  stringToHex,
   hexStripPrefix,
   hexAddPrefix,
 } from "dedot/utils";
@@ -20,14 +12,13 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ClientMethod } from "@/lib/parser";
-import { set } from "zod";
+import { GenericTxCall } from "dedot/types";
+import { PolkadotApi } from "@dedot/chaintypes";
 
 interface InformationPaneProps {
-  extrinsic: ClientMethod | null;
-  client: DedotClient<PolkadotApi> | null;
-  metadata: Metadata["latest"] | null;
-  onExtrinsicChange: (extrinsic: ClientMethod) => void;
+  client: DedotClient<PolkadotApi>;
+  tx: GenericTxCall<"v2"> | null;
+  section: { text: string; value: number } | null;
 }
 
 interface Argument {
@@ -37,10 +28,9 @@ interface Argument {
 }
 
 const InformationPane: React.FC<InformationPaneProps> = ({
-  extrinsic,
   client,
-  metadata,
-  onExtrinsicChange,
+  tx,
+  section,
 }) => {
   const [editing, setEditing] = useState(false);
   const [sectionHex, setSectionHex] = useState<HexString | null>(null);
@@ -54,51 +44,46 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   );
 
   useEffect(() => {
-    if (extrinsic && client && metadata) {
-      console.log("Updating display values...", extrinsic);
-      updateDisplayValues(extrinsic);
-    }
-  }, [extrinsic, client, metadata]);
-
-  const updateDisplayValues = (extrinsic: ClientMethod) => {
-    if (extrinsic.sectionName) {
-      setSectionHex(u8aToHex($.u8.tryEncode(extrinsic.sectionIndex)));
-    }
-    if (extrinsic.sectionName && extrinsic.methodName) {
-      const tx =
-        client?.tx[stringCamelCase(extrinsic.sectionName)][
-          stringCamelCase(extrinsic.methodName)
-        ];
-      const { palletIndex, index, fieldCodecs } = tx?.meta!;
-
-      console.log("metadata", tx?.meta);
-
-      setSectionHex(u8aToHex($.u8.tryEncode(palletIndex)));
-      setFunctionHex(u8aToHex($.u8.tryEncode(index)));
-
-      if (extrinsic.args?.length && fieldCodecs) {
-        const args = extrinsic?.args?.map((arg, index) => {
-          const argHex = fieldCodecs[index]
-            ? u8aToHex(fieldCodecs[index].tryEncode(arg.value || ""))
-            : `0x`;
-          return {
-            name: arg.name,
-            type: arg.type,
-            value: argHex,
-          };
-        });
-        if (args) setArgsHex(args);
+    if (section && tx) {
+      console.log("Updating display values...", section);
+      if (section?.value) {
+        setSectionHex(u8aToHex($.u8.tryEncode(section.value)));
       }
-
-      const callData =
-        hexStripPrefix(sectionHex || "") +
-          hexStripPrefix(functionHex || "") +
-          argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
-
-      setEncodedCallData(hexAddPrefix(callData));
-      setEncodedCallHash(hexAddPrefix(callData));
+      if (tx) {
+        setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
+      }
     }
-  };
+  }, [section, tx]);
+
+  // const updateDisplayValues = () => {
+
+  //   if (tx) {
+  //     setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
+
+  //     if (tx?.meta?.fields?.length) {
+  //       const args = tx?.meta?.fields?.map((arg, index) => {
+  //         const argHex =
+  //           tx?.meta?.fieldCodecs[index]
+  //             ? u8aToHex(tx.meta.fieldCodecs[index].tryEncode(tx.))
+  //             : `0x`;
+  //         return {
+  //           name: arg.name,
+  //           type: arg.type,
+  //           value: argHex,
+  //         };
+  //       });
+  //       if (args) setArgsHex(args);
+  //     }
+
+  //     const callData =
+  //       hexStripPrefix(sectionHex || "") +
+  //         hexStripPrefix(functionHex || "") +
+  //         argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
+
+  //     setEncodedCallData(hexAddPrefix(callData));
+  //     setEncodedCallHash(hexAddPrefix(callData));
+  //   }
+  // };
 
   // const handleHexChange = (type: "section" | "function" | "args", index: number = 0) => (e: React.ChangeEvent<HTMLInputElement>) => {
   //   if (!editing || !client || !metadata) return;
@@ -226,17 +211,17 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   const handleEncodedCallDataChange = (
     e: React.ChangeEvent<HTMLTextAreaElement>
   ) => {
-    if (!editing || !client) return;
+    if (!editing) return;
 
     const newCallData = e.target.value;
-    setEncodedCallData(u8aToHex($.RawHex.tryEncode(newCallData)));
-
-    // try {
-    //   const newExtrinsic = client.createFromCallHex(newCallData);
-    //   onExtrinsicChange(newExtrinsic);
-    // } catch (error) {
-    //   console.error("Error updating extrinsic from encoded call data:", error);
-    // }
+    try {
+      const newTx = client.registry.$Extrinsic.decode(
+        $.u8.tryEncode(newCallData)
+      );
+      console.log("newTx", newTx);
+    } catch (error) {
+      console.error("Error updating extrinsic from encoded call data:", error);
+    }
   };
 
   const renderColorCodedCallData = () => {

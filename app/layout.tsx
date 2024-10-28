@@ -7,7 +7,6 @@ import { ThemeProvider } from "next-themes";
 
 import { cn, constructMetadata } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
-import Providers from "./providers";
 
 interface RootLayoutProps {
   children: React.ReactNode;
