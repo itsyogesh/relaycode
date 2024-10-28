@@ -25,12 +25,10 @@ Relaycode is an intuitive extrinsics builder designed to transform the way devel
 - Frontend: Next.js 15 with App Router, React, TypeScript
 - Styling: Tailwind CSS, shadcn/ui components
 - State Management: React Hooks, Context API
-- Blockchain Interaction: Polkadot JS & useInkathon libraries
+- Polkadot Integration: [Dedot](https://github.com/dedotdev/dedot)
 - Theming: next-themes for dark/light mode support
 
+## Milestones
 
-- [x] Implemented core extrinsic builder functionality
-- [x] Developed responsive UI with theme support
-- [ ] Integrated wallet connection feature
-- [ ] Created shareable snippets system
-- [ ] Deployed MVP for testing and demonstration
+For detailed project milestones and deliverables, see our [Milestones](docs/relaycode.md) documentation.
+
