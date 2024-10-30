@@ -5,11 +5,7 @@ import { DedotClient, WsProvider } from "dedot";
 import type { PolkadotApi } from "@dedot/chaintypes";
 import ExtrinsicBuilder from "@/components/builder/extrinsic-builder";
 import InformationPane from "@/components/builder/information-pane";
-import { Metadata } from "dedot/codecs";
-import { ClientMethod } from "@/lib/parser";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PolkadotRuntimeRuntimeCallLike } from "@dedot/chaintypes/polkadot";
-import { ChainSubmittableExtrinsic } from "@dedot/chaintypes/polkadot/tx";
 import { GenericTxCall } from "dedot/types";
 
 const BuilderPage: React.FC = () => {
@@ -82,7 +78,7 @@ const BuilderPage: React.FC = () => {
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-2">Extrinsic Builder</h1>
         <p className="text-xl text-gray-600">
-          Build and analyze extrinsics for Polkadot and Kusama
+          Extrinsics builder for the Polkadot ecosystem
         </p>
       </header>
       <div className="flex flex-col lg:flex-row gap-8">

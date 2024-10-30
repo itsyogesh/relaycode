@@ -7,6 +7,8 @@ import {
   u8aToHex,
   hexStripPrefix,
   hexAddPrefix,
+  xxhashAsU8a,
+  xxhashAsHex,
 } from "dedot/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -44,13 +46,20 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   );
 
   useEffect(() => {
-    if (section && tx) {
-      console.log("Updating display values...", section);
+    if (section) {
       if (section?.value) {
         setSectionHex(u8aToHex($.u8.tryEncode(section.value)));
+        setEncodedCallData(u8aToHex($.u8.tryEncode(section.value)));
       }
       if (tx) {
         setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
+
+        const callData =
+          hexStripPrefix(sectionHex || "") +
+            hexStripPrefix(functionHex || "") +
+            argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
+        setEncodedCallData(hexAddPrefix(callData));
+        setEncodedCallHash(hexAddPrefix(xxhashAsHex(callData, 128)));
       }
     }
   }, [section, tx]);
@@ -277,13 +286,13 @@ const InformationPane: React.FC<InformationPaneProps> = ({
           />
         </div>
 
-        {argsHex?.map((arg, index) => (
+        {tx?.meta?.fields?.map((arg, index) => (
           <div key={index}>
             <Label className="text-sm font-medium">
-              {stringCamelCase(arg.name)} Hex
+              {stringCamelCase(arg.name || "")} Hex
             </Label>
             <Input
-              value={toHex(arg.value || "")}
+              value={toHex("0x")}
               //onChange={handleHexChange("args", index)}
               disabled={!editing}
               className="font-mono text-blue-500"
@@ -316,59 +325,5 @@ const InformationPane: React.FC<InformationPaneProps> = ({
     </div>
   );
 };
-
-//  const registerTx = client.tx.registrar.register;
-//   const { palletIndex, index, fieldCodecs } = registerTx.meta!;
-//   const [$id, $genesisHead, $validationCode] = fieldCodecs;
-
-//   const idInput = 1000;
-//   const genesisHeadInput = '0x1234';
-//   const validationCodeInput = '0x4565';
-
-//   // From inputs to hex
-//   const palletHex = u8aToHex($.u8.tryEncode(palletIndex));
-//   const methodHex = u8aToHex($.u8.tryEncode(index));
-
-//   const idHex = u8aToHex($id.tryEncode(idInput));
-//   const genesisHeadHex = u8aToHex($genesisHead.tryEncode(genesisHeadInput));
-//   const validationCodeHex = u8aToHex($validationCode.tryEncode(validationCodeInput));
-
-//   const tx = registerTx(idInput, genesisHeadInput, validationCodeInput);
-
-//   console.log('=== Inputs -> Raw Hex');
-//   console.log('palletHex', palletHex);
-//   console.log('methodHex', methodHex);
-//   console.log('idHex', idHex);
-//   console.log('genesisHeadHex', genesisHeadHex);
-//   console.log('validationCodeHex', validationCodeHex);
-
-//   const calculatedHex = hexStripPrefix(palletHex) + hexStripPrefix(methodHex) + hexStripPrefix(idHex) + hexStripPrefix(genesisHeadHex) + hexStripPrefix(validationCodeHex)
-//   console.log('calculatedHex', hexAddPrefix(calculatedHex));
-
-//   const callHex = tx.callHex;
-//   console.log('      callHex', callHex);
-
-//   assert(hexAddPrefix(calculatedHex) === callHex, 'Call hex does not match calculated hex');
-
-//   // Now you have the raw hex value, let's convert it to plain value
-//   console.log('=== Raw Hex -> Plain Inputs');
-//   const decodedPalletIndex = $.u8.tryDecode(palletHex);
-//   const decodedMethodIndex = $.u8.tryDecode(methodHex);
-
-//   // args
-//   const decodedId = $id.tryDecode(idHex);
-//   const decodedGenesisHead = $genesisHead.tryDecode(genesisHeadHex);
-//   const decodedValidationCode = $validationCode.tryDecode(validationCodeHex);
-
-//   console.log('decodedPalletIndex', decodedPalletIndex);
-//   console.log('decodedMethodIndex', decodedMethodIndex);
-//   console.log('decodedId', decodedId);
-//   console.log('decodedGenesisHead', decodedGenesisHead);
-//   console.log('decodedValidationCode', decodedValidationCode);
-
-//   await client.disconnect();
-// }
-
-// run().catch(console.error);
 
 export default InformationPane;

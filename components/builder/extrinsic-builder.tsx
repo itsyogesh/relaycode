@@ -132,7 +132,10 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Extrinsic Builder</CardTitle>
+        <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
+        <p className="text-sm text-gray-500">
+          Build and analyze extrinsics for Polkadot
+        </p>
       </CardHeader>
       <CardContent>
         <Form {...form}>
