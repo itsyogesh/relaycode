@@ -47,6 +47,7 @@ const BuilderPage: React.FC = () => {
     section: { text: string; value: number } | null
   ) {
     setSection(section);
+    setTx(null);
   }
 
   console.log("transaction", tx);
