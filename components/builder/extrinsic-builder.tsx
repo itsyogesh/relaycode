@@ -7,13 +7,6 @@ import {
   getArgType,
 } from "@/lib/parser";
 import { useForm } from "react-hook-form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,21 +20,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
-import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +30,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
+import { Separator } from "@/components/ui/separator";
+import { Combobox } from "@/components/builder/combobox";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
@@ -149,81 +130,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
                     <FormLabel>Section</FormLabel>
-                    <Popover open={open} onOpenChange={setOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            className={cn(
-                              "w-[240px] justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? sections?.find(
-                                  (section) =>
-                                    `${section.value}:${section.text}` ===
-                                    field.value
-                                )?.text
-                              : "Select section"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search sections..."
-                            className="h-9"
-                          />
-                          <CommandList>
-                            <CommandEmpty>No section found.</CommandEmpty>
-                            <CommandGroup>
-                              {sections && sections.length > 0 ? (
-                                sections
-                                  .map((section) => {
-                                    console.log(
-                                      "section inside command group",
-                                      section
-                                    );
-                                    return {
-                                      value: section.value,
-                                      label: section.text,
-                                    };
-                                  })
-                                  .map((section) => (
-                                    <CommandItem
-                                      key={section.value}
-                                      value={`${section.value}:${section.label}`}
-                                      onSelect={(currentValue) => {
-                                        field.onChange(currentValue);
-                                        setOpen(false);
-                                      }}
-                                    >
-                                      {section.label}
-                                      <Check
-                                        className={cn(
-                                          "ml-auto h-4 w-4",
-                                          field.value ===
-                                            `${section.value}:${section.label}`
-                                            ? "opacity-100"
-                                            : "opacity-0"
-                                        )}
-                                      />
-                                    </CommandItem>
-                                  ))
-                              ) : (
-                                <CommandItem disabled>
-                                  Loading sections...
-                                </CommandItem>
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <Combobox
+                      items={(sections || []).map((section) => ({
+                        value: section.value,
+                        label: section.text,
+                      }))}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select section"
+                      searchPlaceholder="Search sections..."
+                    />
                   </div>
                   <FormDescription>
                     {sections
@@ -245,76 +161,24 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
                     <FormLabel>Method</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            disabled={!form.watch("section")}
-                            className={cn(
-                              "w-[240px] justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value
-                              ? methods?.find(
-                                  (method) =>
-                                    `${method.value}:${method.text}` ===
-                                    field.value
-                                )?.text
-                              : "Select method"}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search methods..."
-                            className="h-9"
-                          />
-                          <CommandList>
-                            <CommandEmpty>No method found.</CommandEmpty>
-                            <CommandGroup>
-                              {!form.watch("section") ? (
-                                <div className="flex flex-col items-center justify-center p-6 space-y-2">
-                                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                                  <p className="text-sm text-muted-foreground">
-                                    Please select a section first
-                                  </p>
-                                </div>
-                              ) : methods && methods.length > 0 ? (
-                                methods.map((method) => (
-                                  <CommandItem
-                                    key={method.value}
-                                    value={`${method.value}:${method.text}`}
-                                    onSelect={(currentValue) => {
-                                      field.onChange(currentValue);
-                                    }}
-                                  >
-                                    {method.text}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto h-4 w-4",
-                                        field.value ===
-                                          `${method.value}:${method.text}`
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))
-                              ) : (
-                                <CommandItem disabled>
-                                  Loading methods...
-                                </CommandItem>
-                              )}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <Combobox
+                      items={(methods || []).map((method) => ({
+                        value: method.value,
+                        label: method.text,
+                      }))}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Select method"
+                      searchPlaceholder="Search methods..."
+                      disabled={!form.watch("section")}
+                    >
+                      <div className="flex flex-col items-center justify-center p-6 space-y-2">
+                        <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Please select a section first
+                        </p>
+                      </div>
+                    </Combobox>
                   </div>
                   <FormDescription>
                     {tx?.meta?.docs && tx.meta.docs.length > 0 && (
@@ -350,46 +214,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                                       form.watch("method")
                                   )?.text || ""}
                                 </div>
-                                <div className="text-sm font-normal text-muted-foreground">
-                                  Function Documentation
-                                </div>
                               </DialogTitle>
+                              <DialogDescription>
+                                Function Documentation
+                              </DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <ReactMarkdown>
-                                  {tx?.meta?.docs.join("\n")}
-                                </ReactMarkdown>
-                              </div>
-                              {tx?.meta?.fields &&
-                                tx.meta.fields.length > 0 && (
-                                  <div className="space-y-2">
-                                    <h3 className="text-sm font-semibold">
-                                      Parameters:
-                                    </h3>
-                                    <div className="space-y-1">
-                                      {tx.meta.fields.map((field, index) => (
-                                        <div key={index} className="text-sm">
-                                          <span className="font-medium">
-                                            {field.name}
-                                          </span>
-                                          <span className="text-muted-foreground">
-                                            {" "}
-                                            ({field.typeName})
-                                          </span>
-                                          {field.docs &&
-                                            field.docs.length > 0 && (
-                                              <div className="ml-4 prose prose-sm dark:prose-invert max-w-none">
-                                                <ReactMarkdown>
-                                                  {field.docs.join(" ")}
-                                                </ReactMarkdown>
-                                              </div>
-                                            )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
+                            <Separator className="space-y-4" />
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown>
+                                {tx?.meta?.docs.join("\n")}
+                              </ReactMarkdown>
                             </div>
                           </DialogContent>
                         </Dialog>
