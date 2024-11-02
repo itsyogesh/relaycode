@@ -27,6 +27,30 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
+import { Check, ChevronsUpDown, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import ReactMarkdown from "react-markdown";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
@@ -46,13 +70,13 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   onTxChange,
   onSectionChange,
 }) => {
-  const [sections, setSections] = useState<
-    { text: string; value: number; docs: string[] }[] | null
-  >([]);
+  const sections = createSectionOptions(client.metadata.latest);
+
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
   >([]);
   const [expandedDocs, setExpandedDocs] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -60,13 +84,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       method: "",
     },
   });
-
-  useEffect(() => {
-    if (client) {
-      const sectionOptions = createSectionOptions(client.metadata.latest);
-      setSections(sectionOptions);
-    }
-  }, [client]);
 
   useEffect(() => {
     const section = form.watch("section");
@@ -99,22 +116,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     }
   }, [form.watch("method")]);
 
-  useEffect(() => {
-    console.log("transaction_update", tx);
-    // if (tx?.meta?.fields) {
-    //   const newValues: FormValues = {
-    //     section: form.getValues("section"),
-    //     method: form.getValues("method"),
-    //   };
-    //   tx?.meta?.fields.forEach((arg) => {
-    //     if (arg && arg.name) {
-    //       newValues[arg.name] = "";
-    //     }
-    //   });
-    //   form.reset(newValues);
-    // }
-  }, [tx]);
-
   const onSubmit = async (data: any) => {
     // if (!tx || !account) return;
     // try {
@@ -128,6 +129,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   };
 
   console.log("tx_in_body", tx);
+  console.log("sections", sections);
 
   return (
     <Card className="w-full">
@@ -145,33 +147,90 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               name="section"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Choose a section</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a section" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sections?.map((section) => (
-                        <SelectItem
-                          key={section.value}
-                          value={`${section.value}:${section.text}`}
-                        >
-                          {section.text}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-row items-center justify-between">
+                    <FormLabel>Section</FormLabel>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            className={cn(
+                              "w-[240px] justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? sections?.find(
+                                  (section) =>
+                                    `${section.value}:${section.text}` ===
+                                    field.value
+                                )?.text
+                              : "Select section"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search sections..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No section found.</CommandEmpty>
+                            <CommandGroup>
+                              {sections && sections.length > 0 ? (
+                                sections
+                                  .map((section) => {
+                                    console.log(
+                                      "section inside command group",
+                                      section
+                                    );
+                                    return {
+                                      value: section.value,
+                                      label: section.text,
+                                    };
+                                  })
+                                  .map((section) => (
+                                    <CommandItem
+                                      key={section.value}
+                                      value={`${section.value}:${section.label}`}
+                                      onSelect={(currentValue) => {
+                                        field.onChange(currentValue);
+                                        setOpen(false);
+                                      }}
+                                    >
+                                      {section.label}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto h-4 w-4",
+                                          field.value ===
+                                            `${section.value}:${section.label}`
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  ))
+                              ) : (
+                                <CommandItem disabled>
+                                  Loading sections...
+                                </CommandItem>
+                              )}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormDescription>
                     {sections
                       ?.find(
-                        (s) => s.value === parseInt(field.value.split(":")[0])
+                        (s) =>
+                          s.value ===
+                          parseInt(field.value?.split(":")[0] || "0")
                       )
                       ?.docs.join(", ")}
                   </FormDescription>
@@ -184,44 +243,156 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               name="method"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Select extrinsic function</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a method" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {methods?.map((method) => (
-                        <SelectItem
-                          key={`${method.value}`}
-                          value={`${method.value}:${method.text}`}
-                        >
-                          {method.text}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-row items-center justify-between">
+                    <FormLabel>Method</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            disabled={!form.watch("section")}
+                            className={cn(
+                              "w-[240px] justify-between",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value
+                              ? methods?.find(
+                                  (method) =>
+                                    `${method.value}:${method.text}` ===
+                                    field.value
+                                )?.text
+                              : "Select method"}
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder="Search methods..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No method found.</CommandEmpty>
+                            <CommandGroup>
+                              {!form.watch("section") ? (
+                                <div className="flex flex-col items-center justify-center p-6 space-y-2">
+                                  <AlertCircle className="h-10 w-10 text-muted-foreground" />
+                                  <p className="text-sm text-muted-foreground">
+                                    Please select a section first
+                                  </p>
+                                </div>
+                              ) : methods && methods.length > 0 ? (
+                                methods.map((method) => (
+                                  <CommandItem
+                                    key={method.value}
+                                    value={`${method.value}:${method.text}`}
+                                    onSelect={(currentValue) => {
+                                      field.onChange(currentValue);
+                                    }}
+                                  >
+                                    {method.text}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto h-4 w-4",
+                                        field.value ===
+                                          `${method.value}:${method.text}`
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))
+                              ) : (
+                                <CommandItem disabled>
+                                  Loading methods...
+                                </CommandItem>
+                              )}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <FormDescription>
                     {tx?.meta?.docs && tx.meta.docs.length > 0 && (
                       <div className="flex items-center justify-between">
-                        <div
-                          className={`${!expandedDocs ? "line-clamp-1" : ""} flex-1`}
-                        >
-                          {tx.meta.docs.join(" ")}
+                        <div className="line-clamp-1 flex-1">
+                          {tx.meta.docs[0]}
                         </div>
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto font-normal ml-2"
-                          onClick={() => setExpandedDocs(!expandedDocs)}
-                        >
-                          {expandedDocs ? "Show Less" : "Show More"}
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto text-[0.8rem] text-foreground ml-2"
+                            >
+                              View Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle className="space-y-1">
+                                <div className="text-xl font-semibold">
+                                  {sections?.find(
+                                    (s) =>
+                                      s.value ===
+                                      parseInt(
+                                        form.watch("section")?.split(":")[0] ||
+                                          "0"
+                                      )
+                                  )?.text || ""}{" "}
+                                  /{" "}
+                                  {methods?.find(
+                                    (m) =>
+                                      `${m.value}:${m.text}` ===
+                                      form.watch("method")
+                                  )?.text || ""}
+                                </div>
+                                <div className="text-sm font-normal text-muted-foreground">
+                                  Function Documentation
+                                </div>
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown>
+                                  {tx?.meta?.docs.join("\n")}
+                                </ReactMarkdown>
+                              </div>
+                              {tx?.meta?.fields &&
+                                tx.meta.fields.length > 0 && (
+                                  <div className="space-y-2">
+                                    <h3 className="text-sm font-semibold">
+                                      Parameters:
+                                    </h3>
+                                    <div className="space-y-1">
+                                      {tx.meta.fields.map((field, index) => (
+                                        <div key={index} className="text-sm">
+                                          <span className="font-medium">
+                                            {field.name}
+                                          </span>
+                                          <span className="text-muted-foreground">
+                                            {" "}
+                                            ({field.typeName})
+                                          </span>
+                                          {field.docs &&
+                                            field.docs.length > 0 && (
+                                              <div className="ml-4 prose prose-sm dark:prose-invert max-w-none">
+                                                <ReactMarkdown>
+                                                  {field.docs.join(" ")}
+                                                </ReactMarkdown>
+                                              </div>
+                                            )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     )}
                   </FormDescription>
@@ -265,43 +436,3 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 };
 
 export default ExtrinsicBuilder;
-
-// useEffect(() => {
-//   if (client && selectedMethod) {
-//     const extrinsic = client.tx[selectedMethod.section][
-//       selectedMethod.method
-//     ](...args?.map((arg) => arg.value));
-//     onExtrinsicChange(extrinsic);
-//   }
-// }, [client, selectedMethod]);
-
-// const signAndSubmitExtrinsic = async () => {
-//   if (!selectedMethod || !account || !window.injected || !api) return;
-
-//   const { section, method, args } = selectedMethod;
-
-//   const extrinsic = client.tx[section][method](
-//     ...args.map((arg, index) => {
-//       const input = args[index];
-//       return input.value || input.placeholder || "";
-//     })
-//   );
-
-//   const signer = window.injected.signer as Signer;
-//   api.setSigner(signer);
-
-//   try {
-//     const unsub = await extrinsic.signAndSend(account.address, (result) => {
-//       toast.info("Extrinsic status: " + result.status.toString);
-//       if (result.status.isFinalized) {
-//         toast.success(
-//           "Extrinsic finalized at block: " +
-//             result.status.asFinalized.toString()
-//         );
-//         unsub();
-//       }
-//     });
-//   } catch (error) {
-//     toast.error("Error signing and sending extrinsic: " + error);
-//   }
-// };
