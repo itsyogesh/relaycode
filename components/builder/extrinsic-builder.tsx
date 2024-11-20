@@ -32,6 +32,8 @@ import {
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
+import { findComponent } from "@/lib/input-map";
+import { Field } from "dedot/codecs";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
@@ -56,8 +58,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
   >([]);
-  const [expandedDocs, setExpandedDocs] = useState(false);
-  const [open, setOpen] = useState(false);
 
   const form = useForm<FormValues>({
     defaultValues: {
@@ -96,6 +96,62 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       onTxChange(newTx);
     }
   }, [form.watch("method")]);
+
+  const getAllTypes = () => {
+    const allTypes: Field[] = [];
+    sections?.forEach((section) => {
+      const methods = createMethodOptions(client, section.value);
+      const typeArray = printType(section.text, methods || []);
+      typeArray.forEach((type) => {
+        allTypes.push(type);
+      });
+    });
+    return allTypes;
+  };
+
+  const printType = (
+    section: string,
+    methods: { text: string; value: number }[]
+  ) => {
+    const typeArray: Field[] = [];
+
+    methods.forEach((method) => {
+      const tx =
+        client.tx[stringCamelCase(section)][stringCamelCase(method.text)];
+      tx.meta?.fields?.map((arg) => {
+        typeArray.push(arg);
+      });
+    });
+    return typeArray;
+  };
+
+  /*
+  {
+    "name": "asset_kind",
+    "typeId": 55,
+    "typeName": "Box<T::AssetKind>",
+    "docs": []
+  },
+  */
+
+  useEffect(() => {
+    const allTypes = getAllTypes();
+    const uniqueTypes = allTypes.reduce((acc: Field[], curr) => {
+      if (!acc.find((item) => item.typeName === curr.typeName)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    const uniqueTypesByTypeId = uniqueTypes.reduce((acc: Field[], curr) => {
+      if (!acc.find((item) => item.typeId === curr.typeId)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    console.log("Unique Types Length:", uniqueTypes.length);
+    console.log("Unique Types By TypeId Length:", uniqueTypesByTypeId.length);
+    console.log("Unique TypeIds", JSON.stringify(uniqueTypesByTypeId, null, 2));
+  }, [sections]);
 
   const onSubmit = async (data: any) => {
     // if (!tx || !account) return;
@@ -171,14 +227,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                       placeholder="Select method"
                       searchPlaceholder="Search methods..."
                       disabled={!form.watch("section")}
-                    >
-                      <div className="flex flex-col items-center justify-center p-6 space-y-2">
-                        <AlertCircle className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          Please select a section first
-                        </p>
-                      </div>
-                    </Combobox>
+                    />
                   </div>
                   <FormDescription>
                     {tx?.meta?.docs && tx.meta.docs.length > 0 && (
@@ -239,29 +288,24 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 key={arg.name}
                 control={form.control}
                 name={arg.name || ""}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{`${arg.name}: (${arg.typeName})`}</FormLabel>
-                    <FormControl>
-                      <Input
+                render={({ field }) => {
+                  console.log("argument array", arg);
+                  const Component = findComponent(arg.typeName || "").component;
+                  return (
+                    <FormItem className="ml-8">
+                      <Component
+                        client={client}
+                        label={arg.name || ""}
                         {...field}
-                        placeholder={`Enter ${arg.name}`}
-                        onChange={(e) => {
-                          field.onChange(e);
-                        }}
                       />
-                    </FormControl>
-                    <FormDescription>
-                      {`${arg.docs?.join(" ") || " "} ${JSON.stringify(
-                        getArgType(client, arg.typeId)
-                      )}`}
-                    </FormDescription>
-                  </FormItem>
-                )}
+                    </FormItem>
+                  );
+                }}
               />
             ))}
-
-            <Button type="submit">Sign and Submit</Button>
+            <div className="flex justify-end">
+              <Button type="submit">Sign and Submit</Button>
+            </div>
           </form>
         </Form>
       </CardContent>
