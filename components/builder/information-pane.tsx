@@ -16,11 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { GenericTxCall } from "dedot/types";
 import { PolkadotApi } from "@dedot/chaintypes";
+import { UseFormReturn } from "react-hook-form";
+import { BuilderFormValues } from "@/app/builder/page";
 
 interface InformationPaneProps {
   client: DedotClient<PolkadotApi>;
   tx: GenericTxCall<"v2"> | null;
-  section: { text: string; value: number } | null;
+  builderForm: UseFormReturn<BuilderFormValues>;
+  onTxChange: (tx: GenericTxCall<"v2">) => void;
 }
 
 interface Argument {
@@ -32,7 +35,8 @@ interface Argument {
 const InformationPane: React.FC<InformationPaneProps> = ({
   client,
   tx,
-  section,
+  builderForm,
+  onTxChange,
 }) => {
   const [editing, setEditing] = useState(false);
   const [sectionHex, setSectionHex] = useState<HexString | null>(null);
@@ -44,181 +48,30 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   const [encodedCallHash, setEncodedCallHash] = useState<HexString | null>(
     null
   );
+  const [hexEncodedCall, setHexEncodedCall] = useState<string>("");
 
   useEffect(() => {
+    const section = builderForm.watch("section");
     if (section) {
-      if (section?.value) {
-        setSectionHex(u8aToHex($.u8.tryEncode(section.value)));
-        setEncodedCallData(u8aToHex($.u8.tryEncode(section.value)));
-      }
-      if (tx) {
-        setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
-
-        const callData =
-          hexStripPrefix(sectionHex || "") +
-            hexStripPrefix(functionHex || "") +
-            argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
-        setEncodedCallData(hexAddPrefix(callData));
-        setEncodedCallHash(hexAddPrefix(xxhashAsHex(callData, 128)));
-      }
+      setSectionHex(u8aToHex($.u8.tryEncode(parseInt(section.split(":")[0]))));
     }
-  }, [section, tx]);
+  }, [builderForm.watch("section")]);
 
-  // const updateDisplayValues = () => {
+  useEffect(() => {
+    if (tx) {
+      setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
 
-  //   if (tx) {
-  //     setFunctionHex(u8aToHex($.u8.tryEncode(tx.meta?.index)));
-
-  //     if (tx?.meta?.fields?.length) {
-  //       const args = tx?.meta?.fields?.map((arg, index) => {
-  //         const argHex =
-  //           tx?.meta?.fieldCodecs[index]
-  //             ? u8aToHex(tx.meta.fieldCodecs[index].tryEncode(tx.))
-  //             : `0x`;
-  //         return {
-  //           name: arg.name,
-  //           type: arg.type,
-  //           value: argHex,
-  //         };
-  //       });
-  //       if (args) setArgsHex(args);
-  //     }
-
-  //     const callData =
-  //       hexStripPrefix(sectionHex || "") +
-  //         hexStripPrefix(functionHex || "") +
-  //         argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
-
-  //     setEncodedCallData(hexAddPrefix(callData));
-  //     setEncodedCallHash(hexAddPrefix(callData));
-  //   }
-  // };
-
-  // const handleHexChange = (type: "section" | "function" | "args", index: number = 0) => (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   if (!editing || !client || !metadata) return;
-
-  //   let newValue = e.target.value;
-  //   let newExtrinsic: ClientMethod = {
-  //     sectionName: "",
-  //     sectionIndex: -1,
-  //     methodName: "",
-  //     methodIndex: -1,
-  //     args: null,
-  //   };
-
-  //   switch (type) {
-  //     case "section":
-  //       setSectionHex(u8aToHex($.RawHex.tryEncode(newValue)));
-  //       const decodedSection = $.u8.tryDecode(newValue);
-  //       newExtrinsic = {
-  //         ...newExtrinsic,
-  //         sectionName: metadata.pallets.find((p) => p.index === decodedSection)?.name || "",
-  //         sectionIndex: decodedSection,
-  //       };
-  //       break;
-  //     case "function":
-  //       if (newExtrinsic.sectionIndex === -1) {
-  //         setFunctionHex(u8aToHex($.RawHex.tryEncode(newValue)));
-  //       } else {
-  //         const pallet = metadata.pallets.find((p) => p.index === newExtrinsic.sectionIndex);
-  //         if (!pallet?.calls) return;
-  //         const palletCalls = client.registry.findType(pallet.calls);
-  //         assert(palletCalls.typeDef.type === "Enum");
-  //         const method = palletCalls.typeDef.value.members.find((m) => m.index === parseInt(newValue));
-  //         if (!method) return;
-  //         setFunctionHex(u8aToHex($.RawHex.tryEncode(newValue)));
-  //         newExtrinsic = {
-  //           ...newExtrinsic,
-  //           methodName: method.name,
-  //           methodIndex: method.index,
-  //         };
-  //       }
-  //       break;
-  //     case "args":
-  //       if (newExtrinsic.sectionIndex === -1 || newExtrinsic.methodIndex === -1) return;
-  //       const tx = client.tx[stringCamelCase(newExtrinsic.sectionName)][stringCamelCase(newExtrinsic.methodName)];
-  //       const { fieldCodecs } = tx.meta!;
-  //       const newArgs = [...argsHex || []];
-  //       newArgs[index] = {
-  //         ...newArgs[index],
-  //         value: fieldCodecs[index].tryDecode(newValue),
-  //       };
-
-  // }
-
-  // const handleHexChange =
-  //   (type: "section" | "function" | "args", index: number = 0) =>
-  //   (e: React.ChangeEvent<HTMLInputElement>) => {
-  //     if (!editing || !client || !metadata) return;
-
-  //     let newValue = e.target.value;
-  //     if (!newValue.startsWith("0x")) {
-  //       newValue = toHex(newValue);
-  //     }
-
-  //     switch (type) {
-  //       case "section":
-  //         setSectionHex(u8aToHex($.RawHex.tryEncode(newValue)));
-  //         break;
-  //       case "function":
-  //         setFunctionHex(u8aToHex($.RawHex.tryEncode(newValue)));
-  //         break;
-  //       case "args":
-  //         if (!argsHex) return;
-  //         const newArgs = [...argsHex];
-  //         newArgs[index] = stringToU8a(newValue);
-  //         setArgsHex(newArgs);
-  //         break;
-  //     }
-
-  //     try {
-  //       const pallet = metadata?.pallets.find(
-  //         (p) => p.index === parseInt($.RawHex.decode(sectionHex))
-  //       );
-  //       if (!pallet?.calls) return null;
-  //       const palletCalls = client.registry.findType(pallet?.calls);
-  //       assert(palletCalls.typeDef.type === "Enum");
-
-  //       const method = palletCalls.typeDef.value.members.find(
-  //         (m) => m.index === extrinsic?.methodIndex
-  //       );
-  //       if (!method) return null;
-  //       const args = method.fields.map((arg, index) => {
-  //         return {
-  //           name: arg.name || "",
-  //           type: arg.typeId || 0,
-  //           value: argsHex ? u8aToString(argsHex[index]) : "",
-  //         };
-  //       });
-  //       const newExtrinsic: ClientMethod = {
-  //         section: pallet.name || "",
-  //         method: method.name || "",
-  //         args: args,
-  //       };
-  //       onExtrinsicChange(newExtrinsic);
-  //     } catch (error) {
-  //       console.error("Error updating extrinsic:", error);
-  //     }
-  //   };
-
-  // const handleEncodedCallDataChange = (
-  //   e: React.ChangeEvent<HTMLTextAreaElement>
-  // ) => {
-  //   if (!editing || !client) return;
-
-  //   const newCallData = e.target.value;
-  //   setEncodedCallData(xxhashAsU8a(newCallData, 128));
-
-  //   // try {
-  //   //   const newExtrinsic = client.createFromCallHex(newCallData);
-  //   //   onExtrinsicChange(newExtrinsic);
-  //   // } catch (error) {
-  //   //   console.error("Error updating extrinsic from encoded call data:", error);
-  //   // }
-  // };
+      const callData =
+        hexStripPrefix(sectionHex || "") +
+          hexStripPrefix(functionHex || "") +
+          argsHex?.map((arg) => hexStripPrefix(arg.value)).join("") || "";
+      setEncodedCallData(hexAddPrefix(callData));
+      setEncodedCallHash(hexAddPrefix(xxhashAsHex(callData, 128)));
+    }
+  }, [tx]);
 
   const handleEncodedCallDataChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     if (!editing) return;
 
@@ -230,6 +83,44 @@ const InformationPane: React.FC<InformationPaneProps> = ({
       console.log("newTx", newTx);
     } catch (error) {
       console.error("Error updating extrinsic from encoded call data:", error);
+    }
+  };
+
+  const handleEncodedCallHashChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!editing) return;
+
+    const newCallHash = e.target.value;
+
+    console.log("newcallhash", newCallHash);
+
+    setEncodedCallHash(toHex(e.target.value));
+    try {
+      const newTx = client.registry.$Extrinsic.tryDecode(newCallHash);
+      console.log("newTx", newTx);
+    } catch (e) {
+      console.error("Error updating extrinsic from encoded call hash", e);
+    }
+  };
+
+  const handleHexEncodedCall = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (!editing) return;
+
+    const hexEncodedCallHash = e.target.value;
+
+    setHexEncodedCall(hexEncodedCallHash);
+    try {
+      const newTx = client.registry.$Extrinsic.tryDecode(hexEncodedCallHash);
+      console.log("new tx for encoded call", newTx);
+      const newTransaction =
+        client.tx[stringCamelCase(newTx.call.pallet)][
+          stringCamelCase(newTx.call.palletCall.name)
+        ];
+
+      onTxChange(newTransaction);
+    } catch (e) {
+      console.error("Error updating extrinsic from encoded call hash", e);
     }
   };
 
@@ -303,7 +194,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
         <div>
           <Label className="text-sm font-medium">Encoded Call Data</Label>
           {editing ? (
-            <Textarea
+            <Input
               value={toHex(encodedCallData || "")}
               onChange={handleEncodedCallDataChange}
               className="font-mono"
@@ -317,8 +208,19 @@ const InformationPane: React.FC<InformationPaneProps> = ({
           <Label className="text-sm font-medium">Encoded Call Hash</Label>
           <Input
             value={toHex(encodedCallHash || "")}
-            disabled
+            disabled={!editing}
             className="font-mono"
+            onChange={handleEncodedCallHashChange}
+          />
+        </div>
+
+        <div>
+          <Label className="text-sm font-medium">Hex Encoded Call Data</Label>
+          <Textarea
+            value={hexEncodedCall}
+            disabled={!editing}
+            className="font-mono"
+            onChange={handleHexEncodedCall}
           />
         </div>
       </div>

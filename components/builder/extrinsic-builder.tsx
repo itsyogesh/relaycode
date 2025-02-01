@@ -6,7 +6,7 @@ import {
   createSectionOptions,
   getArgType,
 } from "@/lib/parser";
-import { useForm } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -34,12 +34,13 @@ import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
 import { findComponent } from "@/lib/input-map";
 import { Field } from "dedot/codecs";
+import { BuilderFormValues } from "@/app/builder/page";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
   tx: GenericTxCall<"v2"> | null;
   onTxChange: (tx: GenericTxCall<"v2">) => void;
-  onSectionChange: (section: { text: string; value: number } | null) => void;
+  builderForm: UseFormReturn<BuilderFormValues>;
 }
 interface FormValues {
   section: string;
@@ -51,7 +52,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   client,
   tx,
   onTxChange,
-  onSectionChange,
+  builderForm,
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
 
@@ -59,34 +60,21 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     { text: string; value: number }[] | null
   >([]);
 
-  const form = useForm<FormValues>({
-    defaultValues: {
-      section: "",
-      method: "",
-    },
-  });
-
   useEffect(() => {
-    const section = form.watch("section");
+    const section = builderForm.watch("section");
     if (section) {
       const newMethods = createMethodOptions(
         client,
         parseInt(section.split(":")[0])
       );
       setMethods(newMethods);
-      form.setValue("method", "");
-      if (section) {
-        onSectionChange(
-          sections?.find((s) => s.value === parseInt(section.split(":")[0])) ||
-            null
-        );
-      }
+      builderForm.setValue("method", "");
     }
-  }, [form.watch("section")]);
+  }, [builderForm.watch("section")]);
 
   useEffect(() => {
-    const method = form.watch("method");
-    const section = form.watch("section");
+    const method = builderForm.watch("method");
+    const section = builderForm.watch("section");
     if (section && method) {
       const newTx =
         client.tx[stringCamelCase(section.split(":")[1])][
@@ -95,16 +83,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       console.log("newTx", newTx);
       onTxChange(newTx);
     }
-  }, [form.watch("method")]);
+  }, [builderForm.watch("method")]);
 
   const getAllTypes = () => {
     const allTypes: Field[] = [];
     sections?.forEach((section) => {
       const methods = createMethodOptions(client, section.value);
-      const typeArray = printType(section.text, methods || []);
-      typeArray.forEach((type) => {
-        allTypes.push(type);
-      });
+      // const typeArray = printType(section.text, methods || []);
+      // typeArray.forEach((type) => {
+      //   allTypes.push(type);
+      // });
     });
     return allTypes;
   };
@@ -148,9 +136,9 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       }
       return acc;
     }, []);
-    console.log("Unique Types Length:", uniqueTypes.length);
-    console.log("Unique Types By TypeId Length:", uniqueTypesByTypeId.length);
-    console.log("Unique TypeIds", JSON.stringify(uniqueTypesByTypeId, null, 2));
+    // console.log("Unique Types Length:", uniqueTypes.length);
+    // console.log("Unique Types By TypeId Length:", uniqueTypesByTypeId.length);
+    // console.log("Unique TypeIds", JSON.stringify(uniqueTypesByTypeId, null, 2));
   }, [sections]);
 
   const onSubmit = async (data: any) => {
@@ -165,9 +153,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     // }
   };
 
-  console.log("tx_in_body", tx);
-  console.log("sections", sections);
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -177,10 +162,13 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
         </p>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Form {...builderForm}>
+          <form
+            onSubmit={builderForm.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
             <FormField
-              control={form.control}
+              control={builderForm.control}
               name="section"
               render={({ field }) => (
                 <FormItem>
@@ -211,7 +199,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
             />
 
             <FormField
-              control={form.control}
+              control={builderForm.control}
               name="method"
               render={({ field }) => (
                 <FormItem>
@@ -226,7 +214,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                       onValueChange={field.onChange}
                       placeholder="Select method"
                       searchPlaceholder="Search methods..."
-                      disabled={!form.watch("section")}
+                      disabled={!builderForm.watch("section")}
                     />
                   </div>
                   <FormDescription>
@@ -252,15 +240,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                                     (s) =>
                                       s.value ===
                                       parseInt(
-                                        form.watch("section")?.split(":")[0] ||
-                                          "0"
+                                        builderForm
+                                          .watch("section")
+                                          ?.split(":")[0] || "0"
                                       )
                                   )?.text || ""}{" "}
                                   /{" "}
                                   {methods?.find(
                                     (m) =>
                                       `${m.value}:${m.text}` ===
-                                      form.watch("method")
+                                      builderForm.watch("method")
                                   )?.text || ""}
                                 </div>
                               </DialogTitle>
@@ -286,10 +275,10 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
             {tx?.meta?.fields?.map((arg) => (
               <FormField
                 key={arg.name}
-                control={form.control}
+                control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  console.log("argument array", arg);
+                  //console.log("argument array", arg);
                   const Component = findComponent(arg.typeName || "").component;
                   return (
                     <FormItem className="ml-8">

@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 
+import { Nunito } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 
@@ -12,6 +13,11 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
+const nunito = Nunito({
+  subsets: ["latin"],
+  variable: "--font-nunito",
+});
+
 export const metadata = constructMetadata();
 
 export default function RootLayout({ children }: RootLayoutProps) {
@@ -21,6 +27,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
+          nunito.variable,
           GeistSans.variable,
           GeistMono.variable
         )}
