@@ -7,15 +7,25 @@ import ExtrinsicBuilder from "@/components/builder/extrinsic-builder";
 import InformationPane from "@/components/builder/information-pane";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GenericTxCall } from "dedot/types";
+import { useForm } from "react-hook-form";
+
+export interface BuilderFormValues {
+  section: string;
+  method: string;
+  [key: string]: string;
+}
 
 const BuilderPage: React.FC = () => {
   const [client, setClient] = useState<DedotClient<PolkadotApi> | null>(null);
   const [tx, setTx] = useState<GenericTxCall<"v2"> | null>(null);
-  const [section, setSection] = useState<{
-    text: string;
-    value: number;
-  } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const form = useForm<BuilderFormValues>({
+    defaultValues: {
+      section: "",
+      method: "",
+    },
+  });
 
   const getClient = useCallback(async () => {
     try {
@@ -38,19 +48,9 @@ const BuilderPage: React.FC = () => {
   }, []);
 
   const handleTxChange = (tx: GenericTxCall<"v2">) => {
-    console.log("tx changed", tx);
     console.log("metadata", tx?.meta);
     setTx(() => tx);
   };
-
-  function handleSectionChange(
-    section: { text: string; value: number } | null
-  ) {
-    setSection(section);
-    setTx(null);
-  }
-
-  console.log("transaction", tx);
 
   const SkeletonUI = () => (
     <>
@@ -72,8 +72,6 @@ const BuilderPage: React.FC = () => {
     </>
   );
 
-  console.log("tx in page body", tx);
-
   return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
@@ -92,11 +90,16 @@ const BuilderPage: React.FC = () => {
                 client={client}
                 tx={tx}
                 onTxChange={handleTxChange}
-                onSectionChange={handleSectionChange}
+                builderForm={form}
               />
             </div>
             <div className="w-full lg:w-1/2 bg-gray-100 rounded-lg p-6">
-              <InformationPane client={client} tx={tx} section={section} />
+              <InformationPane
+                client={client}
+                tx={tx}
+                builderForm={form}
+                onTxChange={handleTxChange}
+              />
             </div>
           </>
         )}

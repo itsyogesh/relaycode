@@ -11,6 +11,7 @@ import { MobileNav } from "@/components/layout/mobile-nav";
 import { Icons } from "@/components/shared/icons";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
+import { RelaycodeIcon } from "@/components/icons/relaycode-logo";
 
 interface MainNavProps {
   items?: MainNavItem[];
@@ -42,7 +43,7 @@ export function MainNav({ items, children }: MainNavProps) {
   return (
     <div className="flex gap-6 md:gap-10">
       <Link href="/" className="hidden items-center space-x-2 md:flex">
-        <Icons.logo className="size-8" />
+        <RelaycodeIcon className="h-8 w-8" />
         <span className="tracking-sm hidden font-heading text-xl font-bold sm:inline-block">
           {siteConfig.name}
         </span>
