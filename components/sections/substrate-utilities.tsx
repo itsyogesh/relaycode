@@ -1,13 +1,21 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { motion } from "framer-motion"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { ArrowRight, Copy, Calculator, Package, Scroll, Search, Plus } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useState } from "react"
-import Link from "next/link"
+import * as React from "react";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  ArrowRight,
+  Copy,
+  Calculator,
+  Package,
+  Scroll,
+  Search,
+  Plus,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+import Link from "next/link";
 
 function textToHex(text: string): string {
   return (
@@ -15,7 +23,7 @@ function textToHex(text: string): string {
     Array.from(text)
       .map((char) => char.charCodeAt(0).toString(16).padStart(2, "0"))
       .join("")
-  )
+  );
 }
 
 const utilities = [
@@ -47,10 +55,16 @@ const utilities = [
     gradient: "from-[#7916F3]/10 via-transparent to-transparent",
     status: "soon",
   },
-]
+];
 
-const StatusBadge = ({ status, className }: { status: "live" | "soon"; className?: string }) => {
-  const isLive = status === "live"
+const StatusBadge = ({
+  status,
+  className,
+}: {
+  status: "live" | "soon";
+  className?: string;
+}) => {
+  const isLive = status === "live";
   return (
     <div className={className}>
       <div
@@ -58,30 +72,35 @@ const StatusBadge = ({ status, className }: { status: "live" | "soon"; className
           "inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium border",
           isLive
             ? "bg-green-500/10 text-green-500 border-green-500/20"
-            : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+            : "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
         )}
       >
-        <div className={cn("size-1.5 rounded-full", isLive ? "bg-green-500 animate-pulse" : "bg-yellow-500")} />
+        <div
+          className={cn(
+            "size-1.5 rounded-full",
+            isLive ? "bg-green-500 animate-pulse" : "bg-yellow-500"
+          )}
+        />
         {isLive ? "Live" : "Coming Soon"}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export function SubstrateUtilitiesSection() {
-  const [input, setInput] = useState("Hello Polkadot")
-  const [copied, setCopied] = React.useState(false)
-  const hexOutput = textToHex(input)
+  const [input, setInput] = useState("Hello Polkadot");
+  const [copied, setCopied] = React.useState(false);
+  const hexOutput = textToHex(input);
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(hexOutput)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(hexOutput);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err)
+      console.error("Failed to copy:", err);
     }
-  }
+  };
 
   return (
     <section className="overflow-hidden bg-background py-24 sm:py-32">
@@ -93,7 +112,9 @@ export function SubstrateUtilitiesSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Substrate Utilities</h2>
+            <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
+              Substrate Utilities
+            </h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Essential tools for developers and teams building on Substrate.
             </p>
@@ -107,7 +128,9 @@ export function SubstrateUtilitiesSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-8 mb-4"
           >
-            <p className="text-sm text-muted-foreground">Try instant Text/SCALE Conversion</p>
+            <p className="text-sm text-muted-foreground">
+              Try instant Text/SCALE Conversion
+            </p>
           </motion.div>
 
           {/* Live Converter Widget */}
@@ -121,7 +144,10 @@ export function SubstrateUtilitiesSection() {
             <div className="rounded-xl border bg-card p-6 shadow-sm transition-all duration-300 hover:bg-gradient-to-r hover:from-[#FF2670]/[0.02] hover:to-[#7916F3]/[0.02]">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label htmlFor="convert" className="text-sm font-medium text-left block">
+                  <label
+                    htmlFor="convert"
+                    className="text-sm font-medium text-left block"
+                  >
                     Enter text
                   </label>
                   <Input
@@ -143,7 +169,7 @@ export function SubstrateUtilitiesSection() {
                       onClick={copyToClipboard}
                       className={cn(
                         "absolute right-2 top-2 rounded-md border p-2 hover:bg-background transition-colors",
-                        copied && "text-green-500 border-green-500/20",
+                        copied && "text-green-500 border-green-500/20"
                       )}
                     >
                       <Copy className="h-4 w-4" />
@@ -172,18 +198,27 @@ export function SubstrateUtilitiesSection() {
                   transition={{ duration: 0.5, delay: 0.1 * index }}
                   className="group relative overflow-hidden rounded-lg border bg-card p-8 shadow-sm"
                 >
-                  <StatusBadge status={utility.status as "live" | "soon"} className="absolute top-4 right-4 z-20" />
+                  <StatusBadge
+                    status={utility.status as "live" | "soon"}
+                    className="absolute top-4 right-4 z-20"
+                  />
                   <div className="relative z-10 flex flex-col items-start gap-4">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-r from-[#FF2670]/20 to-[#7916F3]/20">
                       <utility.icon className="h-6 w-6 text-primary" />
                     </div>
                     <div className="space-y-1 text-left">
-                      <h3 className="font-semibold tracking-tight">{utility.title}</h3>
-                      <p className="text-sm text-muted-foreground">{utility.description}</p>
+                      <h3 className="font-bold font-heading tracking-tight">
+                        {utility.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {utility.description}
+                      </p>
                     </div>
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none">
-                    <div className={`absolute inset-0 bg-gradient-to-r ${utility.gradient}`} />
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-r ${utility.gradient}`}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                   </div>
                 </motion.div>
@@ -217,6 +252,5 @@ export function SubstrateUtilitiesSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }
-

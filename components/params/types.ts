@@ -1,8 +1,6 @@
 import { z } from "zod";
-import type { TypeDef } from "@dedot/codecs";
 import type { DedotClient } from "dedot";
 import { PolkadotApi } from "@dedot/chaintypes";
-import { PortableType } from "@polkadot/types/interfaces";
 
 export interface ParamInputProps {
   name: string;

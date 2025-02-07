@@ -444,7 +444,7 @@ export function ExtrinsicBuilderSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl">
               Our Extrinsic Builder is live on Polkadot
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
@@ -477,7 +477,7 @@ export function ExtrinsicBuilderSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-2xl font-bold tracking-tight sm:text-3xl"
+            className="text-2xl font-bold font-heading tracking-tight sm:text-3xl"
           >
             From &apos;Huh?&apos; to &apos;Aha!&apos; in 3 Steps
           </motion.h2>
@@ -494,17 +494,17 @@ export function ExtrinsicBuilderSection() {
                 {
                   number: 1,
                   title: "Pick what you want to do",
-                  description: "Choose from staking, NFTs, and more",
+                  description: "Choose from staking, NFTs & more",
                 },
                 {
                   number: 2,
                   title: "Fill human-friendly forms",
-                  description: "No more cryptic parameters",
+                  description: "No more cryptic methods and parameters",
                 },
                 {
                   number: 3,
                   title: "We handle the encoding",
-                  description: "All the Polkadot magic, automated",
+                  description: "All the Polkadot SCALE magic, automated",
                 },
               ]}
             />
@@ -523,7 +523,7 @@ export function ExtrinsicBuilderSection() {
                 className="group relative overflow-hidden rounded-xl border bg-gradient-to-br from-background to-muted/50 shadow-sm transition-all hover:shadow-md"
               >
                 <div className="p-6">
-                  <h3 className="mb-2 text-xl font-semibold tracking-tight">
+                  <h3 className="mb-2 text-xl font-bold font-heading tracking-tight">
                     {feature.title}
                   </h3>
                   <p className="text-sm text-muted-foreground">

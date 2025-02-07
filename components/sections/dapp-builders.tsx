@@ -206,7 +206,7 @@ export function DappBuildersSection() {
                           transition={{ duration: 0.4 }}
                           className="flex h-full flex-col"
                         >
-                          <h3 className="pt-4 text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-[#FF2670] to-[#7916F3]">
+                          <h3 className="pt-4 text-3xl font-semibold tracking-normal bg-clip-text text-transparent bg-gradient-to-r from-[#FF2670] to-[#7916F3]">
                             {components[activeIndex].title}
                           </h3>
                           <div className="relative mt-8 mb-6 rounded-lg bg-muted/80 p-4 font-mono text-sm shadow-sm">
@@ -252,7 +252,7 @@ export function DappBuildersSection() {
                     <div className="mb-4">
                       <StatusBadge status="soon" />
                     </div>
-                    <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                    <h2 className="mb-4 text-3xl font-bold font-heading tracking-tight sm:text-4xl">
                       <Balancer>For dApp Builders</Balancer>
                     </h2>
                     <p className="text-lg text-muted-foreground">

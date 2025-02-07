@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 
 interface StepProps {
-  number: number
-  title: string
-  description: string
+  number: number;
+  title: string;
+  description: string;
 }
 
 const Step = ({ number, title, description }: StepProps) => (
@@ -23,11 +23,13 @@ const Step = ({ number, title, description }: StepProps) => (
         {number}
         <div className="absolute -inset-1 animate-pulse rounded-full bg-primary/5" />
       </motion.div>
-      <h3 className="mt-4 text-lg font-semibold">{title}</h3>
-      <p className="mt-2 text-center text-sm text-muted-foreground">{description}</p>
+      <h3 className="mt-4 text-lg font-heading font-semibold">{title}</h3>
+      <p className="mt-2 text-center text-sm text-muted-foreground">
+        {description}
+      </p>
     </div>
   </motion.div>
-)
+);
 
 const ConnectingLine = () => (
   <div className="relative flex-1 py-4">
@@ -41,7 +43,7 @@ const ConnectingLine = () => (
       style={{ transformOrigin: "left" }}
     />
   </div>
-)
+);
 
 export function ConnectedSteps({ steps }: { steps: StepProps[] }) {
   return (
@@ -53,6 +55,5 @@ export function ConnectedSteps({ steps }: { steps: StepProps[] }) {
         </>
       ))}
     </div>
-  )
+  );
 }
-

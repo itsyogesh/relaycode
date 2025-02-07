@@ -1,15 +1,16 @@
-"use client"
+"use client";
 
-import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardContent } from "@/components/ui/card"
-import { Zap, Book, Shield } from "lucide-react"
-import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Zap, Book, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const features = [
   {
     icon: Zap,
     title: "Live Input Encoding",
-    description: "Watch your inputs transform into chain-specific data in real-time",
+    description:
+      "Watch your inputs transform into chain-specific data in real-time",
     illustration: (
       <div className="h-[120px] w-full rounded-lg bg-gradient-to-r from-[#FF2670]/5 to-[#7916F3]/5 p-4">
         <div className="flex gap-4 h-full">
@@ -54,7 +55,8 @@ const features = [
   {
     icon: Shield,
     title: "Type-Safe Building Blocks",
-    description: "Build your own forms and catch input failures for 100+ substrate primitives",
+    description:
+      "Build your own forms and catch input failures for 100+ substrate primitives",
     illustration: (
       <div className="h-[120px] w-full rounded-lg bg-gradient-to-r from-[#FF2670]/5 to-[#7916F3]/5 p-4">
         <div className="grid grid-cols-3 gap-3 h-full">
@@ -82,9 +84,9 @@ const features = [
     gradient: "from-[#FF2670]/5 to-[#7916F3]/5",
     border: "from-[#FF2670]/20 to-[#7916F3]/20",
   },
-]
+];
 
-const userTypes = ["Developers", "New Users", "Power Users", "Builders"]
+const userTypes = ["Developers", "New Users", "Power Users", "Builders"];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -94,12 +96,12 @@ const containerVariants = {
       staggerChildren: 0.2,
     },
   },
-}
+};
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0 },
-}
+};
 
 const textVariants = {
   enter: (direction: number) => ({
@@ -114,7 +116,7 @@ const textVariants = {
     y: direction < 0 ? 20 : -20,
     opacity: 0,
   }),
-}
+};
 
 const gradientVariants = {
   initial: { opacity: 0.5 },
@@ -122,22 +124,23 @@ const gradientVariants = {
     opacity: 1,
     transition: { duration: 0.3 },
   },
-}
+};
 
 export function WhyDevelopers() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [direction, setDirection] = useState(1)
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setDirection(1)
-      setCurrentIndex((prev) => (prev + 1) % userTypes.length)
-    }, 2000)
-    return () => clearInterval(timer)
-  }, [])
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % userTypes.length);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const currentWord = userTypes[currentIndex]
-  const maxWidth = Math.max(...userTypes.map((word) => word.length)) * 0.9 + "ch"
+  const currentWord = userTypes[currentIndex];
+  const maxWidth =
+    Math.max(...userTypes.map((word) => word.length)) * 0.9 + "ch";
 
   return (
     <section className="overflow-hidden bg-muted/50 py-24 sm:py-32">
@@ -149,9 +152,12 @@ export function WhyDevelopers() {
           transition={{ duration: 0.8 }}
           className="text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl flex items-center justify-center">
+          <h2 className="text-3xl font-bold font-heading tracking-tight sm:text-4xl flex items-center justify-center">
             <div className="relative inline-flex items-center">
-              <div style={{ width: maxWidth }} className="inline-flex justify-center overflow-hidden h-[1.1em]">
+              <div
+                style={{ width: maxWidth }}
+                className="inline-flex justify-center overflow-hidden h-[1.1em]"
+              >
                 <AnimatePresence mode="wait" custom={direction}>
                   <motion.span
                     key={currentWord}
@@ -175,8 +181,10 @@ export function WhyDevelopers() {
             </div>
           </h2>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
-            We created Relaycode to solve our own issues around complex chain data and encoding in Polkadot. Our goal is
-            to let users and developers focus on building instead of dealing with the intricacies of Polkadot.
+            We created Relaycode to solve our own issues around complex chain
+            data and encoding in Polkadot. Our goal is to let users and
+            developers focus on building instead of dealing with the intricacies
+            of Polkadot.
           </p>
         </motion.div>
 
@@ -219,8 +227,12 @@ export function WhyDevelopers() {
                   <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                     <feature.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="mb-3 text-xl font-semibold">{feature.title}</h3>
-                  <p className="mb-6 text-muted-foreground">{feature.description}</p>
+                  <h3 className="mb-3 text-xl font-heading font-semibold">
+                    {feature.title}
+                  </h3>
+                  <p className="mb-6 text-muted-foreground">
+                    {feature.description}
+                  </p>
                   {feature.illustration}
                 </CardContent>
               </Card>
@@ -261,6 +273,5 @@ export function WhyDevelopers() {
         </motion.div>
       </div>
     </section>
-  )
+  );
 }
-

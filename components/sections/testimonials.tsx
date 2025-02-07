@@ -73,7 +73,7 @@ export function TestimonialsSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight font-heading sm:text-4xl">
               Trusted By Builders
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
