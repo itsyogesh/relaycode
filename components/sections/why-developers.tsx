@@ -86,7 +86,7 @@ const features = [
   },
 ];
 
-const userTypes = ["Developers", "New Users", "Power Users", "Builders"];
+const userTypes = ["Developers", "Beginners", "Power Users", "Builders"];
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -156,7 +156,7 @@ export function WhyDevelopers() {
             <div className="relative inline-flex items-center">
               <div
                 style={{ width: maxWidth }}
-                className="inline-flex justify-center overflow-hidden h-[1.1em]"
+                className="inline-flex justify-center overflow-hidden h-[1.2em]"
               >
                 <AnimatePresence mode="wait" custom={direction}>
                   <motion.span

@@ -72,7 +72,7 @@ export function HeroSection() {
                 />
               </div>
 
-              <div className="relative mx-auto max-w-5xl rounded-xl overflow-hidden shadow-2xl">
+              <div className="relative mx-auto max-w-5xl rounded-xl overflow-hidden shadow-xl">
                 <div className="relative pb-[56.25%]">
                   <img
                     src="/placeholder.svg?height=720&width=1280"

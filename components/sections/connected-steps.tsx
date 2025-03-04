@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { motion } from "framer-motion";
 
 interface StepProps {
@@ -23,7 +24,7 @@ const Step = ({ number, title, description }: StepProps) => (
         {number}
         <div className="absolute -inset-1 animate-pulse rounded-full bg-primary/5" />
       </motion.div>
-      <h3 className="mt-4 text-lg font-heading font-semibold">{title}</h3>
+      <h3 className="mt-4 text-lg font-semibold text-center">{title}</h3>
       <p className="mt-2 text-center text-sm text-muted-foreground">
         {description}
       </p>
@@ -31,8 +32,8 @@ const Step = ({ number, title, description }: StepProps) => (
   </motion.div>
 );
 
-const ConnectingLine = () => (
-  <div className="relative flex-1 py-4">
+const ConnectingLine = ({ className }: { className?: string }) => (
+  <div className={`relative flex-1 py-4 ${className || ""}`}>
     <div className="absolute left-0 right-0 top-1/2 h-px bg-primary/10" />
     <motion.div
       className="absolute left-0 right-0 top-1/2 h-px bg-primary/30"
@@ -47,12 +48,26 @@ const ConnectingLine = () => (
 
 export function ConnectedSteps({ steps }: { steps: StepProps[] }) {
   return (
-    <div className="flex items-start gap-4">
+    <div className="flex flex-col md:flex-row items-center md:items-start gap-8 md:gap-4">
       {steps.map((step, index) => (
-        <>
-          <Step key={step.title} {...step} />
-          {index < steps.length - 1 && <ConnectingLine />}
-        </>
+        <React.Fragment key={step.title}>
+          <Step {...step} />
+          {index < steps.length - 1 && (
+            <ConnectingLine className="hidden md:block" />
+          )}
+          {index < steps.length - 1 && (
+            <div className="h-8 w-px bg-primary/10 md:hidden">
+              <motion.div
+                className="h-full w-full bg-primary/30"
+                initial={{ scaleY: 0 }}
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1, ease: "easeInOut" }}
+                style={{ transformOrigin: "top" }}
+              />
+            </div>
+          )}
+        </React.Fragment>
       ))}
     </div>
   );
