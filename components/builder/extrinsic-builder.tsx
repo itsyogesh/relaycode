@@ -38,8 +38,8 @@ import { BuilderFormValues } from "@/app/builder/page";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
-  tx: GenericTxCall<"v2"> | null;
-  onTxChange: (tx: GenericTxCall<"v2">) => void;
+  tx: GenericTxCall | null;
+  onTxChange: (tx: GenericTxCall) => void;
   builderForm: UseFormReturn<BuilderFormValues>;
 }
 interface FormValues {

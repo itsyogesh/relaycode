@@ -17,7 +17,7 @@ export interface BuilderFormValues {
 
 const BuilderPage: React.FC = () => {
   const [client, setClient] = useState<DedotClient<PolkadotApi> | null>(null);
-  const [tx, setTx] = useState<GenericTxCall<"v2"> | null>(null);
+  const [tx, setTx] = useState<GenericTxCall | null>(null);
   const [loading, setLoading] = useState(true);
 
   const form = useForm<BuilderFormValues>({
@@ -47,7 +47,7 @@ const BuilderPage: React.FC = () => {
     };
   }, []);
 
-  const handleTxChange = (tx: GenericTxCall<"v2">) => {
+  const handleTxChange = (tx: GenericTxCall) => {
     console.log("metadata", tx?.meta);
     setTx(() => tx);
   };

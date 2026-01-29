@@ -4,9 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
 import type { ParamInputProps } from "../types";
-import { isValidAddress } from "dedot/utils";
+import { decodeAddress } from "dedot/utils";
 
-const schema = z.string().refine((value) => isValidAddress(value), {
+const schema = z.string().refine((value) => {
+  try {
+    decodeAddress(value);
+    return true;
+  } catch {
+    return false;
+  }
+}, {
   message: "Invalid Substrate address",
 });
 

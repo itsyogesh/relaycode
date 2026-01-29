@@ -21,9 +21,9 @@ import { BuilderFormValues } from "@/app/builder/page";
 
 interface InformationPaneProps {
   client: DedotClient<PolkadotApi>;
-  tx: GenericTxCall<"v2"> | null;
+  tx: GenericTxCall | null;
   builderForm: UseFormReturn<BuilderFormValues>;
-  onTxChange: (tx: GenericTxCall<"v2">) => void;
+  onTxChange: (tx: GenericTxCall) => void;
 }
 
 interface Argument {
@@ -113,9 +113,12 @@ const InformationPane: React.FC<InformationPaneProps> = ({
     try {
       const newTx = client.registry.$Extrinsic.tryDecode(hexEncodedCallHash);
       console.log("new tx for encoded call", newTx);
+      const palletCall = newTx.call.palletCall;
+      if (!palletCall) return;
+      const callName = typeof palletCall === "string" ? palletCall : palletCall.name;
       const newTransaction =
         client.tx[stringCamelCase(newTx.call.pallet)][
-          stringCamelCase(newTx.call.palletCall.name)
+          stringCamelCase(callName)
         ];
 
       onTxChange(newTransaction);
