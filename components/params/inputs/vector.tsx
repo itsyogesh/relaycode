@@ -52,8 +52,7 @@ export function Vector({
     return items.map((_, index) => {
       const itemComponent = React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
-            ...child.props,
+          return React.cloneElement(child as React.ReactElement<any>, {
             key: index,
             name: `${name}-${index}`,
             isDisabled: isDisabled,

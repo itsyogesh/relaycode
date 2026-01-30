@@ -55,8 +55,7 @@ export function Enum({
   const renderVariantComponent = () => {
     const variant = variants.find(v => v.name === selectedVariant);
     if (variant?.component && React.isValidElement(variant.component)) {
-      return React.cloneElement(variant.component, {
-        ...variant.component.props,
+      return React.cloneElement(variant.component as React.ReactElement<any>, {
         name: `${name}-value`,
         isDisabled: isDisabled,
         onChange: handleValueChange,

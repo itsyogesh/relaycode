@@ -39,8 +39,7 @@ export function Option({
   // Clone the child component with modified props
   const childComponent = React.Children.map(children, (child) => {
     if (React.isValidElement(child)) {
-      return React.cloneElement(child, {
-        ...child.props,
+      return React.cloneElement(child as React.ReactElement<any>, {
         isDisabled: !isEnabled || isDisabled,
         onChange: handleChildChange,
       });

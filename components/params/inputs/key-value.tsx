@@ -51,8 +51,7 @@ export function KeyValue({
   // Render key component
   const renderKeyComponent = () => {
     if (React.isValidElement(keyComponent)) {
-      return React.cloneElement(keyComponent, {
-        ...keyComponent.props,
+      return React.cloneElement(keyComponent as React.ReactElement<any>, {
         name: `${name}-key`,
         label: "Key",
         isDisabled: isDisabled,
@@ -79,8 +78,7 @@ export function KeyValue({
   // Render value component
   const renderValueComponent = () => {
     if (React.isValidElement(valueComponent)) {
-      return React.cloneElement(valueComponent, {
-        ...valueComponent.props,
+      return React.cloneElement(valueComponent as React.ReactElement<any>, {
         name: `${name}-value`,
         label: "Value",
         isDisabled: isDisabled,

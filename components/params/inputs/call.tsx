@@ -105,8 +105,7 @@ export function Call({
       if (React.isValidElement(param.component)) {
         return (
           <div key={param.name} className="mb-4 last:mb-0">
-            {React.cloneElement(param.component, {
-              ...param.component.props,
+            {React.cloneElement(param.component as React.ReactElement<any>, {
               name: `${name}-${param.name}`,
               label: param.name,
               description: `Type: ${param.type}`,

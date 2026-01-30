@@ -46,8 +46,7 @@ export function Struct({
       if (React.isValidElement(field.component)) {
         return (
           <div key={field.name} className="mb-4 last:mb-0">
-            {React.cloneElement(field.component, {
-              ...field.component.props,
+            {React.cloneElement(field.component as React.ReactElement<any>, {
               name: `${name}-${field.name}`,
               label: field.label,
               description: field.description,
