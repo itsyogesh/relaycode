@@ -29,7 +29,6 @@ import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
 import { findComponent } from "@/lib/input-map";
 import { BuilderFormValues } from "@/app/builder/page";
-import { ConnectButton } from "@/components/wallet/connect-button";
 import { useAccount, useSendTransaction } from "@luno-kit/react";
 import { toast } from "sonner";
 
@@ -105,14 +104,11 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
-            <p className="text-sm text-gray-500">
-              Build and analyze extrinsics for Polkadot
-            </p>
-          </div>
-          <ConnectButton />
+        <div>
+          <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
+          <p className="text-sm text-gray-500">
+            Build and analyze extrinsics for Polkadot
+          </p>
         </div>
       </CardHeader>
       <CardContent>
@@ -246,13 +242,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               />
             ))}
             <div className="flex justify-end">
-              {account ? (
-                <Button type="submit" disabled={!tx || isPending}>
-                  {isPending ? "Submitting..." : "Sign and Submit"}
-                </Button>
-              ) : (
-                <ConnectButton />
-              )}
+              <Button
+                type="submit"
+                disabled={!account || !tx || isPending}
+              >
+                {isPending
+                  ? "Submitting..."
+                  : !account
+                    ? "Connect Wallet to Submit"
+                    : "Sign and Submit"}
+              </Button>
             </div>
           </form>
         </Form>
