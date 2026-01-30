@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { DedotClient, WsProvider } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
+import React, { useState } from "react";
 import ExtrinsicBuilder from "@/components/builder/extrinsic-builder";
 import InformationPane from "@/components/builder/information-pane";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GenericTxCall } from "dedot/types";
 import { useForm } from "react-hook-form";
+import { ClientProvider, useClient } from "@/context/client";
 
 export interface BuilderFormValues {
   section: string;
@@ -15,10 +14,9 @@ export interface BuilderFormValues {
   [key: string]: string;
 }
 
-const BuilderPage: React.FC = () => {
-  const [client, setClient] = useState<DedotClient<PolkadotApi> | null>(null);
+function BuilderContent() {
+  const { client, loading } = useClient();
   const [tx, setTx] = useState<GenericTxCall | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const form = useForm<BuilderFormValues>({
     defaultValues: {
@@ -26,26 +24,6 @@ const BuilderPage: React.FC = () => {
       method: "",
     },
   });
-
-  const getClient = useCallback(async () => {
-    try {
-      const client = await DedotClient.new<PolkadotApi>(
-        new WsProvider("wss://rpc.polkadot.io")
-      );
-      setClient(client);
-    } catch (error) {
-      console.error("Error connecting to Polkadot node:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    getClient();
-    return () => {
-      client?.disconnect();
-    };
-  }, []);
 
   const handleTxChange = (tx: GenericTxCall) => {
     console.log("metadata", tx?.meta);
@@ -73,6 +51,35 @@ const BuilderPage: React.FC = () => {
   );
 
   return (
+    <div className="flex flex-col lg:flex-row gap-8">
+      {loading || !client ? (
+        <SkeletonUI />
+      ) : (
+        <>
+          <div className="w-full lg:w-1/2">
+            <ExtrinsicBuilder
+              client={client}
+              tx={tx}
+              onTxChange={handleTxChange}
+              builderForm={form}
+            />
+          </div>
+          <div className="w-full lg:w-1/2 bg-gray-100 rounded-lg p-6">
+            <InformationPane
+              client={client}
+              tx={tx}
+              builderForm={form}
+              onTxChange={handleTxChange}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const BuilderPage: React.FC = () => {
+  return (
     <div className="container mx-auto px-4 py-8">
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-2">Extrinsic Builder</h1>
@@ -80,30 +87,9 @@ const BuilderPage: React.FC = () => {
           Extrinsics builder for the Polkadot ecosystem
         </p>
       </header>
-      <div className="flex flex-col lg:flex-row gap-8">
-        {loading || !client ? (
-          <SkeletonUI />
-        ) : (
-          <>
-            <div className="w-full lg:w-1/2">
-              <ExtrinsicBuilder
-                client={client}
-                tx={tx}
-                onTxChange={handleTxChange}
-                builderForm={form}
-              />
-            </div>
-            <div className="w-full lg:w-1/2 bg-gray-100 rounded-lg p-6">
-              <InformationPane
-                client={client}
-                tx={tx}
-                builderForm={form}
-                onTxChange={handleTxChange}
-              />
-            </div>
-          </>
-        )}
-      </div>
+      <ClientProvider>
+        <BuilderContent />
+      </ClientProvider>
     </div>
   );
 };
