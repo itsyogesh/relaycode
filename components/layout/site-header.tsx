@@ -28,7 +28,7 @@ export function NavBar({
         scroll ? (scrolled ? "border-b" : "bg-background/0") : "border-b"
       }`}
     >
-      <div className="container flex items-center justify-between py-4">
+      <div className="container flex items-center justify-between py-8">
         <MainNav items={items}>{children}</MainNav>
 
         <div className="flex items-center space-x-3">

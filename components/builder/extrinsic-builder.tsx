@@ -4,18 +4,23 @@ import type { PolkadotApi } from "@dedot/chaintypes";
 import {
   createMethodOptions,
   createSectionOptions,
+  getArgType,
 } from "@/lib/parser";
-import { UseFormReturn } from "react-hook-form";
+import { useForm, UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormField,
   FormItem,
+  FormLabel,
+  FormControl,
   FormDescription,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
+import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -28,16 +33,19 @@ import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
 import { findComponent } from "@/lib/input-map";
-import { validateAllArgs } from "@/lib/validation";
+import { Field } from "dedot/codecs";
 import { BuilderFormValues } from "@/app/builder/page";
-import { useAccount, useSendTransaction } from "@luno-kit/react";
-import { toast } from "sonner";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
-  tx: GenericTxCall | null;
-  onTxChange: (tx: GenericTxCall) => void;
+  tx: GenericTxCall<"v2"> | null;
+  onTxChange: (tx: GenericTxCall<"v2">) => void;
   builderForm: UseFormReturn<BuilderFormValues>;
+}
+interface FormValues {
+  section: string;
+  method: string;
+  [key: string]: string;
 }
 
 const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
@@ -47,8 +55,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   builderForm,
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
-  const { account } = useAccount();
-  const { sendTransactionAsync, isPending } = useSendTransaction();
 
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
@@ -74,64 +80,86 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
         client.tx[stringCamelCase(section.split(":")[1])][
           stringCamelCase(method.split(":")[1])
         ];
+      console.log("newTx", newTx);
       onTxChange(newTx);
     }
   }, [builderForm.watch("method")]);
 
-  const onSubmit = async (data: Record<string, any>) => {
-    if (!tx || !account) return;
+  const getAllTypes = () => {
+    const allTypes: Field[] = [];
+    sections?.forEach((section) => {
+      const methods = createMethodOptions(client, section.value);
+      // const typeArray = printType(section.text, methods || []);
+      // typeArray.forEach((type) => {
+      //   allTypes.push(type);
+      // });
+    });
+    return allTypes;
+  };
 
-    // Validate all arguments before submission
-    const fields = tx.meta?.fields || [];
-    const validation = validateAllArgs(client, fields, data);
+  const printType = (
+    section: string,
+    methods: { text: string; value: number }[]
+  ) => {
+    const typeArray: Field[] = [];
 
-    if (!validation.valid) {
-      // Set form errors for each invalid field
-      validation.results.forEach((result, fieldName) => {
-        if (!result.valid && result.error) {
-          builderForm.setError(fieldName, {
-            type: "validation",
-            message: result.error,
-          });
-        }
+    methods.forEach((method) => {
+      const tx =
+        client.tx[stringCamelCase(section)][stringCamelCase(method.text)];
+      tx.meta?.fields?.map((arg) => {
+        typeArray.push(arg);
       });
+    });
+    return typeArray;
+  };
 
-      toast.error("Validation failed", {
-        description: validation.errors.slice(0, 3).join("; "),
-      });
-      return;
-    }
+  /*
+  {
+    "name": "asset_kind",
+    "typeId": 55,
+    "typeName": "Box<T::AssetKind>",
+    "docs": []
+  },
+  */
 
-    try {
-      // Build the args array from form data matching tx field order
-      const args = fields.map((field) => data[field.name || ""]);
+  useEffect(() => {
+    const allTypes = getAllTypes();
+    const uniqueTypes = allTypes.reduce((acc: Field[], curr) => {
+      if (!acc.find((item) => item.typeName === curr.typeName)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    const uniqueTypesByTypeId = uniqueTypes.reduce((acc: Field[], curr) => {
+      if (!acc.find((item) => item.typeId === curr.typeId)) {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    // console.log("Unique Types Length:", uniqueTypes.length);
+    // console.log("Unique Types By TypeId Length:", uniqueTypesByTypeId.length);
+    // console.log("Unique TypeIds", JSON.stringify(uniqueTypesByTypeId, null, 2));
+  }, [sections]);
 
-      // Create the submittable extrinsic by calling the tx function with args
-      const extrinsic = (tx as any)(...args);
-
-      toast.info("Signing and submitting transaction...");
-
-      const receipt = await sendTransactionAsync({ extrinsic });
-
-      toast.success("Transaction included in block", {
-        description: `Block: ${receipt.blockHash}`,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error("Transaction failed", { description: message });
-      console.error("Error signing and sending extrinsic:", error);
-    }
+  const onSubmit = async (data: any) => {
+    // if (!tx || !account) return;
+    // try {
+    //   const extrinsic = tx(...data.args?.map((arg: any) => arg.value));
+    //   const signedExtrinsic = await extrinsic.sign(account.address);
+    //   const txHash = await signedExtrinsic.send();
+    //   console.log("Transaction sent with hash:", txHash);
+    // } catch (error) {
+    //   console.error("Error signing and sending extrinsic:", error);
+    // }
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <div>
-          <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
-          <p className="text-sm text-gray-500">
-            Build and analyze extrinsics for Polkadot
-          </p>
-        </div>
+        <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
+        <p className="text-sm text-gray-500">
+          Build and analyze extrinsics for Polkadot
+        </p>
       </CardHeader>
       <CardContent>
         <Form {...builderForm}>
@@ -145,7 +173,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
-                    <label className="text-sm font-medium">Section</label>
+                    <FormLabel>Section</FormLabel>
                     <Combobox
                       items={(sections || []).map((section) => ({
                         value: section.value,
@@ -176,7 +204,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
-                    <label className="text-sm font-medium">Method</label>
+                    <FormLabel>Method</FormLabel>
                     <Combobox
                       items={(methods || []).map((method) => ({
                         value: method.value,
@@ -189,55 +217,57 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                       disabled={!builderForm.watch("section")}
                     />
                   </div>
-                  {tx?.meta?.docs && tx.meta.docs.length > 0 && (
-                    <div className="flex items-center justify-between text-[0.8rem] text-muted-foreground">
-                      <span className="line-clamp-1 flex-1">
-                        {tx.meta.docs[0]}
-                      </span>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto text-[0.8rem] text-foreground ml-2"
-                          >
-                            View Details
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>
-                              <span className="text-xl font-semibold">
-                                {sections?.find(
-                                  (s) =>
-                                    s.value ===
-                                    parseInt(
-                                      builderForm
-                                        .watch("section")
-                                        ?.split(":")[0] || "0"
-                                    )
-                                )?.text || ""}{" "}
-                                /{" "}
-                                {methods?.find(
-                                  (m) =>
-                                    `${m.value}:${m.text}` ===
-                                    builderForm.watch("method")
-                                )?.text || ""}
-                              </span>
-                            </DialogTitle>
-                            <DialogDescription>
-                              Function Documentation
-                            </DialogDescription>
-                          </DialogHeader>
-                          <Separator className="space-y-4" />
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown>
-                              {tx?.meta?.docs.join("\n")}
-                            </ReactMarkdown>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
+                  <FormDescription>
+                    {tx?.meta?.docs && tx.meta.docs.length > 0 && (
+                      <div className="flex items-center justify-between">
+                        <div className="line-clamp-1 flex-1">
+                          {tx.meta.docs[0]}
+                        </div>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto text-[0.8rem] text-foreground ml-2"
+                            >
+                              View Details
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle className="space-y-1">
+                                <div className="text-xl font-semibold">
+                                  {sections?.find(
+                                    (s) =>
+                                      s.value ===
+                                      parseInt(
+                                        builderForm
+                                          .watch("section")
+                                          ?.split(":")[0] || "0"
+                                      )
+                                  )?.text || ""}{" "}
+                                  /{" "}
+                                  {methods?.find(
+                                    (m) =>
+                                      `${m.value}:${m.text}` ===
+                                      builderForm.watch("method")
+                                  )?.text || ""}
+                                </div>
+                              </DialogTitle>
+                              <DialogDescription>
+                                Function Documentation
+                              </DialogDescription>
+                            </DialogHeader>
+                            <Separator className="space-y-4" />
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                              <ReactMarkdown>
+                                {tx?.meta?.docs.join("\n")}
+                              </ReactMarkdown>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    )}
+                  </FormDescription>
                 </FormItem>
               )}
             />
@@ -248,14 +278,13 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  const resolved = findComponent(arg.typeName || "", arg.typeId);
-                  const Component = resolved.component;
+                  //console.log("argument array", arg);
+                  const Component = findComponent(arg.typeName || "").component;
                   return (
                     <FormItem className="ml-8">
                       <Component
                         client={client}
                         label={arg.name || ""}
-                        typeId={resolved.typeId}
                         {...field}
                       />
                     </FormItem>
@@ -264,16 +293,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               />
             ))}
             <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={!account || !tx || isPending}
-              >
-                {isPending
-                  ? "Submitting..."
-                  : !account
-                    ? "Connect Wallet to Submit"
-                    : "Sign and Submit"}
-              </Button>
+              <Button type="submit">Sign and Submit</Button>
             </div>
           </form>
         </Form>

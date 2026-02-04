@@ -44,8 +44,7 @@ export function createMethodOptions(
 
   if (!pallet?.calls) return null;
 
-  const callsTypeId = typeof pallet.calls === "number" ? pallet.calls : pallet.calls.typeId;
-  const palletCalls = client.registry.findType(callsTypeId);
+  const palletCalls = client.registry.findType(pallet?.calls);
   assert(palletCalls.typeDef.type === "Enum");
 
   return palletCalls.typeDef.value.members.map((call) => {
