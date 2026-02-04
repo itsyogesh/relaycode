@@ -12,6 +12,7 @@ export interface ParamInputProps {
   client: DedotClient<PolkadotApi>;
   typeId?: number;
   onChange?: (value: unknown) => void;
+  typeId?: number;
 }
 
 export interface ParamComponentType {
