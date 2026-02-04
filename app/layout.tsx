@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 
 import { cn, constructMetadata } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { WalletProvider } from "@/components/wallet/wallet-provider";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -32,17 +33,17 @@ export default function RootLayout({ children }: RootLayoutProps) {
           GeistMono.variable
         )}
       >
-        {/* <Providers> */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <WalletProvider>
+            {children}
+          </WalletProvider>
           <Toaster richColors closeButton />
         </ThemeProvider>
-        {/* </Providers> */}
       </body>
     </html>
   );

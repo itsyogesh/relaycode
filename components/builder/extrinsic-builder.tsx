@@ -4,23 +4,18 @@ import type { PolkadotApi } from "@dedot/chaintypes";
 import {
   createMethodOptions,
   createSectionOptions,
-  getArgType,
 } from "@/lib/parser";
-import { useForm, UseFormReturn } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
-  FormControl,
   FormDescription,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
-import { AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,19 +28,15 @@ import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
 import { findComponent } from "@/lib/input-map";
-import { Field } from "dedot/codecs";
 import { BuilderFormValues } from "@/app/builder/page";
+import { useAccount, useSendTransaction } from "@luno-kit/react";
+import { toast } from "sonner";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
-  tx: GenericTxCall<"v2"> | null;
-  onTxChange: (tx: GenericTxCall<"v2">) => void;
+  tx: GenericTxCall | null;
+  onTxChange: (tx: GenericTxCall) => void;
   builderForm: UseFormReturn<BuilderFormValues>;
-}
-interface FormValues {
-  section: string;
-  method: string;
-  [key: string]: string;
 }
 
 const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
@@ -55,6 +46,8 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   builderForm,
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
+  const { account } = useAccount();
+  const { sendTransactionAsync, isPending } = useSendTransaction();
 
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
@@ -80,86 +73,43 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
         client.tx[stringCamelCase(section.split(":")[1])][
           stringCamelCase(method.split(":")[1])
         ];
-      console.log("newTx", newTx);
       onTxChange(newTx);
     }
   }, [builderForm.watch("method")]);
 
-  const getAllTypes = () => {
-    const allTypes: Field[] = [];
-    sections?.forEach((section) => {
-      const methods = createMethodOptions(client, section.value);
-      // const typeArray = printType(section.text, methods || []);
-      // typeArray.forEach((type) => {
-      //   allTypes.push(type);
-      // });
-    });
-    return allTypes;
-  };
+  const onSubmit = async (data: Record<string, any>) => {
+    if (!tx || !account) return;
 
-  const printType = (
-    section: string,
-    methods: { text: string; value: number }[]
-  ) => {
-    const typeArray: Field[] = [];
+    try {
+      // Build the args array from form data matching tx field order
+      const args = tx.meta?.fields?.map((field) => data[field.name || ""]) ?? [];
 
-    methods.forEach((method) => {
-      const tx =
-        client.tx[stringCamelCase(section)][stringCamelCase(method.text)];
-      tx.meta?.fields?.map((arg) => {
-        typeArray.push(arg);
+      // Create the submittable extrinsic by calling the tx function with args
+      const extrinsic = (tx as any)(...args);
+
+      toast.info("Signing and submitting transaction...");
+
+      const receipt = await sendTransactionAsync({ extrinsic });
+
+      toast.success("Transaction included in block", {
+        description: `Block: ${receipt.blockHash}`,
       });
-    });
-    return typeArray;
-  };
-
-  /*
-  {
-    "name": "asset_kind",
-    "typeId": 55,
-    "typeName": "Box<T::AssetKind>",
-    "docs": []
-  },
-  */
-
-  useEffect(() => {
-    const allTypes = getAllTypes();
-    const uniqueTypes = allTypes.reduce((acc: Field[], curr) => {
-      if (!acc.find((item) => item.typeName === curr.typeName)) {
-        acc.push(curr);
-      }
-      return acc;
-    }, []);
-    const uniqueTypesByTypeId = uniqueTypes.reduce((acc: Field[], curr) => {
-      if (!acc.find((item) => item.typeId === curr.typeId)) {
-        acc.push(curr);
-      }
-      return acc;
-    }, []);
-    // console.log("Unique Types Length:", uniqueTypes.length);
-    // console.log("Unique Types By TypeId Length:", uniqueTypesByTypeId.length);
-    // console.log("Unique TypeIds", JSON.stringify(uniqueTypesByTypeId, null, 2));
-  }, [sections]);
-
-  const onSubmit = async (data: any) => {
-    // if (!tx || !account) return;
-    // try {
-    //   const extrinsic = tx(...data.args?.map((arg: any) => arg.value));
-    //   const signedExtrinsic = await extrinsic.sign(account.address);
-    //   const txHash = await signedExtrinsic.send();
-    //   console.log("Transaction sent with hash:", txHash);
-    // } catch (error) {
-    //   console.error("Error signing and sending extrinsic:", error);
-    // }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      toast.error("Transaction failed", { description: message });
+      console.error("Error signing and sending extrinsic:", error);
+    }
   };
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
-        <p className="text-sm text-gray-500">
-          Build and analyze extrinsics for Polkadot
-        </p>
+        <div>
+          <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
+          <p className="text-sm text-gray-500">
+            Build and analyze extrinsics for Polkadot
+          </p>
+        </div>
       </CardHeader>
       <CardContent>
         <Form {...builderForm}>
@@ -173,7 +123,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
-                    <FormLabel>Section</FormLabel>
+                    <label className="text-sm font-medium">Section</label>
                     <Combobox
                       items={(sections || []).map((section) => ({
                         value: section.value,
@@ -204,7 +154,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <div className="flex flex-row items-center justify-between">
-                    <FormLabel>Method</FormLabel>
+                    <label className="text-sm font-medium">Method</label>
                     <Combobox
                       items={(methods || []).map((method) => ({
                         value: method.value,
@@ -278,7 +228,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  //console.log("argument array", arg);
                   const Component = findComponent(arg.typeName || "").component;
                   return (
                     <FormItem className="ml-8">
@@ -293,7 +242,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
               />
             ))}
             <div className="flex justify-end">
-              <Button type="submit">Sign and Submit</Button>
+              <Button
+                type="submit"
+                disabled={!account || !tx || isPending}
+              >
+                {isPending
+                  ? "Submitting..."
+                  : !account
+                    ? "Connect Wallet to Submit"
+                    : "Sign and Submit"}
+              </Button>
             </div>
           </form>
         </Form>
