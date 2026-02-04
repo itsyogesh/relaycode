@@ -12,6 +12,7 @@ import { Moment } from "@/components/params/inputs/moment";
 import { Option } from "@/components/params/inputs/option";
 import { Struct } from "@/components/params/inputs/struct";
 import { Text } from "@/components/params/inputs/text";
+import { Tuple } from "@/components/params/inputs/tuple";
 import { Vector } from "@/components/params/inputs/vector";
 import { Vote } from "@/components/params/inputs/vote";
 import { VoteThreshold } from "@/components/params/inputs/vote-threshold";
@@ -127,6 +128,12 @@ const registry: ComponentRegistration[] = [
     priority: 40,
   },
   {
+    component: Tuple,
+    schema: Tuple.schema,
+    patterns: [/^\(/, /^Tuple/],
+    priority: 38,
+  },
+  {
     component: Struct,
     schema: Struct.schema,
     patterns: [],
@@ -143,21 +150,21 @@ const registry: ComponentRegistration[] = [
 // Sort by priority descending
 const sortedRegistry = [...registry].sort((a, b) => b.priority - a.priority);
 
-export function findComponent(typeName: string): ParamComponentType {
+export function findComponent(typeName: string, typeId?: number): ParamComponentType & { typeId?: number } {
   for (const entry of sortedRegistry) {
     for (const pattern of entry.patterns) {
       if (typeof pattern === "string") {
         if (typeName === pattern) {
-          return { component: entry.component, schema: entry.schema };
+          return { component: entry.component, schema: entry.schema, typeId };
         }
       } else {
         if (pattern.test(typeName)) {
-          return { component: entry.component, schema: entry.schema };
+          return { component: entry.component, schema: entry.schema, typeId };
         }
       }
     }
   }
 
   // Fallback to Text for unknown types
-  return { component: Text, schema: Text.schema };
+  return { component: Text, schema: Text.schema, typeId };
 }

@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import type { ParamInputProps } from "../types";
+import { validateStructFields } from "@/lib/validation";
 
 interface StructField {
   name: string;
@@ -25,11 +26,31 @@ export function Struct({
   description,
   isDisabled,
   isRequired,
-  error,
+  error: externalError,
   onChange,
   fields,
 }: StructProps) {
   const [values, setValues] = React.useState<Record<string, any>>({});
+  const [validationError, setValidationError] = React.useState<string | null>(null);
+
+  // Get list of required field names
+  const requiredFieldNames = React.useMemo(() => {
+    return fields.filter((f) => f.required).map((f) => f.name);
+  }, [fields]);
+
+  const validateAndEmit = (newValues: Record<string, any>) => {
+    // Validate required fields
+    const validation = validateStructFields(newValues, requiredFieldNames);
+
+    if (!validation.valid) {
+      setValidationError(validation.error || null);
+    } else {
+      setValidationError(null);
+    }
+
+    // Always emit the current values so parent can track state
+    onChange?.(newValues);
+  };
 
   const handleFieldChange = (fieldName: string, value: any) => {
     const newValues = {
@@ -37,7 +58,7 @@ export function Struct({
       [fieldName]: value,
     };
     setValues(newValues);
-    onChange?.(newValues);
+    validateAndEmit(newValues);
   };
 
   // Render each field with its component
@@ -61,6 +82,8 @@ export function Struct({
     });
   };
 
+  const displayError = externalError || validationError;
+
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={name}>
@@ -73,7 +96,7 @@ export function Struct({
         </CardContent>
       </Card>
       {description && <FormDescription>{description}</FormDescription>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {displayError && <p className="text-sm text-red-500">{displayError}</p>}
     </div>
   );
 }
