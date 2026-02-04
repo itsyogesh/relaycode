@@ -5,6 +5,7 @@ import { FormDescription } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import type { ParamInputProps } from "../types";
+import { validateVectorConstraints } from "@/lib/validation";
 
 interface VectorProps extends ParamInputProps {
   children: React.ReactNode;
@@ -20,31 +21,53 @@ export function Vector({
   description,
   isDisabled,
   isRequired,
-  error,
+  error: externalError,
   onChange,
   children,
   minItems = 0,
   maxItems,
 }: VectorProps) {
   const [items, setItems] = React.useState<any[]>([undefined]);
+  const [validationError, setValidationError] = React.useState<string | null>(null);
+
+  const validateAndEmit = (newItems: any[]) => {
+    // Validate constraints
+    const validation = validateVectorConstraints(
+      newItems.filter((item) => item !== undefined),
+      minItems,
+      maxItems,
+      label
+    );
+
+    if (!validation.valid) {
+      setValidationError(validation.error || null);
+    } else {
+      setValidationError(null);
+    }
+
+    // Always emit the current values (even if invalid) so parent can track state
+    onChange?.(newItems.filter((item) => item !== undefined));
+  };
 
   const handleAdd = () => {
     if (maxItems && items.length >= maxItems) return;
-    setItems([...items, undefined]);
+    const newItems = [...items, undefined];
+    setItems(newItems);
+    validateAndEmit(newItems);
   };
 
   const handleRemove = (index: number) => {
     if (items.length <= minItems) return;
     const newItems = items.filter((_, i) => i !== index);
     setItems(newItems);
-    onChange?.(newItems.filter(item => item !== undefined));
+    validateAndEmit(newItems);
   };
 
   const handleItemChange = (index: number, value: any) => {
     const newItems = [...items];
     newItems[index] = value;
     setItems(newItems);
-    onChange?.(newItems.filter(item => item !== undefined));
+    validateAndEmit(newItems);
   };
 
   // Clone the child component for each item
@@ -80,14 +103,26 @@ export function Vector({
     });
   };
 
+  const canAddMore = !maxItems || items.length < maxItems;
+  const displayError = externalError || validationError;
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={name}>
-          {label}
-          {isRequired && <span className="text-red-500 ml-1">*</span>}
-        </Label>
-        {!isDisabled && (!maxItems || items.length < maxItems) && (
+        <div className="flex items-center gap-2">
+          <Label htmlFor={name}>
+            {label}
+            {isRequired && <span className="text-red-500 ml-1">*</span>}
+          </Label>
+          {(minItems > 0 || maxItems) && (
+            <span className="text-xs text-muted-foreground">
+              ({minItems > 0 ? `min: ${minItems}` : ""}
+              {minItems > 0 && maxItems ? ", " : ""}
+              {maxItems ? `max: ${maxItems}` : ""})
+            </span>
+          )}
+        </div>
+        {!isDisabled && canAddMore && (
           <Button
             variant="ghost"
             size="sm"
@@ -103,7 +138,7 @@ export function Vector({
         {renderItems()}
       </div>
       {description && <FormDescription>{description}</FormDescription>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {displayError && <p className="text-sm text-red-500">{displayError}</p>}
     </div>
   );
 }

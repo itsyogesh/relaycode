@@ -28,6 +28,7 @@ import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
 import { findComponent } from "@/lib/input-map";
+import { validateAllArgs } from "@/lib/validation";
 import { BuilderFormValues } from "@/app/builder/page";
 import { useAccount, useSendTransaction } from "@luno-kit/react";
 import { toast } from "sonner";
@@ -80,9 +81,30 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   const onSubmit = async (data: Record<string, any>) => {
     if (!tx || !account) return;
 
+    // Validate all arguments before submission
+    const fields = tx.meta?.fields || [];
+    const validation = validateAllArgs(client, fields, data);
+
+    if (!validation.valid) {
+      // Set form errors for each invalid field
+      validation.results.forEach((result, fieldName) => {
+        if (!result.valid && result.error) {
+          builderForm.setError(fieldName, {
+            type: "validation",
+            message: result.error,
+          });
+        }
+      });
+
+      toast.error("Validation failed", {
+        description: validation.errors.slice(0, 3).join("; "),
+      });
+      return;
+    }
+
     try {
       // Build the args array from form data matching tx field order
-      const args = tx.meta?.fields?.map((field) => data[field.name || ""]) ?? [];
+      const args = fields.map((field) => data[field.name || ""]);
 
       // Create the submittable extrinsic by calling the tx function with args
       const extrinsic = (tx as any)(...args);
@@ -167,57 +189,55 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                       disabled={!builderForm.watch("section")}
                     />
                   </div>
-                  <FormDescription>
-                    {tx?.meta?.docs && tx.meta.docs.length > 0 && (
-                      <div className="flex items-center justify-between">
-                        <div className="line-clamp-1 flex-1">
-                          {tx.meta.docs[0]}
-                        </div>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="link"
-                              className="p-0 h-auto text-[0.8rem] text-foreground ml-2"
-                            >
-                              View Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-2xl">
-                            <DialogHeader>
-                              <DialogTitle className="space-y-1">
-                                <div className="text-xl font-semibold">
-                                  {sections?.find(
-                                    (s) =>
-                                      s.value ===
-                                      parseInt(
-                                        builderForm
-                                          .watch("section")
-                                          ?.split(":")[0] || "0"
-                                      )
-                                  )?.text || ""}{" "}
-                                  /{" "}
-                                  {methods?.find(
-                                    (m) =>
-                                      `${m.value}:${m.text}` ===
-                                      builderForm.watch("method")
-                                  )?.text || ""}
-                                </div>
-                              </DialogTitle>
-                              <DialogDescription>
-                                Function Documentation
-                              </DialogDescription>
-                            </DialogHeader>
-                            <Separator className="space-y-4" />
-                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                              <ReactMarkdown>
-                                {tx?.meta?.docs.join("\n")}
-                              </ReactMarkdown>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    )}
-                  </FormDescription>
+                  {tx?.meta?.docs && tx.meta.docs.length > 0 && (
+                    <div className="flex items-center justify-between text-[0.8rem] text-muted-foreground">
+                      <span className="line-clamp-1 flex-1">
+                        {tx.meta.docs[0]}
+                      </span>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-[0.8rem] text-foreground ml-2"
+                          >
+                            View Details
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>
+                              <span className="text-xl font-semibold">
+                                {sections?.find(
+                                  (s) =>
+                                    s.value ===
+                                    parseInt(
+                                      builderForm
+                                        .watch("section")
+                                        ?.split(":")[0] || "0"
+                                    )
+                                )?.text || ""}{" "}
+                                /{" "}
+                                {methods?.find(
+                                  (m) =>
+                                    `${m.value}:${m.text}` ===
+                                    builderForm.watch("method")
+                                )?.text || ""}
+                              </span>
+                            </DialogTitle>
+                            <DialogDescription>
+                              Function Documentation
+                            </DialogDescription>
+                          </DialogHeader>
+                          <Separator className="space-y-4" />
+                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <ReactMarkdown>
+                              {tx?.meta?.docs.join("\n")}
+                            </ReactMarkdown>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
                 </FormItem>
               )}
             />
@@ -228,12 +248,14 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  const Component = findComponent(arg.typeName || "").component;
+                  const resolved = findComponent(arg.typeName || "", arg.typeId);
+                  const Component = resolved.component;
                   return (
                     <FormItem className="ml-8">
                       <Component
                         client={client}
                         label={arg.name || ""}
+                        typeId={resolved.typeId}
                         {...field}
                       />
                     </FormItem>
