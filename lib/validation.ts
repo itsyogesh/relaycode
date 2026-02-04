@@ -211,14 +211,23 @@ export function validateField(
   return { valid: true };
 }
 
+export interface AllArgsValidationResult {
+  valid: boolean;
+  results: Map<string, ValidationResult>;
+  errors: string[];
+}
+
 /**
  * Validates all arguments for an extrinsic call
  */
 export function validateAllArgs(
+  _client: unknown, // Client parameter for future type-aware validation
   fields: { name?: string; typeName?: string; typeId?: number }[],
   values: Record<string, unknown>
-): Map<string, ValidationResult> {
+): AllArgsValidationResult {
   const results = new Map<string, ValidationResult>();
+  const errors: string[] = [];
+  let allValid = true;
 
   for (const field of fields) {
     const fieldName = field.name || `field_${field.typeId}`;
@@ -227,7 +236,14 @@ export function validateAllArgs(
 
     const result = validateField(typeName, value, fieldName);
     results.set(fieldName, result);
+
+    if (!result.valid) {
+      allValid = false;
+      if (result.error) {
+        errors.push(result.error);
+      }
+    }
   }
 
-  return results;
+  return { valid: allValid, results, errors };
 }
