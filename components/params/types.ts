@@ -10,6 +10,7 @@ export interface ParamInputProps {
   isRequired?: boolean;
   error?: string;
   client: DedotClient<PolkadotApi>;
+  typeId?: number;
   onChange?: (value: unknown) => void;
 }
 

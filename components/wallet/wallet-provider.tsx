@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, createContext, useContext, ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LunoKitProvider } from "@luno-kit/ui";
 import { walletConfig } from "@/config/wallet";
+
+// Context to indicate LunoKit provider is available
+const LunoKitAvailableContext = createContext<boolean>(false);
+
+export function useLunoKitAvailable(): boolean {
+  return useContext(LunoKitAvailableContext);
+}
 
 const lunoTheme = {
   autoMode: true,
@@ -59,13 +66,25 @@ const lunoTheme = {
   },
 } as const;
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient());
+export function WalletProvider({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000,
+            retry: 1,
+          },
+        },
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <LunoKitProvider config={walletConfig} theme={lunoTheme}>
-        {children}
+        <LunoKitAvailableContext.Provider value={true}>
+          {children}
+        </LunoKitAvailableContext.Provider>
       </LunoKitProvider>
     </QueryClientProvider>
   );
