@@ -87,7 +87,7 @@ const registry: ComponentRegistration[] = [
   {
     component: Call,
     schema: Call.schema,
-    patterns: ["Call", "RuntimeCall", /Call$/],
+    patterns: ["Call", "RuntimeCall", /Call$/, /RuntimeCall>/],
     priority: 70,
   },
   {
