@@ -1,21 +1,30 @@
-import React from "react";
+"use client";
+
+import React, { useMemo, useCallback } from "react";
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
-import type { ParamInputProps } from "../types";
+import { AccountCombobox, type AccountOption } from "./account-combobox";
+import { useSS58 } from "@/hooks/use-ss58";
+import { useRecentAddresses } from "@/hooks/use-recent-addresses";
 import { decodeAddress } from "dedot/utils";
+import type { ParamInputProps } from "../types";
 
-const schema = z.string().refine((value) => {
-  try {
-    decodeAddress(value);
-    return true;
-  } catch {
-    return false;
+import { useSafeAccounts } from "@/hooks/use-wallet-safe";
+
+const schema = z.string().refine(
+  (value) => {
+    try {
+      decodeAddress(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  {
+    message: "Invalid Substrate address",
   }
-}, {
-  message: "Invalid Substrate address",
-});
+);
 
 export function Account({
   name,
@@ -24,12 +33,57 @@ export function Account({
   isDisabled,
   isRequired,
   error,
+  client,
   onChange,
 }: ParamInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.trim();
-    onChange?.(value === "" ? undefined : value);
-  };
+  const { accounts } = useSafeAccounts();
+  const { recentAddresses, addRecent } = useRecentAddresses();
+  const { ss58Prefix, formatAddress, isValidAddress, truncateAddress } =
+    useSS58(client ?? null);
+
+  // Convert LunoKit accounts to AccountOption format
+  const accountOptions: AccountOption[] = useMemo(() => {
+    return accounts.map((acc) => ({
+      address: acc.address,
+      name: acc.name,
+    }));
+  }, [accounts]);
+
+  // Extract just the addresses from recent
+  const recentAddressList = useMemo(() => {
+    return recentAddresses.map((r) => r.address);
+  }, [recentAddresses]);
+
+  // Track current value
+  const [value, setValue] = React.useState<string | undefined>(undefined);
+
+  const handleChange = useCallback(
+    (address: string | undefined) => {
+      setValue(address);
+
+      if (!address) {
+        onChange?.(undefined);
+        return;
+      }
+
+      // Format to chain prefix before passing up
+      const formatted = formatAddress(address);
+      if (formatted) {
+        onChange?.(formatted);
+
+        // Add to recent if it's not from connected accounts
+        const isConnectedAccount = accounts.some((acc) => {
+          const accFormatted = formatAddress(acc.address);
+          return accFormatted === formatted;
+        });
+
+        if (!isConnectedAccount) {
+          addRecent(address);
+        }
+      }
+    },
+    [onChange, formatAddress, accounts, addRecent]
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -37,13 +91,17 @@ export function Account({
         {label}
         {isRequired && <span className="text-red-500 ml-1">*</span>}
       </Label>
-      <Input
-        id={name}
-        type="text"
-        disabled={isDisabled}
+      <AccountCombobox
+        value={value}
         onChange={handleChange}
-        className="font-mono"
-        placeholder="5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
+        accounts={accountOptions}
+        recentAddresses={recentAddressList}
+        ss58Prefix={ss58Prefix}
+        formatAddress={formatAddress}
+        isValidAddress={isValidAddress}
+        truncateAddress={truncateAddress}
+        disabled={isDisabled}
+        placeholder="Select or paste an account..."
       />
       {description && <FormDescription>{description}</FormDescription>}
       {error && <p className="text-sm text-red-500">{error}</p>}
