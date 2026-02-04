@@ -1,60 +1,78 @@
-// ApiContext.tsx
+"use client";
+
 import {
   createContext,
   useContext,
   useState,
   useEffect,
+  useRef,
   ReactNode,
-  useCallback,
 } from "react";
 import { DedotClient, WsProvider } from "dedot";
-import type { SubstrateApi } from "@dedot/chaintypes";
+import type { PolkadotApi } from "@dedot/chaintypes";
+import { useChain } from "@luno-kit/react";
+
+const DEFAULT_RPC = "wss://rpc.polkadot.io";
 
 export interface ClientContextValue {
-  client: DedotClient | null;
-  setClient: (client: DedotClient) => void;
+  client: DedotClient<PolkadotApi> | null;
+  loading: boolean;
 }
 
 const ClientContext = createContext<ClientContextValue>({
   client: null,
-  setClient: () => {},
+  loading: true,
 });
 
-export const useClient = () => {
-  return useContext(ClientContext);
-};
+export const useClient = () => useContext(ClientContext);
 
-interface ApiProviderProps {
-  children: ReactNode;
-}
-
-export const ClientProvider = ({ children }: ApiProviderProps): JSX.Element => {
+export const ClientProvider = ({ children }: { children: ReactNode }) => {
+  const [client, setClient] = useState<DedotClient<PolkadotApi> | null>(null);
   const [loading, setLoading] = useState(true);
-  const [client, setClient] = useState<DedotClient | null>(null);
+  const clientRef = useRef<DedotClient<PolkadotApi> | null>(null);
 
-  const getClient = useCallback(async () => {
-    try {
-      const client = await DedotClient.new<SubstrateApi>(
-        new WsProvider("wss://rpc.polkadot.io")
-      );
-      setClient(client);
-    } catch (error) {
-      console.error("Error connecting to Polkadot node:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const { chain } = useChain();
+  const rpcUrl = chain?.rpcUrls?.webSocket?.[0] ?? DEFAULT_RPC;
 
   useEffect(() => {
-    getClient();
-    return () => {
-      client?.disconnect();
-    };
-  }, []);
+    let cancelled = false;
 
-  const value: ClientContextValue = { client, setClient };
+    const connect = async () => {
+      // Disconnect previous client
+      if (clientRef.current) {
+        await clientRef.current.disconnect();
+        clientRef.current = null;
+      }
+
+      setLoading(true);
+      try {
+        const newClient = await DedotClient.new<PolkadotApi>(
+          new WsProvider(rpcUrl)
+        );
+        if (cancelled) {
+          await newClient.disconnect();
+          return;
+        }
+        clientRef.current = newClient;
+        setClient(newClient);
+      } catch (error) {
+        console.error("Error connecting to chain:", error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      clientRef.current?.disconnect();
+    };
+  }, [rpcUrl]);
 
   return (
-    <ClientContext.Provider value={value}>{children}</ClientContext.Provider>
+    <ClientContext.Provider value={{ client, loading }}>
+      {children}
+    </ClientContext.Provider>
   );
 };
