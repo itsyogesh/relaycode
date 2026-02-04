@@ -6,9 +6,7 @@ const createJestConfig = nextJest({
 });
 
 // ESM packages that need to be transformed by Jest.
-// In pnpm, packages under .pnpm use "+" instead of "/" for scoped names
-// (e.g., @noble/hashes -> @noble+hashes@1.8.0).
-// We need two patterns: one for the .pnpm internal path, one for the symlinked path.
+// These packages ship ESM-only builds that Jest can't handle natively.
 const esmPackages = [
   "@noble/hashes",
   "@noble/curves",
@@ -21,15 +19,8 @@ const esmPackages = [
   "@luno-kit/core",
   "@luno-kit/react",
   "@luno-kit/ui",
+  "cuer",
 ];
-
-// Convert scoped packages to pnpm .pnpm directory format: @scope/name -> @scope\\+name
-const pnpmPattern = esmPackages
-  .map((pkg) => pkg.replace("/", "\\+"))
-  .join("|");
-
-// Keep normal format for the symlinked node_modules path
-const normalPattern = esmPackages.join("|");
 
 const config: Config = {
   coverageProvider: "v8",
@@ -39,10 +30,27 @@ const config: Config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
-  transformIgnorePatterns: [
-    `<rootDir>/node_modules/.pnpm/(?!(${pnpmPattern})@)`,
-    `node_modules/(?!(\\.pnpm|${normalPattern})/)`,
-  ],
 };
 
-export default createJestConfig(config);
+// Use async config to modify transformIgnorePatterns after next/jest builds them
+// This workaround is needed because next/jest overwrites transformIgnorePatterns
+// See: https://github.com/vercel/next.js/issues/35634
+export default async (...args: Parameters<ReturnType<typeof createJestConfig>>) => {
+  const fn = createJestConfig(config);
+  const resolvedConfig = await fn(...args);
+
+  // Create a pattern that allows our ESM packages to be transformed
+  // Handles both regular node_modules and pnpm's .pnpm directory structure
+  const esmPackagesPattern = esmPackages
+    .map((pkg) => pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("|");
+
+  // Replace the default node_modules pattern with one that excludes our ESM packages
+  resolvedConfig.transformIgnorePatterns = [
+    `/node_modules/(?!(${esmPackagesPattern})/)`,
+    `\\.pnpm/(?!(${esmPackagesPattern.replace(/\//g, "\\+")})@)`,
+    "^.+\\.module\\.(css|sass|scss)$",
+  ];
+
+  return resolvedConfig;
+};
