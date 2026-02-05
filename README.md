@@ -28,41 +28,43 @@ Relaycode is an intuitive extrinsics builder designed to transform the way devel
 - Polkadot Integration: [Dedot](https://github.com/dedotdev/dedot)
 - Theming: next-themes for dark/light mode support
 
+## Documentation
+
+- [API Reference](docs/api/README.md) - Core encoding, decoding, and validation APIs
+- [Component Reference](docs/components/README.md) - Input component documentation
+- [Getting Started Tutorial](docs/tutorial/getting-started.md) - Build your first extrinsic
+- [Advanced Usage](docs/tutorial/advanced.md) - Bi-directional editing, batch calls, complex types
+- [Testing Guide](docs/testing-guide.md) - How to run and write tests
+
 ## Milestones
 
 For detailed project milestones and deliverables, see our [Milestones](docs/relaycode.md) documentation.
 
-### List of components for Extrinsic Inputs (WIP)
+### Implemented Input Components
 
-This is a list of input components that are going to be implemented for the extrinsic builder. This list is currently based on `polkadot-js` components found [here](https://github.com/polkadot-js/apps/tree/master/packages/react-params/src/Param). 
+The following input components have been implemented for the extrinsic builder:
 
-- [ ] **Account** - Handles `AccountId`, `Address`, `LookupSource`, `MultiAddress`
-- [ ] **Amount** - Handles `AccountIndex`, `i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`, `u256`
-- [ ] **Balance** - Handles `Amount`, `Balance`, `BalanceOf`
-- [ ] **Bool** - Handles `bool`
-- [ ] **Bytes** - Handles `Bytes`, `Vec<u8>`
-- [ ] **Call** - Handles `Call`, `Proposal`, `RuntimeCall`
-- [ ] **Cid** - Handles `PalletAllianceCid`
-- [ ] **Code** - Handles `Code`
-- [ ] **DispatchError** - Handles `DispatchError`
-- [ ] **DispatchResult** - Handles `DispatchResult`, `Result<Null, SpRuntimeDispatchError>`
-- [ ] **Raw** - Handles `Raw`, `RuntimeSessionKeys`, `Keys`
-- [ ] **Enum** - Handles `Enum`
-- [ ] **Hash256** - Handles `Hash`, `H256`
+- [x] **Account** - Handles `AccountId`, `Address`, `LookupSource`, `MultiAddress`
+- [x] **Amount** - Handles `i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`, `Compact<uN>`
+- [x] **Balance** - Handles `Balance`, `BalanceOf`
+- [x] **Bool** - Handles `bool`
+- [x] **Bytes** - Handles `Bytes`, `Vec<u8>`
+- [x] **Call** - Handles `Call`, `RuntimeCall`
+- [x] **Enum** - Handles enum types from metadata
+- [x] **Hash256** - Handles `Hash`, `H256`
+- [x] **KeyValue** - Handles `KeyValue`
+- [x] **Moment** - Handles `Moment`, `MomentOf`
+- [x] **Option** - Handles `Option<T>`
+- [x] **Text** - Handles `String`, `Text` (and fallback for unknown types)
+- [x] **Struct** - Handles composite/struct types
+- [x] **Tuple** - Handles tuple types `(T1, T2, ...)`
+- [x] **Vector** - Handles `Vec<T>`, `BoundedVec<T, S>`
+- [x] **Vote** - Handles `Vote`
+- [x] **VoteThreshold** - Handles `VoteThreshold`
+
+### Planned Components
+
 - [ ] **Hash160** - Handles `H160`
 - [ ] **Hash512** - Handles `H512`
-- [ ] **KeyValue** - Handles `KeyValue`
-- [ ] **KeyValueArray** - Handles `Vec<KeyValue>`
-- [ ] **Moment** - Handles `Moment`, `MomentOf`
-- [ ] **Null** - Handles `Null`
-- [ ] **OpaqueCall** - Handles `OpaqueCall`
-- [ ] **Option** - Handles `Option`
-- [ ] **Text** - Handles `String`, `Text`
-- [ ] **Struct** - Handles `Struct`
-- [ ] **Tuple** - Handles `Tuple`
 - [ ] **BTreeMap** - Handles `BTreeMap`
-- [ ] **Vector** - Handles `Vec`, `BTreeSet`
-- [ ] **VectorFixed** - Handles `VecFixed`
-- [ ] **Vote** - Handles `Vote`
-- [ ] **VoteThreshold** - Handles `VoteThreshold`
-- [ ] **Unknown** - Handles `Unknown`
+- [ ] **VectorFixed** - Handles fixed-length arrays
