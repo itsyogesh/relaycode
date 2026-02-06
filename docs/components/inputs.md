@@ -91,7 +91,7 @@ Standard `ParamInputProps` interface.
 
 **File:** `components/params/inputs/balance.tsx`
 
-**Handles:** `Balance`, `BalanceOf`
+**Handles:** `Balance`, `BalanceOf`, `Compact<Balance>`, `Compact<BalanceOf>`
 
 Token amount input with denomination selector and wallet balance display.
 
@@ -574,6 +574,121 @@ interface VectorProps extends ParamInputProps {
 │ [5FHneW46...A9Yq                            ▾] [🗑]  │
 │ [Select account...                          ▾] [🗑]  │
 └─────────────────────────────────────────────────────┘
+```
+
+---
+
+## VectorFixedInput
+
+**File:** `components/params/inputs/vector-fixed.tsx`
+
+**Handles:** `[T; N]` (fixed-length arrays, e.g., `[u8; 32]`, `[AccountId; 3]`)
+
+Fixed-length array input with a predetermined number of elements.
+
+### Features
+- Parses length from type name (`[T; N]` syntax) or from registry (`SizedVec`)
+- Renders exactly N input fields — no add/remove
+- Each element uses the appropriate typed input component
+- Shows element count indicator
+
+### Props
+Extended interface:
+```typescript
+interface VectorFixedProps extends ParamInputProps {
+  typeId: number;
+}
+```
+
+### Value Type
+`unknown[]` - Fixed-length array of element values
+
+### Example Usage
+```tsx
+<VectorFixed
+  client={client}
+  name="data"
+  label="Fixed Data"
+  typeName="[u8; 32]"
+  typeId={typeId}
+  onChange={(values) => console.log(values)}
+/>
+```
+
+---
+
+## BTreeMapInput
+
+**File:** `components/params/inputs/btree-map.tsx`
+
+**Handles:** `BTreeMap<K, V>`
+
+Key-value pair list with typed inner inputs for both keys and values.
+
+### Features
+- Add/remove key-value pairs dynamically
+- Resolves key and value types from chain registry (BTreeMap is a `Sequence` of `Tuple`s in SCALE)
+- Each pair renders typed inputs for key and value
+- Card-based layout for each entry
+
+### Props
+Extended interface:
+```typescript
+interface BTreeMapProps extends ParamInputProps {
+  typeId: number;
+}
+```
+
+### Value Type
+`[unknown, unknown][]` - Array of key-value tuples
+
+### Example Usage
+```tsx
+<BTreeMap
+  client={client}
+  name="metadata"
+  label="Metadata"
+  typeId={typeId}
+  onChange={(pairs) => console.log(pairs)}
+/>
+```
+
+---
+
+## BTreeSetInput
+
+**File:** `components/params/inputs/btree-set.tsx`
+
+**Handles:** `BTreeSet<T>`
+
+Unique value set input with duplicate detection.
+
+### Features
+- Add/remove items dynamically
+- Resolves inner element type from chain registry (BTreeSet is a `Sequence` in SCALE)
+- Duplicate detection with validation warning
+- Each item uses the appropriate typed input component
+
+### Props
+Extended interface:
+```typescript
+interface BTreeSetProps extends ParamInputProps {
+  typeId: number;
+}
+```
+
+### Value Type
+`unknown[]` - Array of unique values
+
+### Example Usage
+```tsx
+<BTreeSet
+  client={client}
+  name="members"
+  label="Members"
+  typeId={typeId}
+  onChange={(items) => console.log(items)}
+/>
 ```
 
 ---
