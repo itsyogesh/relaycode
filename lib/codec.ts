@@ -390,3 +390,242 @@ function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {
   return true;
 }
 
+// ────────────────────────────────────────────────────────────────
+// Hex Tree Decomposition (display-only, for 1:1 hex pane mirroring)
+// ────────────────────────────────────────────────────────────────
+
+export interface HexLeafNode {
+  kind: "leaf";
+}
+
+export interface HexChildItem {
+  label: string;
+  typeId: number;
+  hex: string;
+  children?: HexTreeNode;
+}
+
+export interface HexCompoundNode {
+  kind: "compound";
+  compoundType: string;
+  children: HexChildItem[];
+}
+
+export type HexTreeNode = HexLeafNode | HexCompoundNode;
+
+const MAX_DECOMPOSE_DEPTH = 4;
+
+/**
+ * Check if a typeId resolves to the Bytes component (Vec<u8>).
+ * These should be treated as leaf nodes to avoid decomposing into individual u8 items.
+ */
+function isBytesType(client: DedotClient<any>, typeId: number): boolean {
+  try {
+    const portableType = client.registry.findType(typeId);
+    const typeName = portableType?.typeDef?.type === "Sequence"
+      ? (portableType as any)?.path?.join("::") || ""
+      : "";
+
+    // Check typeName from the portable type's path
+    const pathName = ((portableType as any)?.path as string[] | undefined);
+    const lastName = pathName && pathName.length > 0 ? pathName[pathName.length - 1] : "";
+
+    // Check if the component registry maps this to Bytes
+    const innerTypeDef = portableType?.typeDef;
+    if (innerTypeDef?.type === "Sequence") {
+      const innerTypeId = innerTypeDef.value.typeParam;
+      const innerPortable = client.registry.findType(innerTypeId);
+      // Vec<u8> → Sequence of Primitive u8
+      if (innerPortable?.typeDef?.type === "Primitive" && innerPortable.typeDef.value.kind === "u8") {
+        return true;
+      }
+    }
+
+    // Also check if typeName/path matches Bytes patterns
+    if (lastName === "Bytes" || typeName.includes("Bytes")) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build a decomposition tree for a single encoded arg.
+ * The tree mirrors the form structure so the hex pane can show per-element hex.
+ */
+export function decomposeArgHex(
+  client: DedotClient<any>,
+  typeId: number,
+  value: unknown,
+  depth: number = 0
+): HexTreeNode {
+  if (depth >= MAX_DECOMPOSE_DEPTH) return { kind: "leaf" };
+  if (value === undefined || value === null || value === "") return { kind: "leaf" };
+
+  try {
+    const portableType = client.registry.findType(typeId);
+    const typeDef = portableType?.typeDef;
+    if (!typeDef) return { kind: "leaf" };
+
+    // Sequence (Vec<T>) — but NOT Vec<u8>/Bytes
+    if (typeDef.type === "Sequence") {
+      if (isBytesType(client, typeId)) return { kind: "leaf" };
+
+      const innerTypeId = typeDef.value.typeParam;
+      if (Array.isArray(value) && value.length > 0) {
+        const children: HexChildItem[] = value.map((item, i) => {
+          const result = encodeArg(client, innerTypeId, item);
+          return {
+            label: `[${i}]`,
+            typeId: innerTypeId,
+            hex: result.hex,
+            children: decomposeArgHex(client, innerTypeId, item, depth + 1),
+          };
+        });
+        return { kind: "compound", compoundType: "Sequence", children };
+      }
+      return { kind: "leaf" };
+    }
+
+    // SizedVec ([T; N]) — same logic as Sequence
+    if (typeDef.type === "SizedVec") {
+      const innerTypeId = typeDef.value.typeParam;
+      // Check if inner is u8 (fixed-size byte array like [u8; 32])
+      try {
+        const innerPortable = client.registry.findType(innerTypeId);
+        if (innerPortable?.typeDef?.type === "Primitive" && innerPortable.typeDef.value.kind === "u8") {
+          return { kind: "leaf" };
+        }
+      } catch { /* fall through */ }
+
+      if (Array.isArray(value) && value.length > 0) {
+        const children: HexChildItem[] = value.map((item, i) => {
+          const result = encodeArg(client, innerTypeId, item);
+          return {
+            label: `[${i}]`,
+            typeId: innerTypeId,
+            hex: result.hex,
+            children: decomposeArgHex(client, innerTypeId, item, depth + 1),
+          };
+        });
+        return { kind: "compound", compoundType: "SizedVec", children };
+      }
+      return { kind: "leaf" };
+    }
+
+    // Struct — decompose per field
+    if (typeDef.type === "Struct") {
+      const fields = typeDef.value.fields;
+      if (fields.length > 0 && typeof value === "object" && value !== null && !Array.isArray(value)) {
+        const obj = value as Record<string, unknown>;
+        const children: HexChildItem[] = fields.map((field) => {
+          const fieldName = field.name || "";
+          const fieldValue = obj[fieldName];
+          const result = encodeArg(client, field.typeId, fieldValue);
+          return {
+            label: fieldName,
+            typeId: field.typeId,
+            hex: result.hex,
+            children: decomposeArgHex(client, field.typeId, fieldValue, depth + 1),
+          };
+        });
+        return { kind: "compound", compoundType: "Struct", children };
+      }
+      return { kind: "leaf" };
+    }
+
+    // Enum — show the selected variant's inner data
+    if (typeDef.type === "Enum") {
+      if (typeof value === "object" && value !== null && "type" in (value as any)) {
+        const enumObj = value as { type: string; value?: unknown };
+        const variant = typeDef.value.members.find((m) => m.name === enumObj.type);
+        if (variant && variant.fields.length > 0 && enumObj.value !== undefined) {
+          if (variant.fields.length === 1) {
+            const innerField = variant.fields[0];
+            const innerResult = encodeArg(client, innerField.typeId, enumObj.value);
+            const children: HexChildItem[] = [{
+              label: enumObj.type,
+              typeId: innerField.typeId,
+              hex: innerResult.hex,
+              children: decomposeArgHex(client, innerField.typeId, enumObj.value, depth + 1),
+            }];
+            return { kind: "compound", compoundType: "Enum", children };
+          }
+          // Multi-field variant (rare, treated as struct-like)
+          if (typeof enumObj.value === "object" && enumObj.value !== null) {
+            const obj = enumObj.value as Record<string, unknown>;
+            const children: HexChildItem[] = variant.fields.map((field) => {
+              const fieldName = field.name || "";
+              const fieldValue = obj[fieldName];
+              const result = encodeArg(client, field.typeId, fieldValue);
+              return {
+                label: `${enumObj.type}.${fieldName}`,
+                typeId: field.typeId,
+                hex: result.hex,
+                children: decomposeArgHex(client, field.typeId, fieldValue, depth + 1),
+              };
+            });
+            return { kind: "compound", compoundType: "Enum", children };
+          }
+        }
+      }
+      return { kind: "leaf" };
+    }
+
+    // Tuple — decompose per index
+    if (typeDef.type === "Tuple") {
+      const tupleFields = typeDef.value.fields;
+      if (Array.isArray(value) && tupleFields.length > 0) {
+        const children: HexChildItem[] = tupleFields.map((innerTypeId: number, i: number) => {
+          const itemValue = value[i];
+          const result = encodeArg(client, innerTypeId, itemValue);
+          return {
+            label: `[${i}]`,
+            typeId: innerTypeId,
+            hex: result.hex,
+            children: decomposeArgHex(client, innerTypeId, itemValue, depth + 1),
+          };
+        });
+        return { kind: "compound", compoundType: "Tuple", children };
+      }
+      return { kind: "leaf" };
+    }
+
+    // Compact — look through to inner type
+    if (typeDef.type === "Compact") {
+      return { kind: "leaf" };
+    }
+
+    // Primitive, BitSequence, etc.
+    return { kind: "leaf" };
+  } catch {
+    return { kind: "leaf" };
+  }
+}
+
+/**
+ * Immutably set a value at a nested path inside compound form values.
+ * Path segments: number for array index, string for object key.
+ */
+export function patchValueAtPath(
+  root: unknown,
+  path: (string | number)[],
+  newValue: unknown
+): unknown {
+  if (path.length === 0) return newValue;
+
+  const [head, ...rest] = path;
+
+  if (typeof head === "number") {
+    const arr = Array.isArray(root) ? [...root] : [];
+    arr[head] = patchValueAtPath(arr[head], rest, newValue);
+    return arr;
+  }
+
+  const obj = (typeof root === "object" && root !== null && !Array.isArray(root))
+    ? { ...(root as Record<string, unknown>) }
+    : {};
+  obj[head] = patchValueAtPath(obj[head], rest, newValue);
+  return obj;
+}
