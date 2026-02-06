@@ -13,7 +13,7 @@ const footerLinks = {
   learn: [
     { name: "Documentation", href: "/docs" },
     { name: "Video Tutorials", href: "/tutorials" },
-    { name: "API Reference", href: "/api" },
+    { name: "API Reference", href: "/api-docs" },
     { name: "Security Audit", href: "/security" },
   ],
   community: [

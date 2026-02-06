@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Balancer from "react-wrap-balancer";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AuroraBackground } from "@/components/layout/aurora-background";
 import { ArrowRight, PlayCircle } from "lucide-react";
@@ -37,13 +38,15 @@ export function HeroSection() {
               </Balancer>
             </p>
             <div className="mt-10">
-              <Button
-                size="lg"
-                className="text-lg rounded-full group px-8 py-3 h-auto"
-              >
-                Try Extrinsic Builder (Beta)
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </Button>
+              <Link href="/builder">
+                <Button
+                  size="lg"
+                  className="text-lg rounded-full group px-8 py-3 h-auto"
+                >
+                  Try Extrinsic Builder (Beta)
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
             </div>
 
             {/* Demo Section */}
