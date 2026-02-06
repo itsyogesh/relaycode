@@ -50,10 +50,12 @@ The system uses a priority-based registry to match types. Higher priority patter
 | Priority | Component | Patterns |
 |----------|-----------|----------|
 | 100 | Account | `AccountId`, `AccountId32`, `AccountId20`, `MultiAddress`, `Address`, `LookupSource`, `/^AccountId/`, `/^MultiAddress/` |
-| 95 | Balance | `Balance`, `BalanceOf`, `/^Balance/` |
+| 95 | Balance | `Balance`, `BalanceOf`, `Compact<Balance>`, `Compact<BalanceOf>`, `/^Balance/` |
 | 90 | Amount | `Compact<u128>`, `Compact<u64>`, `u128`, `u64`, `u32`, `u16`, `u8`, `i128`, `i64`, `i32`, `i16`, `i8`, `/Compact</` |
 | 85 | Boolean | `bool` |
+| 82 | Hash160 | `H160`, `/^H160$/` |
 | 80 | Hash256 | `H256`, `Hash`, `/H256/`, `/Hash/` |
+| 78 | Hash512 | `H512`, `/^H512$/` |
 | 75 | Bytes | `Bytes`, `Vec<u8>`, `/Bytes/` |
 | 70 | Call | `Call`, `RuntimeCall`, `/Call$/`, `/RuntimeCall>/` |
 | 65 | Moment | `Moment`, `/Moment/` |
@@ -61,6 +63,9 @@ The system uses a priority-based registry to match types. Higher priority patter
 | 55 | VoteThreshold | `VoteThreshold`, `/VoteThreshold/` |
 | 50 | KeyValue | `KeyValue`, `/KeyValue/` |
 | 45 | Option | `/^Option</` |
+| 43 | VectorFixed | `/^\[.+;\s*\d+\]$/` (e.g., `[u8; 32]`) |
+| 42 | BTreeMap | `/^BTreeMap</` |
+| 41 | BTreeSet | `/^BTreeSet</` |
 | 40 | Vector | `/^Vec</`, `/^BoundedVec</` |
 | 38 | Tuple | `/^\(/`, `/^Tuple/` |
 | 35 | Struct | (no patterns - fallback for composite types) |
@@ -77,14 +82,20 @@ The system checks patterns in priority order, returning the first match.
 
 **Example matches:**
 ```typescript
-findComponent("AccountId");       // → Account (exact match, priority 100)
-findComponent("AccountIdOf<T>");  // → Account (regex match, priority 100)
-findComponent("Balance");         // → Balance (exact match, priority 95)
-findComponent("BalanceOf<T>");    // → Balance (regex match, priority 95)
-findComponent("Vec<u8>");         // → Bytes (exact match, priority 75)
-findComponent("Vec<AccountId>");  // → Vector (regex match, priority 40)
-findComponent("Option<Balance>"); // → Option (regex match, priority 45)
-findComponent("UnknownType");     // → Text (fallback)
+findComponent("AccountId");              // → Account (exact match, priority 100)
+findComponent("AccountIdOf<T>");         // → Account (regex match, priority 100)
+findComponent("Balance");                // → Balance (exact match, priority 95)
+findComponent("Compact<Balance>");       // → Balance (exact match, priority 95)
+findComponent("BalanceOf<T>");           // → Balance (regex match, priority 95)
+findComponent("H160");                   // → Hash160 (exact match, priority 82)
+findComponent("H512");                   // → Hash512 (exact match, priority 78)
+findComponent("Vec<u8>");               // → Bytes (exact match, priority 75)
+findComponent("[u8; 32]");              // → VectorFixed (regex match, priority 43)
+findComponent("BTreeMap<u32, u64>");    // → BTreeMap (regex match, priority 42)
+findComponent("BTreeSet<AccountId>");   // → BTreeSet (regex match, priority 41)
+findComponent("Vec<AccountId>");        // → Vector (regex match, priority 40)
+findComponent("Option<Balance>");       // → Option (regex match, priority 45)
+findComponent("UnknownType");           // → Text (fallback)
 ```
 
 ## Component Registration
@@ -226,11 +237,17 @@ Common Substrate type patterns and their expected components:
 | `AccountId`, `AccountId32` | Account | SS58 address input |
 | `MultiAddress` | Account | Supports Id, Index, Raw variants |
 | `Balance`, `BalanceOf<T>` | Balance | With denomination selector |
+| `Compact<Balance>`, `Compact<BalanceOf>` | Balance | Compact-wrapped balances get denomination support |
 | `Compact<u128>` | Amount | Integer input |
 | `u32`, `u64`, `u128` | Amount | Unsigned integers |
 | `bool` | Boolean | Toggle switch |
+| `H160` | Hash160 | 20-byte hex input |
 | `H256`, `BlockHash` | Hash256 | 32-byte hex input |
+| `H512` | Hash512 | 64-byte hex input |
 | `Vec<u8>`, `Bytes` | Bytes | Hex byte array |
+| `[T; N]` | VectorFixed | Fixed-length array (e.g., `[u8; 32]`) |
+| `BTreeMap<K, V>` | BTreeMap | Key-value pair list |
+| `BTreeSet<T>` | BTreeSet | Unique value set |
 | `Vec<T>` | Vector | Dynamic array |
 | `Option<T>` | Option | Optional with toggle |
 | `(T1, T2, ...)` | Tuple | Positional elements |

@@ -83,8 +83,10 @@ __tests__/
 │   ├── denominations.test.ts
 │   ├── parser.test.ts
 │   └── validation.test.ts
-└── input-map.test.ts
+└── input-map.test.ts          # 52 tests covering all type registrations
 ```
+
+**Current test count:** 163 tests across 7 test suites.
 
 ### Naming Conventions
 
@@ -454,6 +456,34 @@ Then open Chrome DevTools at `chrome://inspect`.
 4. **Use descriptive names** - Test names should explain expected behavior
 5. **Keep tests focused** - One assertion per test when possible
 6. **Clean up** - Reset mocks and state between tests
+
+## Manual Testnet Verification
+
+Follow these steps to verify the builder works end-to-end on a testnet:
+
+### Setup
+1. Install a Polkadot wallet extension (Talisman, Polkadot.js, or SubWallet)
+2. Create or import a testnet account
+3. Get testnet tokens from the Westend faucet
+
+### Verification Steps
+
+1. **Chain Selector**: Use the chain dropdown in the navbar to switch to **Westend** (testnet badge visible)
+2. **Wallet Connect**: Click "Connect" and approve the connection in your wallet
+3. **Metadata Load**: After connecting, verify the builder shows pallets in the Section dropdown
+4. **Build Extrinsic**: Select `System` > `remark` and enter a bytes value (e.g., `0x1234`)
+5. **Type Badges**: Verify the type badge (e.g., `Bytes`) appears next to the field label
+6. **Encode**: Confirm the hex pane updates with the encoded call data
+7. **Decode**: Copy the hex, clear the form, paste it back — verify the form repopulates
+8. **Balance Transfer**: Select `Balances` > `transferKeepAlive`
+   - Verify `dest` shows Account input with type badge `MultiAddress`
+   - Verify `value` shows Balance input with denomination selector and type badge `Compact<Balance>`
+9. **Submit** (optional): Sign and submit the remark extrinsic, verify transaction success toast
+
+### Verifying New Components
+- **BTreeMap**: Find a pallet/method that uses BTreeMap (or verify via input-map tests)
+- **VectorFixed**: Verify `[u8; 32]` pattern matches in input-map tests
+- **Hash variants**: Verify H160 and H512 resolve to correct components in tests
 
 ## See Also
 

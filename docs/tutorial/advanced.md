@@ -187,6 +187,48 @@ Vec<Vec<AccountId>>
      └─ [1] 5GNJqTPy...
 ```
 
+## Fixed-Length Arrays
+
+Fixed-length arrays like `[u8; 32]` render a fixed number of input fields:
+
+```
+[u8; 32] — 32 elements
+├── [0]: [u8 input]
+├── [1]: [u8 input]
+├── ...
+└── [31]: [u8 input]
+```
+
+Unlike `Vec<T>`, you cannot add or remove elements. The count is determined by the type definition.
+
+## BTreeMap and BTreeSet
+
+### BTreeMap<K, V>
+
+Key-value maps render as a list of entries, each with typed key and value inputs:
+
+```
+BTreeMap<AccountId, Balance>
+├── Entry 0:  Key: [Account input]  Value: [Balance input]
+├── Entry 1:  Key: [Account input]  Value: [Balance input]
+└── [+ Add Entry]
+```
+
+In the SCALE metadata, BTreeMap is encoded as a `Sequence` of `Tuple`s — Relaycode resolves the key and value types automatically from the chain registry.
+
+### BTreeSet<T>
+
+Sets render similarly to vectors but with duplicate detection:
+
+```
+BTreeSet<AccountId>
+├── Item 0: [Account input]
+├── Item 1: [Account input]
+└── [+ Add Item]
+
+⚠ Set contains duplicate values  ← shown when duplicates detected
+```
+
 ## Option Types
 
 Optional values can be present or absent.

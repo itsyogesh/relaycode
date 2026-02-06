@@ -10,21 +10,28 @@ All input components live in `components/params/inputs/` and share a common inte
 
 ```
 components/params/
-├── types.ts           # ParamInputProps interface
+├── types.ts              # ParamInputProps interface
 └── inputs/
-    ├── account.tsx    # SS58 address input
-    ├── amount.tsx     # Integer numeric input
-    ├── balance.tsx    # Token amount with denominations
-    ├── boolean.tsx    # Boolean toggle
-    ├── bytes.tsx      # Hex byte array
-    ├── call.tsx       # Nested extrinsic builder
-    ├── enum.tsx       # Variant selector
-    ├── hash.tsx       # H256/H160/H512 input
-    ├── option.tsx     # Optional value wrapper
-    ├── struct.tsx     # Composite type container
-    ├── text.tsx       # String/fallback input
-    ├── tuple.tsx      # Positional collection
-    └── vector.tsx     # Dynamic array
+    ├── account.tsx       # SS58 address input
+    ├── amount.tsx        # Integer numeric input
+    ├── balance.tsx       # Token amount with denominations
+    ├── boolean.tsx       # Boolean toggle
+    ├── btree-map.tsx     # BTreeMap key-value pairs
+    ├── btree-set.tsx     # BTreeSet unique values
+    ├── bytes.tsx         # Hex byte array
+    ├── call.tsx          # Nested extrinsic builder
+    ├── enum.tsx          # Variant selector
+    ├── hash.tsx          # H160/H256/H512 input
+    ├── key-value.tsx     # Key-value pair
+    ├── moment.tsx        # Timestamp input
+    ├── option.tsx        # Optional value wrapper
+    ├── struct.tsx        # Composite type container
+    ├── text.tsx          # String/fallback input
+    ├── tuple.tsx         # Positional collection
+    ├── vector.tsx        # Dynamic array
+    ├── vector-fixed.tsx  # Fixed-length array
+    ├── vote.tsx          # Vote input
+    └── vote-threshold.tsx # Vote threshold input
 ```
 
 ### ParamInputProps Interface
@@ -36,6 +43,7 @@ interface ParamInputProps {
   name: string;                    // Field identifier
   label?: string;                  // Display label
   description?: string;            // Help text
+  typeName?: string;               // Substrate type name (e.g., "Balance", "AccountId")
   isDisabled?: boolean;            // Disable input
   isRequired?: boolean;            // Show required indicator
   error?: string;                  // Error message to display
@@ -74,12 +82,17 @@ Amount.schema = schema;
 
 ### Binary Types
 - [BytesInput](./inputs.md#bytesinput) - Byte arrays
-- [HashInput](./inputs.md#hashinput) - Fixed-size hashes
+- [HashInput](./inputs.md#hashinput) - Fixed-size hashes (H160, H256, H512)
+
+### Collection Types
+- [VectorInput](./inputs.md#vectorinput) - Dynamic arrays (`Vec<T>`)
+- [VectorFixedInput](./inputs.md#vectorfixedinput) - Fixed-length arrays (`[T; N]`)
+- [BTreeMapInput](./inputs.md#btreemapinput) - Key-value maps (`BTreeMap<K, V>`)
+- [BTreeSetInput](./inputs.md#btreesetinput) - Unique value sets (`BTreeSet<T>`)
 
 ### Composite Types
 - [StructInput](./inputs.md#structinput) - Named field objects
 - [TupleInput](./inputs.md#tupleinput) - Positional arrays
-- [VectorInput](./inputs.md#vectorinput) - Dynamic arrays
 - [OptionInput](./inputs.md#optioninput) - Optional values
 - [EnumInput](./inputs.md#enuminput) - Variant types
 
@@ -118,11 +131,14 @@ Components call `onChange` with the appropriate value type:
 | Amount | `string` (integer as string) |
 | Balance | `string` (planck value as string) |
 | Boolean | `boolean` |
+| BTreeMap | `[unknown, unknown][]` (array of key-value tuples) |
+| BTreeSet | `unknown[]` (array of unique values) |
 | Bytes | `string` (hex with 0x) |
 | Hash | `string` (hex with 0x) |
 | Text | `string` |
 | Option | `undefined` or inner value |
 | Vector | `unknown[]` |
+| VectorFixed | `unknown[]` (fixed-length array) |
 | Struct | `Record<string, unknown>` |
 | Tuple | `unknown[]` |
 | Enum | `{ type: string; value?: unknown }` |

@@ -112,17 +112,33 @@ Using Relaycode is straightforward:
 
 For your first transaction, try a simple remark (`System.remark`) with some text. It's a free extrinsic that won't transfer any funds—perfect for testing.
 
+### Multi-Chain Support
+
+Relaycode supports multiple chains out of the box. Use the chain selector dropdown in the navbar to switch between **Polkadot**, **Kusama**, and **Westend** (testnet). The builder automatically reconnects, loads the chain's metadata, and adjusts denominations and SS58 prefixes.
+
+### Type Badges
+
+Each parameter field in the builder now shows its Substrate type name (e.g., `MultiAddress`, `Compact<Balance>`) as a badge next to the field label, helping developers understand the underlying types.
+
+### Comprehensive Type Coverage
+
+Beyond the standard types, Relaycode now supports:
+- **BTreeMap<K, V>** - Key-value pair maps with typed inputs
+- **BTreeSet<T>** - Unique value sets with duplicate detection
+- **[T; N]** - Fixed-length arrays
+- **H160, H256, H512** - All hash sizes with correct length validation
+
 ## What's Next
 
 Relaycode is actively developed, with exciting features on the roadmap:
-
-**Multi-Chain Support**: Easily switch between Polkadot, Kusama, parachains, and testnets from a single interface.
 
 **Extrinsic Templates**: Save frequently-used extrinsics as templates. Share them with your team or the community.
 
 **Batch Builder**: Visual interface for constructing complex batch transactions with drag-and-drop ordering.
 
 **Historical Analysis**: Decode and analyze historical extrinsics from block explorers.
+
+**Parachain Support**: Expand beyond relay chains to support Asset Hub, People, Coretime, and custom parachains.
 
 We're building the tools we wish we had when we started developing on Polkadot. If you have ideas for features that would help your workflow, we'd love to hear them.
 

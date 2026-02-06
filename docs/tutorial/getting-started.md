@@ -16,13 +16,24 @@ Relaycode is an extrinsic builder for the Polkadot ecosystem. It provides a user
 - A Polkadot-compatible wallet (Polkadot.js extension, Talisman, SubWallet, etc.)
 - Some DOT or testnet tokens for transaction fees
 
+## Selecting a Chain
+
+Before connecting, choose which chain to interact with using the **Chain Selector** dropdown in the navbar:
+
+- **Polkadot** - Mainnet (real DOT)
+- **Kusama** - Canary network (real KSM)
+- **Westend** - Testnet (free test tokens, marked with "testnet" badge)
+
+For your first time, we recommend selecting **Westend** so you can experiment without spending real tokens.
+
 ## Connecting Your Wallet
 
 1. **Open Relaycode** and navigate to the Builder page
-2. **Click "Connect Wallet"** in the top navigation
-3. **Select your wallet** from the available options
-4. **Approve the connection** in your wallet extension
-5. Your connected accounts will appear in the Account selector
+2. **Select your chain** from the chain selector dropdown
+3. **Click "Connect"** in the top navigation
+4. **Select your wallet** from the available options (Polkadot.js, Talisman, or SubWallet)
+5. **Approve the connection** in your wallet extension
+6. Your connected accounts will appear in the Account selector
 
 Once connected, you'll see your account balance and be able to select accounts for transactions.
 
@@ -126,14 +137,24 @@ For true/false values:
 - Toggle switch
 
 ### Hash Input
-For block hashes, extrinsic hashes (H256):
-- 32-byte hex input
-- Format validation
+For block hashes, extrinsic hashes:
+- H160 (20-byte), H256 (32-byte), H512 (64-byte)
+- Format and length validation
 
 ### Vector Input
 For arrays (Vec<T>):
 - Add/remove items
 - Dynamic length
+
+### Fixed Array Input
+For fixed-length arrays (`[T; N]`):
+- Fixed number of elements — no add/remove
+- Each element uses the appropriate typed input
+
+### BTreeMap Input
+For key-value maps (BTreeMap<K, V>):
+- Add/remove key-value pairs
+- Typed inputs for keys and values
 
 ### Option Input
 For optional values (Option<T>):
