@@ -37,14 +37,16 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let cancelled = false;
 
+    // Immediately clear client and show loading when chain changes
+    setClient(null);
+    setLoading(true);
+
     const connect = async () => {
       // Disconnect previous client
       if (clientRef.current) {
         await clientRef.current.disconnect();
         clientRef.current = null;
       }
-
-      setLoading(true);
       try {
         const newClient = await DedotClient.new<PolkadotApi>(
           new WsProvider(rpcUrl)

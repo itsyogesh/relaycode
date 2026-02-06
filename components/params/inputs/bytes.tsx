@@ -23,10 +23,21 @@ export function Bytes({
   isRequired,
   error,
   onChange,
+  value: externalValue,
 }: ParamInputProps) {
+  const [displayValue, setDisplayValue] = React.useState("");
+
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null) {
+      const str = String(externalValue);
+      if (str !== displayValue) setDisplayValue(str);
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trim().toLowerCase();
-    
+    setDisplayValue(value);
+
     // Add 0x prefix if not present and value is not empty
     const formattedValue = value && !value.startsWith("0x") ? `0x${value}` : value;
     onChange?.(formattedValue === "" ? undefined : formattedValue);
@@ -42,6 +53,7 @@ export function Bytes({
         id={name}
         type="text"
         disabled={isDisabled}
+        value={displayValue}
         onChange={handleChange}
         className="font-mono"
         placeholder="0x1234abcd"

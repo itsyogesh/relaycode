@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
 import type { ParamInputProps } from "../types";
 import { validateVectorConstraints } from "@/lib/validation";
+import { findComponent } from "@/lib/input-map";
 
 interface VectorProps extends ParamInputProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   minItems?: number;
   maxItems?: number;
 }
@@ -23,12 +24,47 @@ export function Vector({
   isRequired,
   error: externalError,
   onChange,
+  value: externalValue,
   children,
+  client,
+  typeId,
   minItems = 0,
   maxItems,
 }: VectorProps) {
   const [items, setItems] = React.useState<any[]>([undefined]);
   const [validationError, setValidationError] = React.useState<string | null>(null);
+
+  // Resolve the inner element type from metadata
+  const innerType = React.useMemo(() => {
+    if (!client || typeId === undefined) return null;
+    try {
+      const typeInfo = client.registry.findType(typeId);
+      const typeDef = typeInfo?.typeDef;
+      if (typeDef && typeDef.type === "Sequence") {
+        const elemTypeId = typeDef.value.typeParam;
+        const elemType = client.registry.findType(elemTypeId);
+        // Extract typeName from the path array (last element is the type name)
+        const path = (elemType as any)?.path as string[] | undefined;
+        const typeName = path && path.length > 0 ? path[path.length - 1] : "";
+        return {
+          typeId: elemTypeId,
+          typeName,
+        };
+      }
+    } catch {
+      // Type lookup failed
+    }
+    return null;
+  }, [client, typeId]);
+
+  // Sync from external value (e.g., after hex decode)
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null && Array.isArray(externalValue)) {
+      if (externalValue.length > 0) {
+        setItems(externalValue);
+      }
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validateAndEmit = (newItems: any[]) => {
     // Validate constraints
@@ -72,18 +108,42 @@ export function Vector({
 
   // Clone the child component for each item
   const renderItems = () => {
-    return items.map((_, index) => {
-      const itemComponent = React.Children.map(children, (child) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, {
-            key: index,
-            name: `${name}-${index}`,
-            isDisabled: isDisabled,
-            onChange: (value: any) => handleItemChange(index, value),
-          });
-        }
-        return child;
-      });
+    return items.map((itemValue, index) => {
+      let itemComponent: React.ReactNode;
+
+      if (children) {
+        // Legacy usage: clone provided children
+        itemComponent = React.Children.map(children, (child) => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child as React.ReactElement<any>, {
+              key: index,
+              name: `${name}-${index}`,
+              isDisabled: isDisabled,
+              value: itemValue,
+              onChange: (value: any) => handleItemChange(index, value),
+            });
+          }
+          return child;
+        });
+      } else if (innerType) {
+        // Self-resolving: derive inner component from metadata
+        const resolved = findComponent(innerType.typeName, innerType.typeId, client);
+        const InnerComponent = resolved.component;
+        itemComponent = (
+          <InnerComponent
+            client={client}
+            name={`${name}-${index}`}
+            label={`${label || name} [${index}]`}
+            typeId={innerType.typeId}
+            typeName={innerType.typeName}
+            isDisabled={isDisabled}
+            value={itemValue}
+            onChange={(value: any) => handleItemChange(index, value)}
+          />
+        );
+      } else {
+        return null;
+      }
 
       return (
         <div key={index} className="flex items-start gap-2">

@@ -15,6 +15,7 @@ export function Boolean({
   isRequired,
   error,
   onChange,
+  value: externalValue,
 }: ParamInputProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -29,6 +30,7 @@ export function Boolean({
         <Switch
           id={name}
           disabled={isDisabled}
+          checked={externalValue === true || externalValue === "true"}
           onCheckedChange={onChange}
           aria-label={label}
         />

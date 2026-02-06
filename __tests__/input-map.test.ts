@@ -21,7 +21,9 @@ jest.mock("../components/params/inputs/boolean", () => ({
 }));
 
 jest.mock("../components/params/inputs/hash", () => ({
+  Hash160: { displayName: "Hash160", schema: {} },
   Hash256: { displayName: "Hash256", schema: {} },
+  Hash512: { displayName: "Hash512", schema: {} },
 }));
 
 jest.mock("../components/params/inputs/bytes", () => ({
@@ -34,6 +36,18 @@ jest.mock("../components/params/inputs/option", () => ({
 
 jest.mock("../components/params/inputs/vector", () => ({
   Vector: { displayName: "Vector", schema: {} },
+}));
+
+jest.mock("../components/params/inputs/vector-fixed", () => ({
+  VectorFixed: { displayName: "VectorFixed", schema: {} },
+}));
+
+jest.mock("../components/params/inputs/btree-map", () => ({
+  BTreeMap: { displayName: "BTreeMap", schema: {} },
+}));
+
+jest.mock("../components/params/inputs/btree-set", () => ({
+  BTreeSet: { displayName: "BTreeSet", schema: {} },
 }));
 
 jest.mock("../components/params/inputs/call", () => ({
@@ -68,15 +82,22 @@ jest.mock("../components/params/inputs/key-value", () => ({
   KeyValue: { displayName: "KeyValue", schema: {} },
 }));
 
+jest.mock("../components/params/inputs/tuple", () => ({
+  Tuple: { displayName: "Tuple", schema: {} },
+}));
+
 import { findComponent } from "../lib/input-map";
 import { Account } from "../components/params/inputs/account";
 import { Balance } from "../components/params/inputs/balance";
 import { Amount } from "../components/params/inputs/amount";
 import { Boolean } from "../components/params/inputs/boolean";
-import { Hash256 } from "../components/params/inputs/hash";
+import { Hash160, Hash256, Hash512 } from "../components/params/inputs/hash";
 import { Bytes } from "../components/params/inputs/bytes";
 import { Option } from "../components/params/inputs/option";
 import { Vector } from "../components/params/inputs/vector";
+import { VectorFixed } from "../components/params/inputs/vector-fixed";
+import { BTreeMap } from "../components/params/inputs/btree-map";
+import { BTreeSet } from "../components/params/inputs/btree-set";
 import { Call } from "../components/params/inputs/call";
 import { Text } from "../components/params/inputs/text";
 import { Moment } from "../components/params/inputs/moment";
@@ -127,6 +148,14 @@ describe("findComponent", () => {
     it("should match Balance regex patterns", () => {
       expect(findComponent("BalanceOf<T>").component).toBe(Balance);
     });
+
+    it("should return Balance for Compact<Balance>", () => {
+      expect(findComponent("Compact<Balance>").component).toBe(Balance);
+    });
+
+    it("should return Balance for Compact<BalanceOf>", () => {
+      expect(findComponent("Compact<BalanceOf>").component).toBe(Balance);
+    });
   });
 
   describe("Amount/Numeric types (Priority 90)", () => {
@@ -169,13 +198,21 @@ describe("findComponent", () => {
     });
   });
 
-  describe("Hash types (Priority 80)", () => {
+  describe("Hash types", () => {
+    it("should return Hash160 for H160", () => {
+      expect(findComponent("H160").component).toBe(Hash160);
+    });
+
     it("should return Hash256 for H256", () => {
       expect(findComponent("H256").component).toBe(Hash256);
     });
 
     it("should return Hash256 for Hash", () => {
       expect(findComponent("Hash").component).toBe(Hash256);
+    });
+
+    it("should return Hash512 for H512", () => {
+      expect(findComponent("H512").component).toBe(Hash512);
     });
 
     it("should match Hash regex patterns", () => {
@@ -234,6 +271,34 @@ describe("findComponent", () => {
     });
   });
 
+  describe("VectorFixed types (Priority 43)", () => {
+    it("should return VectorFixed for [u8; 32]", () => {
+      expect(findComponent("[u8; 32]").component).toBe(VectorFixed);
+    });
+
+    it("should return VectorFixed for [u8; 64]", () => {
+      expect(findComponent("[u8; 64]").component).toBe(VectorFixed);
+    });
+
+    it("should return VectorFixed for [AccountId; 3]", () => {
+      expect(findComponent("[AccountId; 3]").component).toBe(VectorFixed);
+    });
+  });
+
+  describe("BTreeMap types (Priority 42)", () => {
+    it("should return BTreeMap for BTreeMap<K, V> types", () => {
+      expect(findComponent("BTreeMap<AccountId, Balance>").component).toBe(BTreeMap);
+      expect(findComponent("BTreeMap<u32, Vec<u8>>").component).toBe(BTreeMap);
+    });
+  });
+
+  describe("BTreeSet types (Priority 41)", () => {
+    it("should return BTreeSet for BTreeSet<T> types", () => {
+      expect(findComponent("BTreeSet<AccountId>").component).toBe(BTreeSet);
+      expect(findComponent("BTreeSet<u32>").component).toBe(BTreeSet);
+    });
+  });
+
   describe("Vector types (Priority 40)", () => {
     it("should return Vector for Vec<T> types", () => {
       expect(findComponent("Vec<AccountId>").component).toBe(Vector);
@@ -278,9 +343,37 @@ describe("findComponent", () => {
       expect(findComponent("Balance").component).toBe(Balance);
     });
 
+    it("should prefer Balance over Amount for Compact<Balance>", () => {
+      // Balance has priority 95, Amount regex /Compact</ has 90
+      expect(findComponent("Compact<Balance>").component).toBe(Balance);
+    });
+
     it("should prefer Account over text for AccountId", () => {
       // Account has priority 100
       expect(findComponent("AccountId").component).toBe(Account);
+    });
+
+    it("should prefer VectorFixed over Vector for fixed arrays", () => {
+      // VectorFixed has priority 43, Vector has 40
+      expect(findComponent("[u8; 32]").component).toBe(VectorFixed);
+    });
+
+    it("should prefer BTreeMap over Vector for BTreeMap types", () => {
+      // BTreeMap has priority 42, Vector has 40
+      expect(findComponent("BTreeMap<u32, u64>").component).toBe(BTreeMap);
+    });
+
+    it("should prefer BTreeSet over Vector for BTreeSet types", () => {
+      // BTreeSet has priority 41, Vector has 40
+      expect(findComponent("BTreeSet<u32>").component).toBe(BTreeSet);
+    });
+
+    it("should prefer Hash160 over Hash256 for H160", () => {
+      expect(findComponent("H160").component).toBe(Hash160);
+    });
+
+    it("should prefer Hash512 over Hash256 for H512", () => {
+      expect(findComponent("H512").component).toBe(Hash512);
     });
   });
 });

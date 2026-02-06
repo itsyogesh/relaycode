@@ -18,8 +18,19 @@ export function Text({
   isRequired,
   error,
   onChange,
+  value: externalValue,
 }: ParamInputProps) {
+  const [displayValue, setDisplayValue] = React.useState("");
+
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null) {
+      const str = String(externalValue);
+      if (str !== displayValue) setDisplayValue(str);
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDisplayValue(e.target.value);
     onChange?.(e.target.value);
   };
 
@@ -33,6 +44,7 @@ export function Text({
         id={name}
         type="text"
         disabled={isDisabled}
+        value={displayValue}
         onChange={handleChange}
         className={cn(
           "font-mono",

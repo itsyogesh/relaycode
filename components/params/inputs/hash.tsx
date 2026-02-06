@@ -39,10 +39,21 @@ export function Hash({
   isRequired,
   error,
   onChange,
+  value: externalValue,
   hashType,
 }: HashInputProps) {
+  const [displayValue, setDisplayValue] = React.useState("");
+
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null) {
+      const str = String(externalValue);
+      if (str !== displayValue) setDisplayValue(str);
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trim().toLowerCase();
+    setDisplayValue(value);
     onChange?.(value === "" ? undefined : value);
   };
 
@@ -67,6 +78,7 @@ export function Hash({
         id={name}
         type="text"
         disabled={isDisabled}
+        value={displayValue}
         onChange={handleChange}
         className="font-mono"
         placeholder={getPlaceholder()}
