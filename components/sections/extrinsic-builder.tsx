@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -463,10 +464,12 @@ export function ExtrinsicBuilderSection() {
             <DemoPreview />
 
             <div className="absolute -bottom-20 left-1/2 -translate-x-1/2">
-              <Button size="lg" className="rounded-full">
-                Try Builder (It&apos;s Free){" "}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <Link href="/builder">
+                <Button size="lg" className="rounded-full">
+                  Try Builder (It&apos;s Free){" "}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>

@@ -1,5 +1,5 @@
 import { DedotClient } from "dedot";
-import { u8aToHex, hexToU8a, hexStripPrefix, hexAddPrefix } from "dedot/utils";
+import { u8aToHex, hexToU8a, hexStripPrefix, hexAddPrefix, decodeAddress } from "dedot/utils";
 
 /**
  * Result type for encoding operations
@@ -20,8 +20,22 @@ export function encodeArg(
   try {
     const codec = client.registry.findCodec(typeId);
     const coerced = coerceValue(value);
-    const encoded = codec.tryEncode(coerced);
-    return { success: true, hex: u8aToHex(encoded) };
+
+    // Try basic encoding first
+    try {
+      const encoded = codec.tryEncode(coerced);
+      return { success: true, hex: u8aToHex(encoded) };
+    } catch {
+      // If basic encoding fails, try type-aware coercion (e.g., MultiAddress wrapping)
+      const smartCoerced = coerceForType(client, typeId, value);
+      if (smartCoerced !== undefined) {
+        const encoded = codec.tryEncode(smartCoerced);
+        return { success: true, hex: u8aToHex(encoded) };
+      }
+      // Re-try with basic coercion to get the original error
+      const encoded = codec.tryEncode(coerced);
+      return { success: true, hex: u8aToHex(encoded) };
+    }
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "Unknown encoding error";
     return { success: false, hex: "0x", error: errorMessage };
@@ -65,6 +79,42 @@ function coerceValue(value: unknown): unknown {
 }
 
 /**
+ * Try type-aware coercion when basic coercion fails.
+ * Handles patterns like MultiAddress (SS58 string → {type: "Id", value: bytes}).
+ */
+function coerceForType(
+  client: DedotClient<any>,
+  typeId: number,
+  value: unknown
+): unknown | undefined {
+  if (typeof value !== "string" || !value) return undefined;
+
+  try {
+    // Check if the type is an enum with an "Id" variant (MultiAddress pattern)
+    const portableType = client.registry.findType(typeId);
+    const typeDef = portableType?.typeDef;
+    if (typeDef && typeDef.type === "Enum") {
+      const members = typeDef.value.members;
+      const hasIdVariant = members.some((m) => m.name === "Id");
+
+      if (hasIdVariant) {
+        // Try to decode as SS58 address and wrap as enum Id variant
+        try {
+          const bytes = decodeAddress(value);
+          return { type: "Id", value: bytes };
+        } catch {
+          // Not a valid address, fall through
+        }
+      }
+    }
+  } catch {
+    // Type lookup failed, fall through
+  }
+
+  return undefined;
+}
+
+/**
  * Result type for decoding operations
  */
 export type DecodeResult =
@@ -89,8 +139,8 @@ export function decodeArg(
     const reEncoded = codec.tryEncode(value);
     const bytesConsumed = reEncoded.length;
 
-    // Convert BigInt to string for form compatibility
-    const formValue = typeof value === "bigint" ? value.toString() : value;
+    // Convert decoded value to form-compatible format
+    const formValue = flattenDecodedValue(value);
     return { success: true, value: formValue, bytesConsumed };
   } catch (e) {
     const errorMessage = e instanceof Error ? e.message : "Unknown decoding error";
@@ -164,6 +214,70 @@ export function encodeAllArgs(
 }
 
 /**
+ * Flatten a decoded Dedot value to a form-compatible format.
+ * Handles common patterns like enum variants (MultiAddress {type, value})
+ * and BigInt conversion.
+ */
+function flattenDecodedValue(value: unknown): unknown {
+  if (value === null || value === undefined) return value;
+
+  // BigInt → string
+  if (typeof value === "bigint") return value.toString();
+
+  // Primitives pass through
+  if (typeof value !== "object") return value;
+
+  // Uint8Array → hex string
+  if (value instanceof Uint8Array) {
+    return u8aToHex(value);
+  }
+
+  // Arrays: recursively flatten each element
+  if (Array.isArray(value)) {
+    return value.map(flattenDecodedValue);
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // Dedot enum variant objects: { type: "VariantName", value: innerValue }
+  // e.g. MultiAddress { type: "Id", value: AccountId32 }
+  if ("type" in obj && typeof obj.type === "string") {
+    const innerValue = "value" in obj ? obj.value : undefined;
+    // For simple enum variants with no inner data (e.g. RewardDestination::Staked),
+    // preserve the full enum object so the Enum component can read the variant name.
+    if (innerValue === undefined || innerValue === null) {
+      return { type: obj.type };
+    }
+    // For enum variants with inner data (e.g. MultiAddress::Id(AccountId32)),
+    // flatten the inner value for display in leaf components.
+    // Note: use flattenDecodedValueEnum() for contexts where enum structure must be preserved.
+    return flattenDecodedValue(innerValue);
+  }
+
+  // Dedot wrapper objects (e.g. AccountId32) that have toJSON() returning a primitive.
+  // These are rich type objects that serialize to meaningful strings (like SS58 addresses).
+  if (typeof (obj as any).toJSON === "function") {
+    const json = (obj as any).toJSON();
+    if (typeof json === "string" || typeof json === "number" || typeof json === "boolean") {
+      return typeof json === "number" ? json.toString() : json;
+    }
+  }
+
+  // Objects with meaningful toString() (not default "[object Object]")
+  const str = String(value);
+  if (str && !str.startsWith("[object ")) {
+    return str;
+  }
+
+  // Plain objects: recursively flatten fields
+  const result: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    result[k] = flattenDecodedValue(v);
+  }
+  return result;
+}
+
+/**
  * Result type for bulk decoding operations
  */
 export interface DecodeAllResult {
@@ -225,8 +339,8 @@ export function decodeAllArgs(
         offset += bytesConsumed;
         totalBytesConsumed += bytesConsumed;
 
-        // Convert BigInt to string for form compatibility
-        result[fieldName] = typeof value === "bigint" ? value.toString() : value;
+        // Convert decoded value to form-compatible format
+        result[fieldName] = flattenDecodedValue(value);
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : "Unknown error";
         errors.set(fieldName, errorMessage);
@@ -275,3 +389,4 @@ function arraysEqual(a: Uint8Array, b: Uint8Array): boolean {
   }
   return true;
 }
+

@@ -11,6 +11,7 @@ import {
   Form,
   FormField,
   FormItem,
+  FormLabel,
   FormDescription,
 } from "@/components/ui/form";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -248,16 +249,24 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  const resolved = findComponent(arg.typeName || "", arg.typeId);
+                  const resolved = findComponent(arg.typeName || "", arg.typeId, client);
                   const Component = resolved.component;
                   return (
                     <FormItem className="ml-8">
-                      <Component
-                        client={client}
-                        label={arg.name || ""}
-                        typeId={resolved.typeId}
-                        {...field}
-                      />
+                      <div className="relative">
+                        {arg.typeName && (
+                          <span className="absolute right-0 top-0 text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded z-10">
+                            {arg.typeName}
+                          </span>
+                        )}
+                        <Component
+                          client={client}
+                          label={arg.name || ""}
+                          typeName={arg.typeName || ""}
+                          typeId={resolved.typeId}
+                          {...field}
+                        />
+                      </div>
                     </FormItem>
                   );
                 }}

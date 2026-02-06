@@ -124,6 +124,10 @@ const InformationPane: React.FC<InformationPaneProps> = ({
     // Skip re-encoding if this update was triggered by hex editing
     if (hexEditingRef.current) {
       hexEditingRef.current = false;
+      // Clear stale encoding errors — the values came from a valid decode
+      setHasEncodingErrors(false);
+      setFieldErrors({});
+      setArgEncodeResults([]);
       return;
     }
 
@@ -136,7 +140,13 @@ const InformationPane: React.FC<InformationPaneProps> = ({
 
     setArgHexes(encodeResult.argHexes);
     setArgEncodeResults(encodeResult.argResults);
-    setHasEncodingErrors(encodeResult.hasErrors);
+
+    // Only flag encoding errors if at least one field has a value (not all empty/untouched)
+    const anyFieldHasValue = fields.some((f) => {
+      const val = formValues[f.name || ""];
+      return val !== undefined && val !== "" && val !== null;
+    });
+    setHasEncodingErrors(anyFieldHasValue && encodeResult.hasErrors);
 
     // Update field errors from encoding
     const newFieldErrors: Record<string, string | null> = {};
@@ -175,7 +185,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
       const result = decodeArg(client, typeId, hex);
       if (result.success) {
         hexEditingRef.current = true;
-        builderForm.setValue(fieldName, result.value as string);
+        builderForm.setValue(fieldName, result.value as string, { shouldDirty: true, shouldTouch: true });
         setFieldErrors((prev) => ({ ...prev, [fieldName]: null }));
       } else {
         setFieldErrors((prev) => ({ ...prev, [fieldName]: result.error }));
@@ -210,8 +220,19 @@ const InformationPane: React.FC<InformationPaneProps> = ({
       if (decoded.success && decoded.values) {
         hexEditingRef.current = true;
         for (const [key, value] of Object.entries(decoded.values)) {
-          builderForm.setValue(key, value as string);
+          builderForm.setValue(key, value as string, { shouldDirty: true, shouldTouch: true });
         }
+
+        // Populate per-arg hex fields by re-encoding each decoded value
+        const fields = tx.meta.fields;
+        const newArgHexes = fields.map((field) => {
+          const fieldName = field.name || "";
+          const value = decoded.values![fieldName];
+          const result = encodeArg(client, field.typeId, value);
+          return result.hex;
+        });
+        setArgHexes(newArgHexes);
+
         setFieldErrors((prev) => ({ ...prev, _callData: null }));
       } else {
         // Build error message from all field errors
@@ -387,7 +408,10 @@ const InformationPane: React.FC<InformationPaneProps> = ({
           const fieldName = arg.name || "";
           const error = fieldErrors[fieldName];
           const encodeResult = argEncodeResults[index];
-          const hasError = error || (encodeResult && !encodeResult.success);
+          const fieldValue = formValues[fieldName];
+          const fieldIsEmpty = fieldValue === undefined || fieldValue === "" || fieldValue === null;
+          // Only show errors when the field has a value (not on clean/untouched fields)
+          const hasError = !fieldIsEmpty && (error || (encodeResult && !encodeResult.success));
           return (
             <div key={index}>
               <div className="flex items-center justify-between">
@@ -409,10 +433,10 @@ const InformationPane: React.FC<InformationPaneProps> = ({
                   <CopyButton text={argHexes[index]} />
                 )}
               </div>
-              {error && (
+              {!fieldIsEmpty && error && (
                 <p className="text-xs text-red-500 mt-1">{error}</p>
               )}
-              {!error && encodeResult && !encodeResult.success && (
+              {!fieldIsEmpty && !error && encodeResult && !encodeResult.success && (
                 <p className="text-xs text-red-500 mt-1">{encodeResult.error}</p>
               )}
             </div>

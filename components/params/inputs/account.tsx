@@ -35,6 +35,7 @@ export function Account({
   error,
   client,
   onChange,
+  value: externalValue,
 }: ParamInputProps) {
   const { accounts } = useSafeAccounts();
   const { recentAddresses, addRecent } = useRecentAddresses();
@@ -54,8 +55,18 @@ export function Account({
     return recentAddresses.map((r) => r.address);
   }, [recentAddresses]);
 
-  // Track current value
+  // Track current value (internal state for the combobox)
   const [value, setValue] = React.useState<string | undefined>(undefined);
+
+  // Sync from external value (e.g., hex decode setting form value)
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null && externalValue !== "") {
+      const extStr = String(externalValue);
+      if (extStr !== value) {
+        setValue(extStr);
+      }
+    }
+  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = useCallback(
     (address: string | undefined) => {

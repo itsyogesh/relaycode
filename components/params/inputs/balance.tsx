@@ -40,6 +40,7 @@ export function Balance({
   error,
   client,
   onChange,
+  value: externalValue,
 }: ParamInputProps) {
   const { symbol, denominations, existentialDeposit, loading } =
     useChainToken(client);
@@ -63,6 +64,21 @@ export function Balance({
       setSelectedDenomLabel(denominations[0].label);
     }
   }, [denominations, selectedDenomLabel]);
+
+  // Sync from external planck value (e.g., hex decode setting form value)
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null && externalValue !== "") {
+      const planckStr = String(externalValue);
+      // Check if current display already represents this planck value
+      const currentPlanck = displayValue.trim() && selectedDenom
+        ? toPlanck(displayValue, selectedDenom)
+        : null;
+      if (currentPlanck !== planckStr && selectedDenom) {
+        const display = fromPlanck(planckStr, selectedDenom);
+        setDisplayValue(display);
+      }
+    }
+  }, [externalValue, selectedDenom]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wallet info (safe hooks that handle missing provider)
   const { address } = useSafeAccount();

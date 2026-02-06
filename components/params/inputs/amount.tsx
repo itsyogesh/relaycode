@@ -39,6 +39,7 @@ export function Amount({
   client,
   typeName,
   onChange,
+  value: externalValue,
 }: AmountProps) {
   const isDenominated =
     typeName !== undefined && BALANCE_LIKE_TYPES.has(typeName);
@@ -66,6 +67,27 @@ export function Amount({
       setSelectedDenomLabel(denominations[0].label);
     }
   }, [isDenominated, denominations, selectedDenomLabel]);
+
+  // Sync from external value (e.g., hex decode setting form value)
+  React.useEffect(() => {
+    if (externalValue !== undefined && externalValue !== null && externalValue !== "") {
+      if (isDenominated && selectedDenom) {
+        const planckStr = String(externalValue);
+        const currentPlanck = displayValue.trim()
+          ? toPlanck(displayValue, selectedDenom)
+          : null;
+        if (currentPlanck !== planckStr) {
+          setDisplayValue(fromPlanck(planckStr, selectedDenom));
+        }
+      } else {
+        // Plain numeric mode
+        const numStr = String(externalValue);
+        if (displayValue !== numStr) {
+          setDisplayValue(numStr);
+        }
+      }
+    }
+  }, [externalValue, selectedDenom, isDenominated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Denominated change handler
   const handleDenominatedChange = useCallback(
@@ -178,8 +200,10 @@ export function Amount({
         id={name}
         type="number"
         disabled={isDisabled}
+        value={displayValue}
         onChange={handlePlainChange}
         className="font-mono"
+        placeholder="0"
         min={0}
       />
       {description && <FormDescription>{description}</FormDescription>}
