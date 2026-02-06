@@ -7,6 +7,7 @@ import { ModeToggle } from "@/components/layout/mode-toggle";
 import useScroll from "@/hooks/use-scroll";
 
 import { ConnectButton } from "@/components/shared/connect-button";
+import { ChainSelector } from "@/components/shared/chain-selector";
 
 interface NavBarProps {
   items?: MainNavItem[];
@@ -33,6 +34,7 @@ export function NavBar({
 
         <div className="flex items-center space-x-3">
           {rightElements}
+          <ChainSelector />
           <ConnectButton />
           <div className="ml-8">
             <ModeToggle />

@@ -26,6 +26,8 @@ Relaycode is an intuitive extrinsics builder designed to transform the way devel
 - Styling: Tailwind CSS, shadcn/ui components
 - State Management: React Hooks, Context API
 - Polkadot Integration: [Dedot](https://github.com/dedotdev/dedot)
+- Wallet: [LunoKit](https://github.com/nickytonline/luno-kit) (Polkadot.js, Talisman, SubWallet)
+- Chains: Polkadot, Kusama, Westend (testnet)
 - Theming: next-themes for dark/light mode support
 
 ## Documentation
@@ -46,12 +48,16 @@ The following input components have been implemented for the extrinsic builder:
 
 - [x] **Account** - Handles `AccountId`, `Address`, `LookupSource`, `MultiAddress`
 - [x] **Amount** - Handles `i8`, `i16`, `i32`, `i64`, `i128`, `u8`, `u16`, `u32`, `u64`, `u128`, `Compact<uN>`
-- [x] **Balance** - Handles `Balance`, `BalanceOf`
+- [x] **Balance** - Handles `Balance`, `BalanceOf`, `Compact<Balance>`, `Compact<BalanceOf>`
 - [x] **Bool** - Handles `bool`
+- [x] **BTreeMap** - Handles `BTreeMap<K, V>` with typed key-value pair inputs
+- [x] **BTreeSet** - Handles `BTreeSet<T>` with duplicate detection
 - [x] **Bytes** - Handles `Bytes`, `Vec<u8>`
 - [x] **Call** - Handles `Call`, `RuntimeCall`
 - [x] **Enum** - Handles enum types from metadata
-- [x] **Hash256** - Handles `Hash`, `H256`
+- [x] **Hash160** - Handles `H160` (20-byte hash)
+- [x] **Hash256** - Handles `Hash`, `H256` (32-byte hash)
+- [x] **Hash512** - Handles `H512` (64-byte hash)
 - [x] **KeyValue** - Handles `KeyValue`
 - [x] **Moment** - Handles `Moment`, `MomentOf`
 - [x] **Option** - Handles `Option<T>`
@@ -59,12 +65,15 @@ The following input components have been implemented for the extrinsic builder:
 - [x] **Struct** - Handles composite/struct types
 - [x] **Tuple** - Handles tuple types `(T1, T2, ...)`
 - [x] **Vector** - Handles `Vec<T>`, `BoundedVec<T, S>`
+- [x] **VectorFixed** - Handles fixed-length arrays `[T; N]`
 - [x] **Vote** - Handles `Vote`
 - [x] **VoteThreshold** - Handles `VoteThreshold`
 
-### Planned Components
+### M2 Features
 
-- [ ] **Hash160** - Handles `H160`
-- [ ] **Hash512** - Handles `H512`
-- [ ] **BTreeMap** - Handles `BTreeMap`
-- [ ] **VectorFixed** - Handles fixed-length arrays
+- [x] **Chain Selector** - Switch between Polkadot, Kusama, and Westend (testnet) from the navbar
+- [x] **Type Badges** - Builder displays Substrate type names alongside field labels
+- [x] **Wallet Integration** - LunoKit-based wallet connect (Polkadot.js, Talisman, SubWallet)
+- [x] **Bi-Directional Editing** - Edit via form or raw hex, with real-time sync
+- [x] **Transaction Submission** - Sign and submit extrinsics directly from the builder
+- [x] **Input Validation** - Pre-submission validation with descriptive error messages
