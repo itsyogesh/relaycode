@@ -23,8 +23,12 @@ import {
   decodeArg,
   encodeAllArgs,
   decodeAllArgs,
+  decomposeArgHex,
+  patchValueAtPath,
   EncodeResult,
+  HexTreeNode,
 } from "@/lib/codec";
+import { FieldHexDisplay } from "@/components/builder/field-hex-display";
 import { Copy, Check, AlertCircle } from "lucide-react";
 
 interface InformationPaneProps {
@@ -83,6 +87,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   const [functionHex, setFunctionHex] = useState<string>("");
   const [argHexes, setArgHexes] = useState<string[]>([]);
   const [argEncodeResults, setArgEncodeResults] = useState<EncodeResult[]>([]);
+  const [argDecompositions, setArgDecompositions] = useState<HexTreeNode[]>([]);
   const [encodedCallData, setEncodedCallData] = useState<string>("");
   const [encodedCallHash, setEncodedCallHash] = useState<string>("");
   const [hexEncodedCall, setHexEncodedCall] = useState<string>("");
@@ -115,6 +120,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
       setFunctionHex("");
       setArgHexes([]);
       setArgEncodeResults([]);
+      setArgDecompositions([]);
       setEncodedCallData("");
       setEncodedCallHash("");
       setHasEncodingErrors(false);
@@ -140,6 +146,18 @@ const InformationPane: React.FC<InformationPaneProps> = ({
 
     setArgHexes(encodeResult.argHexes);
     setArgEncodeResults(encodeResult.argResults);
+
+    // Compute decomposition trees for display
+    const decompositions = fields.map((field) => {
+      const fieldName = field.name || "";
+      const fieldValue = formValues[fieldName];
+      try {
+        return decomposeArgHex(client, field.typeId, fieldValue);
+      } catch {
+        return { kind: "leaf" as const };
+      }
+    });
+    setArgDecompositions(decompositions);
 
     // Only flag encoding errors if at least one field has a value (not all empty/untouched)
     const anyFieldHasValue = fields.some((f) => {
@@ -285,6 +303,31 @@ const InformationPane: React.FC<InformationPaneProps> = ({
     debouncedDecodeArg(fieldName, typeId, newHex);
   };
 
+  // Debounced sub-hex decode for individual elements within compound args
+  const debouncedDecodeSubHex = useDebouncedCallback(
+    (fieldName: string, parentTypeId: number, path: (string | number)[], hex: string, subTypeId: number) => {
+      if (!hex || hex === "0x") return;
+      if (!isHex(hex)) return;
+      const result = decodeArg(client, subTypeId, hex);
+      if (result.success) {
+        hexEditingRef.current = true;
+        const parentValue = builderForm.getValues(fieldName);
+        const patched = patchValueAtPath(parentValue, path, result.value);
+        builderForm.setValue(fieldName, patched as string, { shouldDirty: true, shouldTouch: true });
+      }
+    },
+    DEBOUNCE_MS
+  );
+
+  const handleSubHexChange = useCallback(
+    (fieldIndex: number, fieldName: string, parentTypeId: number) =>
+      (path: (string | number)[], hex: string, subTypeId: number) => {
+        if (!editing) return;
+        debouncedDecodeSubHex(fieldName, parentTypeId, path, hex, subTypeId);
+      },
+    [editing, debouncedDecodeSubHex]
+  );
+
   const handleEncodedCallDataChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editing) return;
     const newCallData = e.target.value;
@@ -410,36 +453,32 @@ const InformationPane: React.FC<InformationPaneProps> = ({
           const encodeResult = argEncodeResults[index];
           const fieldValue = formValues[fieldName];
           const fieldIsEmpty = fieldValue === undefined || fieldValue === "" || fieldValue === null;
-          // Only show errors when the field has a value (not on clean/untouched fields)
-          const hasError = !fieldIsEmpty && (error || (encodeResult && !encodeResult.success));
+          const hasError = !fieldIsEmpty && !!(error || (encodeResult && !encodeResult.success));
+          const displayError = !fieldIsEmpty
+            ? (error || (encodeResult && !encodeResult.success ? encodeResult.error : null))
+            : null;
+          const decomposition = argDecompositions[index] || { kind: "leaf" as const };
+
           return (
-            <div key={index}>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">
-                  {stringCamelCase(fieldName)} Hex
-                </Label>
-                <span className="text-xs text-gray-400 font-mono">
-                  {arg.typeName || `typeId: ${arg.typeId}`}
-                </span>
-              </div>
-              <div className="flex items-center">
-                <Input
-                  value={argHexes[index] || "0x"}
-                  onChange={handleArgHexChange(index, fieldName, arg.typeId)}
-                  disabled={!editing}
-                  className={`font-mono text-blue-500 ${hasError ? "border-red-500" : ""}`}
-                />
-                {argHexes[index] && argHexes[index] !== "0x" && (
-                  <CopyButton text={argHexes[index]} />
-                )}
-              </div>
-              {!fieldIsEmpty && error && (
-                <p className="text-xs text-red-500 mt-1">{error}</p>
-              )}
-              {!fieldIsEmpty && !error && encodeResult && !encodeResult.success && (
-                <p className="text-xs text-red-500 mt-1">{encodeResult.error}</p>
-              )}
-            </div>
+            <FieldHexDisplay
+              key={index}
+              fieldName={fieldName}
+              typeName={arg.typeName || `typeId: ${arg.typeId}`}
+              hex={argHexes[index] || "0x"}
+              decomposition={decomposition}
+              editing={editing}
+              error={displayError}
+              hasError={hasError}
+              onHexChange={(newHex) => {
+                setArgHexes((prev) => {
+                  const next = [...prev];
+                  next[index] = newHex;
+                  return next;
+                });
+                debouncedDecodeArg(fieldName, arg.typeId, newHex);
+              }}
+              onSubHexChange={handleSubHexChange(index, fieldName, arg.typeId)}
+            />
           );
         })}
 
