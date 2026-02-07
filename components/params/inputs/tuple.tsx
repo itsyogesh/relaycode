@@ -12,6 +12,13 @@ interface TupleProps extends ParamInputProps {
 
 const schema = z.array(z.any());
 
+/** Extract the last segment of a type path for a readable label */
+function shortTypeName(typeName: string): string {
+  // "sp_runtime::multiaddress::MultiAddress" → "MultiAddress"
+  const parts = typeName.split("::");
+  return parts[parts.length - 1] || typeName;
+}
+
 export function Tuple({
   name,
   label,
@@ -92,16 +99,18 @@ export function Tuple({
       <Card>
         <CardContent className="pt-4 space-y-4">
           {tupleFields.map((field) => {
-            const resolved = findComponent(field.typeName, field.typeId);
+            const resolved = findComponent(field.typeName, field.typeId, client);
             const Component = resolved.component;
+            const fieldLabel = `${shortTypeName(field.typeName)} [${field.index}]`;
             return (
               <div key={field.index}>
                 <Component
                   client={client}
                   name={`${name}-${field.index}`}
-                  label={`Element ${field.index}`}
+                  label={fieldLabel}
                   description={field.typeName}
                   typeId={field.typeId}
+                  typeName={field.typeName}
                   isDisabled={isDisabled}
                   onChange={(value: unknown) => handleFieldChange(field.index, value)}
                 />

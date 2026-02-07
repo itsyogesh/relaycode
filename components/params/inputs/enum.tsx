@@ -9,12 +9,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ParamInputProps } from "../types";
 import { findComponent } from "@/lib/input-map";
 
 interface EnumVariant {
   name: string;
   fields?: { typeId: number; typeName?: string; name?: string }[];
+  docs?: string[];
   component?: React.ReactNode;
 }
 
@@ -59,6 +66,7 @@ export function Enum({
             typeName: f.typeName,
             name: f.name,
           })),
+          docs: member.docs,
         }));
       }
     } catch {
@@ -66,6 +74,19 @@ export function Enum({
     }
     return [];
   }, [explicitVariants, client, typeId]);
+
+  // Auto-select first variant if nothing is selected
+  React.useEffect(() => {
+    if (!selectedVariant && variants.length > 0 && !externalValue) {
+      const first = variants[0].name;
+      setSelectedVariant(first);
+      const firstVariant = variants[0];
+      // If first variant has no fields, emit immediately
+      if (!firstVariant.fields || firstVariant.fields.length === 0) {
+        onChange?.({ type: first });
+      }
+    }
+  }, [variants]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync from external value (e.g., after hex decode sets { type: "Staked" })
   React.useEffect(() => {
@@ -170,6 +191,17 @@ export function Enum({
     return variant.fields && variant.fields.length > 0;
   }, [selectedVariant, variants]);
 
+  // Check if a variant has data fields
+  const variantHasFields = (variant: EnumVariant) => {
+    return variant.fields && variant.fields.length > 0;
+  };
+
+  // Get docs text for a variant
+  const getVariantDocs = (variant: EnumVariant): string | null => {
+    if (!variant.docs || variant.docs.length === 0) return null;
+    return variant.docs.filter(Boolean).join(" ").trim() || null;
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={name}>
@@ -185,11 +217,35 @@ export function Enum({
           <SelectValue placeholder="Select variant" />
         </SelectTrigger>
         <SelectContent>
-          {variants.map((variant) => (
-            <SelectItem key={variant.name} value={variant.name}>
-              {variant.name}
-            </SelectItem>
-          ))}
+          <TooltipProvider delayDuration={300}>
+            {variants.map((variant) => {
+              const docs = getVariantDocs(variant);
+              const hasFields = variantHasFields(variant);
+              const item = (
+                <SelectItem key={variant.name} value={variant.name}>
+                  <span className="flex items-center gap-1.5">
+                    {hasFields && (
+                      <span className="text-muted-foreground text-xs">{"\u2026"}</span>
+                    )}
+                    {variant.name}
+                  </span>
+                </SelectItem>
+              );
+
+              if (docs) {
+                return (
+                  <Tooltip key={variant.name}>
+                    <TooltipTrigger asChild>{item}</TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs text-xs">
+                      {docs}
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return item;
+            })}
+          </TooltipProvider>
         </SelectContent>
       </Select>
       {selectedVariant && hasSubComponent && renderVariantComponent()}

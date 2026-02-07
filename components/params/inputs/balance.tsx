@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useChainToken } from "@/hooks/use-chain-token";
 import { toPlanck, fromPlanck, type Denomination } from "@/lib/denominations";
+import { stripNumericFormatting, detectPlanckPaste } from "@/lib/paste-utils";
 import type { ParamInputProps } from "../types";
 
 import { useSafeAccount, useSafeBalance } from "@/hooks/use-wallet-safe";
@@ -48,6 +49,7 @@ export function Balance({
   const [displayValue, setDisplayValue] = useState("");
   const [selectedDenomLabel, setSelectedDenomLabel] = useState<string>("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [pasteHint, setPasteHint] = useState<string | null>(null);
 
   // Resolve selected denomination
   const selectedDenom: Denomination = useMemo(() => {
@@ -92,6 +94,7 @@ export function Balance({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
       setDisplayValue(raw);
+      setPasteHint(null);
 
       if (!raw.trim()) {
         setValidationError(null);
@@ -116,6 +119,40 @@ export function Balance({
       }
     },
     [isPlanck, selectedDenom, onChange]
+  );
+
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLInputElement>) => {
+      const pasted = e.clipboardData.getData("text");
+      const stripped = stripNumericFormatting(pasted);
+
+      if (stripped.transformed) {
+        e.preventDefault();
+        // Check if this is a planck value
+        const planckCheck = detectPlanckPaste(stripped.value, selectedDenom.maxDecimals);
+        if (planckCheck.isPlanck && planckCheck.planckValue && selectedDenom.label !== "planck") {
+          const display = fromPlanck(planckCheck.planckValue, selectedDenom);
+          setDisplayValue(display);
+          setValidationError(null);
+          setPasteHint("Converted from planck");
+          onChange?.(planckCheck.planckValue);
+          setTimeout(() => setPasteHint(null), 3000);
+          return;
+        }
+
+        setDisplayValue(stripped.value);
+        const planck = toPlanck(stripped.value, selectedDenom);
+        if (planck !== null) {
+          setValidationError(null);
+          onChange?.(planck);
+        }
+        if (stripped.hint) {
+          setPasteHint(stripped.hint);
+          setTimeout(() => setPasteHint(null), 3000);
+        }
+      }
+    },
+    [selectedDenom, onChange]
   );
 
   const handleDenomChange = useCallback(
@@ -151,17 +188,27 @@ export function Balance({
     }
   }, [transferable, displayValue, selectedDenom, existentialDeposit]);
 
-  const handleMax = useCallback(() => {
-    if (!transferable) return;
-    const maxSafe =
-      transferable > existentialDeposit
-        ? transferable - existentialDeposit
-        : BigInt(0);
-    const display = fromPlanck(maxSafe.toString(), selectedDenom);
-    setDisplayValue(display);
-    setValidationError(null);
-    onChange?.(maxSafe.toString());
-  }, [transferable, existentialDeposit, selectedDenom, onChange]);
+  const handlePercentage = useCallback(
+    (percent: number) => {
+      if (!transferable) return;
+      let amount: bigint;
+      if (percent === 100) {
+        // Max: subtract ED
+        amount =
+          transferable > existentialDeposit
+            ? transferable - existentialDeposit
+            : BigInt(0);
+      } else {
+        amount = (transferable * BigInt(percent)) / BigInt(100);
+      }
+      const display = fromPlanck(amount.toString(), selectedDenom);
+      setDisplayValue(display);
+      setValidationError(null);
+      setPasteHint(null);
+      onChange?.(amount.toString());
+    },
+    [transferable, existentialDeposit, selectedDenom, onChange]
+  );
 
   const denomSelector = (
     <Select value={selectedDenom.label} onValueChange={handleDenomChange}>
@@ -194,6 +241,7 @@ export function Balance({
         disabled={isDisabled || loading}
         value={displayValue}
         onChange={handleValueChange}
+        onPaste={handlePaste}
         className="font-mono"
         placeholder={isPlanck ? "0" : "0.00"}
         suffix={denomSelector}
@@ -201,19 +249,37 @@ export function Balance({
       {address && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Available: {formattedTransferable ?? "—"} {symbol}
+            Available: {formattedTransferable ?? "\u2014"} {symbol}
           </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-5 px-2 text-xs"
-            onClick={handleMax}
-            disabled={!transferable}
-          >
-            Max
-          </Button>
+          <div className="flex gap-1">
+            {[25, 50, 75].map((pct) => (
+              <Button
+                key={pct}
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-5 px-2 text-xs"
+                onClick={() => handlePercentage(pct)}
+                disabled={!transferable}
+              >
+                {pct}%
+              </Button>
+            ))}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-5 px-2 text-xs"
+              onClick={() => handlePercentage(100)}
+              disabled={!transferable}
+            >
+              Max
+            </Button>
+          </div>
         </div>
+      )}
+      {pasteHint && (
+        <p className="text-xs text-blue-600">{pasteHint}</p>
       )}
       {showEdWarning && (
         <p className="text-xs text-yellow-600">

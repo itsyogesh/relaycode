@@ -60,19 +60,40 @@ export function encodeArgLegacy(
  * Form inputs always produce strings, but codecs may need bigint/number/boolean.
  */
 function coerceValue(value: unknown): unknown {
-  if (typeof value !== "string") return value;
+  if (typeof value === "string") {
+    // Boolean
+    if (value === "true") return true;
+    if (value === "false") return false;
 
-  // Boolean
-  if (value === "true") return true;
-  if (value === "false") return false;
-
-  // Try BigInt for numeric strings (Balance, u128, etc.)
-  if (/^\d+$/.test(value)) {
-    try {
-      return BigInt(value);
-    } catch {
-      // fall through
+    // Try BigInt for numeric strings (Balance, u128, etc.)
+    if (/^\d+$/.test(value)) {
+      try {
+        return BigInt(value);
+      } catch {
+        // fall through
+      }
     }
+
+    return value;
+  }
+
+  // Recursively coerce nested objects (e.g. enum variants like AccountVote)
+  if (typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Uint8Array)) {
+    const obj = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    let changed = false;
+    for (const [k, v] of Object.entries(obj)) {
+      const coerced = coerceValue(v);
+      result[k] = coerced;
+      if (coerced !== v) changed = true;
+    }
+    return changed ? result : value;
+  }
+
+  // Recursively coerce arrays
+  if (Array.isArray(value)) {
+    const result = value.map(coerceValue);
+    return result;
   }
 
   return value;

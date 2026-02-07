@@ -185,7 +185,7 @@ export function Call({
                 Parameters
               </label>
               {methodFields.map((field) => {
-                const resolved = findComponent(field.typeName, field.typeId);
+                const resolved = findComponent(field.typeName, field.typeId, client);
                 const Component = resolved.component;
                 return (
                   <div key={field.name} className="ml-4">
@@ -195,6 +195,7 @@ export function Call({
                       label={field.name}
                       description={field.typeName}
                       typeId={field.typeId}
+                      typeName={field.typeName}
                       isDisabled={isDisabled}
                       onChange={(value: unknown) => handleArgChange(field.name, value)}
                     />

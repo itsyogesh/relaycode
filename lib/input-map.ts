@@ -124,7 +124,7 @@ const registry: ComponentRegistration[] = [
   {
     component: Vote,
     schema: Vote.schema,
-    patterns: ["Vote", /^Vote$/],
+    patterns: ["AccountVote", /^AccountVote/],
     priority: 60,
   },
   {
