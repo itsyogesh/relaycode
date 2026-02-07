@@ -1,8 +1,10 @@
 import React from "react";
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
+import { InputWithAddon } from "@/components/ui/input-with-addon";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { autoPrefix0x } from "@/lib/paste-utils";
 import type { ParamInputProps } from "../types";
 
 // Helper function to validate hex string of specific length
@@ -31,6 +33,12 @@ interface HashInputProps extends ParamInputProps {
   hashType: "H160" | "H256" | "H512";
 }
 
+const HASH_LENGTHS: Record<string, number> = {
+  H160: 40,
+  H256: 64,
+  H512: 128,
+};
+
 export function Hash({
   name,
   label,
@@ -43,6 +51,8 @@ export function Hash({
   hashType,
 }: HashInputProps) {
   const [displayValue, setDisplayValue] = React.useState("");
+
+  const expectedLength = HASH_LENGTHS[hashType];
 
   React.useEffect(() => {
     if (externalValue !== undefined && externalValue !== null) {
@@ -57,6 +67,16 @@ export function Hash({
     onChange?.(value === "" ? undefined : value);
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text");
+    const result = autoPrefix0x(pasted);
+    if (result.transformed) {
+      e.preventDefault();
+      setDisplayValue(result.value);
+      onChange?.(result.value === "" ? undefined : result.value);
+    }
+  };
+
   const getPlaceholder = () => {
     switch (hashType) {
       case "H160":
@@ -68,20 +88,31 @@ export function Hash({
     }
   };
 
+  // Validation state
+  const isValid = displayValue ? isValidHexString(displayValue, expectedLength) : null;
+
+  const validationIcon = isValid === true ? (
+    <CheckCircle2 className="h-4 w-4 text-green-500" />
+  ) : isValid === false ? (
+    <XCircle className="h-4 w-4 text-red-500" />
+  ) : null;
+
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor={name}>
         {label}
         {isRequired && <span className="text-red-500 ml-1">*</span>}
       </Label>
-      <Input
+      <InputWithAddon
         id={name}
         type="text"
         disabled={isDisabled}
         value={displayValue}
         onChange={handleChange}
+        onPaste={handlePaste}
         className="font-mono"
         placeholder={getPlaceholder()}
+        suffix={validationIcon}
       />
       {description && <FormDescription>{description}</FormDescription>}
       {error && <p className="text-sm text-red-500">{error}</p>}

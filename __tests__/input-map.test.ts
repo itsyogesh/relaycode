@@ -252,8 +252,11 @@ describe("findComponent", () => {
   });
 
   describe("Vote type (Priority 60)", () => {
-    it("should return Vote for Vote", () => {
-      expect(findComponent("Vote").component).toBe(Vote);
+    it("should return Vote for AccountVote", () => {
+      expect(findComponent("AccountVote").component).toBe(Vote);
+    });
+    it("should return Vote for AccountVote<BalanceOf<T, I>>", () => {
+      expect(findComponent("AccountVote<BalanceOf<T, I>>").component).toBe(Vote);
     });
   });
 

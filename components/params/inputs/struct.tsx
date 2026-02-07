@@ -10,6 +10,7 @@ interface StructField {
   name: string;
   label: string;
   description?: string;
+  typeName?: string;
   component: React.ReactNode;
   required?: boolean;
 }
@@ -67,14 +68,25 @@ export function Struct({
       if (React.isValidElement(field.component)) {
         return (
           <div key={field.name} className="mb-4 last:mb-0">
-            {React.cloneElement(field.component as React.ReactElement<any>, {
-              name: `${name}-${field.name}`,
-              label: field.label,
-              description: field.description,
-              isDisabled: isDisabled,
-              isRequired: field.required,
-              onChange: (value: any) => handleFieldChange(field.name, value),
-            })}
+            <div className="flex items-center gap-2 mb-1">
+              {React.cloneElement(field.component as React.ReactElement<any>, {
+                name: `${name}-${field.name}`,
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    {field.label}
+                    {field.typeName && (
+                      <code className="text-[10px] px-1 py-0.5 bg-muted rounded text-muted-foreground font-mono">
+                        {field.typeName}
+                      </code>
+                    )}
+                  </span>
+                ),
+                description: field.description,
+                isDisabled: isDisabled,
+                isRequired: field.required,
+                onChange: (value: any) => handleFieldChange(field.name, value),
+              })}
+            </div>
           </div>
         );
       }

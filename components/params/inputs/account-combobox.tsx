@@ -51,6 +51,7 @@ export function AccountCombobox({
 }: AccountComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [pasteConfirmed, setPasteConfirmed] = useState(false);
 
   // Format value for display
   const displayValue = useMemo(() => {
@@ -108,6 +109,23 @@ export function AccountCombobox({
     setSearch("");
   };
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const pasted = e.clipboardData.getData("text");
+    // Strip surrounding quotes and whitespace
+    const cleaned = pasted.trim().replace(/^["']|["']$/g, "").trim();
+    if (cleaned && isValidAddress(cleaned)) {
+      e.preventDefault();
+      const formatted = formatAddress(cleaned);
+      if (formatted) {
+        onChange(formatted);
+        setOpen(false);
+        setSearch("");
+        setPasteConfirmed(true);
+        setTimeout(() => setPasteConfirmed(false), 2000);
+      }
+    }
+  };
+
   // Find name for currently selected value
   const selectedAccount = formattedAccounts.find(
     (a) => a.formattedAddress === displayValue
@@ -131,6 +149,9 @@ export function AccountCombobox({
                   ? `${selectedAccount.name} (${truncateAddress(displayValue)})`
                   : truncateAddress(displayValue)}
               </span>
+              {pasteConfirmed && (
+                <Check className="h-4 w-4 text-green-500 shrink-0" />
+              )}
             </div>
           ) : (
             <span className="text-muted-foreground font-normal">
@@ -146,6 +167,7 @@ export function AccountCombobox({
             placeholder="Search or paste address..."
             value={search}
             onValueChange={setSearch}
+            onPaste={handlePaste}
           />
           <CommandList>
             {formattedAccounts.length === 0 &&
