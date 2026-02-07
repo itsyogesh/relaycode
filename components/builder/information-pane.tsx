@@ -30,6 +30,7 @@ import {
 } from "@/lib/codec";
 import { FieldHexDisplay } from "@/components/builder/field-hex-display";
 import { Copy, Check, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface InformationPaneProps {
   client: DedotClient<PolkadotApi>;
@@ -39,6 +40,7 @@ interface InformationPaneProps {
 }
 
 const DEBOUNCE_MS = 500;
+const HEX_INPUT_CLASS = "bg-muted/50 disabled:opacity-70";
 
 function useDebouncedCallback<T extends (...args: any[]) => void>(
   callback: T,
@@ -429,7 +431,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
             <Input
               value={sectionHex}
               disabled={true}
-              className="font-mono text-red-500"
+              className={cn("font-mono text-red-500", HEX_INPUT_CLASS)}
             />
             {sectionHex && <CopyButton text={sectionHex} />}
           </div>
@@ -441,7 +443,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
             <Input
               value={functionHex}
               disabled={true}
-              className="font-mono text-green-500"
+              className={cn("font-mono text-green-500", HEX_INPUT_CLASS)}
             />
             {functionHex && <CopyButton text={functionHex} />}
           </div>
@@ -489,21 +491,25 @@ const InformationPane: React.FC<InformationPaneProps> = ({
               <Input
                 value={encodedCallData}
                 onChange={handleEncodedCallDataChange}
-                className={`font-mono ${fieldErrors._callData ? "border-red-500" : ""}`}
+                className={cn("font-mono", HEX_INPUT_CLASS, fieldErrors._callData && "border-red-500")}
               />
               {fieldErrors._callData && (
                 <p className="text-xs text-red-500 mt-1">{fieldErrors._callData}</p>
               )}
             </div>
-          ) : (
+          ) : encodedCallData && encodedCallData !== "0x" ? (
             <div className="flex items-center">
               <div className="flex-1">
                 {renderColorCodedCallData()}
               </div>
-              {encodedCallData && encodedCallData !== "0x" && (
-                <CopyButton text={encodedCallData} />
-              )}
+              <CopyButton text={encodedCallData} />
             </div>
+          ) : (
+            <Input
+              value=""
+              disabled={true}
+              className={cn("font-mono", HEX_INPUT_CLASS)}
+            />
           )}
         </div>
 
@@ -513,7 +519,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
             <Input
               value={encodedCallHash}
               disabled={true}
-              className="font-mono"
+              className={cn("font-mono", HEX_INPUT_CLASS)}
             />
             {encodedCallHash && <CopyButton text={encodedCallHash} />}
           </div>
@@ -524,7 +530,7 @@ const InformationPane: React.FC<InformationPaneProps> = ({
           <Textarea
             value={hexEncodedCall}
             disabled={!editing}
-            className={`font-mono ${fieldErrors._extrinsic ? "border-red-500" : ""}`}
+            className={cn("font-mono", HEX_INPUT_CLASS, fieldErrors._extrinsic && "border-red-500")}
             onChange={handleHexEncodedCall}
             placeholder="Paste a full hex-encoded extrinsic to decode..."
           />
