@@ -47,22 +47,24 @@ export function ChainSelector() {
               onSelect={() => handleSelect(chain.genesisHash)}
               className="cursor-pointer"
             >
-              <span className="flex items-center gap-2">
-                {chain.chainIconUrl && (
-                  <img
-                    src={chain.chainIconUrl}
-                    alt=""
-                    className="h-4 w-4 rounded-full"
-                  />
-                )}
-                <span>{chain.name}</span>
-                {chain.testnet && (
-                  <span className="text-[10px] text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                    testnet
-                  </span>
-                )}
+              <span className="flex w-full items-center justify-between gap-2">
+                <span className="flex items-center gap-2">
+                  {chain.chainIconUrl && (
+                    <img
+                      src={chain.chainIconUrl}
+                      alt=""
+                      className="h-4 w-4 rounded-full"
+                    />
+                  )}
+                  <span>{chain.name}</span>
+                  {chain.testnet && (
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                      testnet
+                    </span>
+                  )}
+                </span>
+                {isActive && <Check className="h-4 w-4 text-primary" />}
               </span>
-              {isActive && <Check className="h-4 w-4 text-primary" />}
             </DropDrawerItem>
           );
         })}
