@@ -1,0 +1,127 @@
+---
+title: Enum Input
+description: Variant selector for Substrate enum types with dynamic inner value resolution
+---
+
+# Enum Input
+
+The Enum input handles all Substrate enum (variant) types from chain metadata. It presents a dropdown for selecting which variant is active, then dynamically renders the appropriate sub-inputs for that variant's fields. Enums are one of the most common composite types in Substrate -- used for calls, errors, events, and configuration options throughout every pallet.
+
+## Supported Types
+
+The Enum component sits at **priority 30** in the registry with no explicit type name patterns. Instead, it is resolved through the **TypeDef fallback** mechanism: when no higher-priority pattern matches and the chain metadata reports the type's `TypeDef` as `"Enum"`, `findComponent` returns the Enum component.
+
+This means the Enum component handles any type that the metadata declares as an enum, regardless of its name.
+
+## Props
+
+The component extends `ParamInputProps` with an additional `variants` prop:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the selector |
+| `description` | `string` | No | Help text shown below the component |
+| `typeName` | `string` | No | The SCALE type name |
+| `isDisabled` | `boolean` | No | Disables the selector and all sub-inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving variant types from metadata |
+| `typeId` | `number` | No | Metadata type ID used to look up the enum's variants |
+| `value` | `any` | No | Externally controlled value in `{ type, value? }` format |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the variant selection |
+| `variants` | `EnumVariant[]` | No | Explicit variant definitions (overrides metadata resolution) |
+
+### EnumVariant Interface
+
+```ts
+interface EnumVariant {
+  name: string;
+  fields?: { typeId: number; typeName?: string; name?: string }[];
+  docs?: string[];
+  component?: React.ReactNode;
+}
+```
+
+When `variants` is not provided, the component reads variants directly from the chain metadata using `client.registry.findType(typeId)`.
+
+## Features
+
+- **Auto-resolves variants from chain metadata**: When connected to a chain, the component reads the enum's member list from the runtime metadata -- no manual variant configuration needed.
+- **Unit variants**: Variants with no fields (like `Staked`, `None`, `SimpleMajority`) emit immediately on selection with no sub-input.
+- **Data variants**: Variants with associated data render sub-inputs dynamically using `findComponent` to resolve the correct component for each field's type.
+- **Single-field inline rendering**: When a variant has exactly one field, the sub-input renders inline directly below the selector.
+- **Multi-field struct-like rendering**: When a variant has multiple fields, they render as a group with an indented left border, similar to struct fields.
+- **Variant documentation tooltips**: If the metadata includes doc strings for a variant, hovering over it in the dropdown shows a tooltip with the documentation.
+- **Data indicator**: Variants with associated fields show an ellipsis marker in the dropdown to indicate they require additional input.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Enum is resolved via the TypeDef fallback, not by type name patterns.
+// When the metadata reports typeId 42 as an Enum:
+const resolved = findComponent("SomeCustomEnum", 42, client);
+// Returns { component: Enum, schema, typeId: 42 }
+```
+
+## Usage
+
+The Enum component is rendered by the extrinsic builder when a parameter's metadata type is an enum. Direct usage:
+
+```tsx
+import { Enum } from "@/components/params/inputs/enum";
+
+<Enum
+  name="payee"
+  label="Reward Destination"
+  client={client}
+  typeId={42}
+  onChange={(val) => console.log("Selected:", val)}
+/>
+```
+
+With explicit variants (bypassing metadata):
+
+```tsx
+<Enum
+  name="threshold"
+  label="Vote Threshold"
+  client={client}
+  variants={[
+    { name: "SuperMajorityApprove" },
+    { name: "SuperMajorityAgainst" },
+    { name: "SimpleMajority" },
+  ]}
+  onChange={(val) => console.log("Selected:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an object with a `type` string and an optional `value`:
+
+```ts
+const schema = z.object({
+  type: z.string(),
+  value: z.any().optional(),
+});
+```
+
+## Value Format
+
+The `onChange` callback receives an object:
+
+```ts
+// Unit variant (no fields)
+{ type: "Staked" }
+
+// Data variant (with inner value)
+{ type: "Account", value: "5GrwvaEF..." }
+
+// Complex data variant
+{ type: "Split", value: { aye: "1000000", nay: "500000" } }
+```
+
+The `type` field always contains the variant name as a string. The `value` field is present only when the selected variant has associated data, and its shape depends on the variant's field types.

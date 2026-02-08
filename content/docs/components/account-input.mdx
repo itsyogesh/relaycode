@@ -1,0 +1,98 @@
+---
+title: Account Input
+description: Address input with wallet integration and SS58 validation
+---
+
+# Account Input
+
+The Account input provides a Substrate address field with connected wallet integration, recent address history, and SS58 format validation. It is used whenever a parameter expects an on-chain account identifier -- transfers, proxies, identity lookups, and any call that targets a specific address.
+
+## Supported Type Names
+
+The Account component matches the following type names at **priority 100** (highest in the registry):
+
+- `AccountId`
+- `AccountId32`
+- `AccountId20`
+- `MultiAddress`
+- `Address`
+- `LookupSource`
+- Any type name matching `/^AccountId/` or `/^MultiAddress/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"AccountId32"`) |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for chain metadata and SS58 prefix |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the formatted SS58 address |
+
+## Features
+
+- **Connected wallet accounts**: Displays accounts from the connected wallet (via LunoKit) in a dropdown combobox, letting users pick from their own addresses.
+- **Recent address history**: Tracks previously entered addresses in local storage and surfaces them as suggestions for quick reuse.
+- **SS58 validation**: Uses Dedot's `decodeAddress` to validate any entered address. Invalid addresses are rejected at the schema level.
+- **Chain-aware formatting**: Automatically re-encodes addresses to the connected chain's SS58 prefix, so a Polkadot-formatted address pasted into a Kusama context is converted correctly.
+- **Combobox interface**: Combines a searchable text input with a dropdown, supporting both paste-in addresses and selection from the list.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// All of these resolve to the Account component
+findComponent("AccountId32", typeId, client);
+findComponent("MultiAddress", typeId, client);
+findComponent("Address", typeId, client);
+findComponent("LookupSource", typeId, client);
+```
+
+## Usage
+
+The Account component is typically rendered by the extrinsic builder after `findComponent` resolves the parameter type. Direct usage:
+
+```tsx
+import { Account } from "@/components/params/inputs/account";
+
+<Account
+  name="dest"
+  label="Destination"
+  description="The recipient account"
+  client={client}
+  typeId={0}
+  isRequired
+  onChange={(address) => console.log("Selected:", address)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that calls `decodeAddress` from `dedot/utils`. Any string that fails SS58 decoding is rejected:
+
+```ts
+const schema = z.string().refine(
+  (value) => {
+    try {
+      decodeAddress(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid Substrate address" }
+);
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- the SS58-encoded address formatted to the connected chain's prefix. If the input is cleared, `undefined` is emitted.

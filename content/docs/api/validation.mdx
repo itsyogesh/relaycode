@@ -1,0 +1,314 @@
+---
+title: Validation
+description: Form validation utilities for Substrate types.
+---
+
+# Validation API
+
+The validation module (`lib/validation.ts`) provides utilities for validating extrinsic builder form inputs. These functions handle common validation scenarios for Substrate types.
+
+## Types
+
+### ValidationResult
+
+```typescript
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+```
+
+### AllArgsValidationResult
+
+```typescript
+interface AllArgsValidationResult {
+  valid: boolean;
+  results: Map<string, ValidationResult>;  // Per-field results
+  errors: string[];                         // All error messages
+}
+```
+
+## Functions
+
+### validateAllArgs()
+
+Validate all arguments for an extrinsic call.
+
+```typescript
+function validateAllArgs(
+  client: unknown,
+  fields: { name?: string; typeName?: string; typeId?: number }[],
+  values: Record<string, unknown>
+): AllArgsValidationResult
+```
+
+**Parameters:**
+- `client` - Dedot client (reserved for future type-aware validation)
+- `fields` - Array of field definitions with name and type info
+- `values` - Object mapping field names to form values
+
+**Returns:** `AllArgsValidationResult` with overall validity and per-field results
+
+**Example:**
+```typescript
+import { validateAllArgs } from "@/lib/validation";
+
+const fields = [
+  { name: "dest", typeName: "AccountId" },
+  { name: "value", typeName: "Balance" },
+];
+
+const values = {
+  dest: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+  value: "1000000000000",
+};
+
+const result = validateAllArgs(client, fields, values);
+
+if (!result.valid) {
+  result.errors.forEach(error => console.error(error));
+}
+```
+
+### validateField()
+
+Validate a single field value against its type.
+
+```typescript
+function validateField(
+  typeName: string,
+  value: unknown,
+  fieldName?: string
+): ValidationResult
+```
+
+**Parameters:**
+- `typeName` - The Substrate type name (e.g., "AccountId", "Balance", "H256")
+- `value` - The value to validate
+- `fieldName` - Optional field name for error messages
+
+**Returns:** `ValidationResult` with validity status and error message
+
+**Example:**
+```typescript
+import { validateField } from "@/lib/validation";
+
+// Validate an account address
+const accountResult = validateField(
+  "AccountId",
+  "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+  "destination"
+);
+
+// Validate a hash
+const hashResult = validateField(
+  "H256",
+  "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+  "blockHash"
+);
+
+// Validate a balance
+const balanceResult = validateField("Balance", "1000", "amount");
+```
+
+**Type-specific validation:**
+
+| Type Pattern | Validation |
+|--------------|------------|
+| `AccountId`, `Address` | SS58 address format |
+| `H256`, `Hash` | 32-byte hex (66 chars with 0x) |
+| `u*`, `i*`, `Balance` | Numeric, non-negative |
+| Other | Required (not empty) |
+
+### validateAmount()
+
+Validate a numeric amount input.
+
+```typescript
+function validateAmount(
+  value: unknown,
+  fieldName?: string
+): ValidationResult
+```
+
+**Parameters:**
+- `value` - The value to validate
+- `fieldName` - Optional field name for error messages (default: "Amount")
+
+**Returns:** `ValidationResult`
+
+**Example:**
+```typescript
+import { validateAmount } from "@/lib/validation";
+
+validateAmount("100");       // { valid: true }
+validateAmount("0");         // { valid: true }
+validateAmount("");          // { valid: false, error: "Amount is required" }
+validateAmount("-5");        // { valid: false, error: "Amount cannot be negative" }
+validateAmount("abc");       // { valid: false, error: "Amount must be a valid number" }
+```
+
+### isValidAddressFormat()
+
+Check if a value has valid SS58 address format.
+
+```typescript
+function isValidAddressFormat(address: unknown): boolean
+```
+
+**Parameters:**
+- `address` - The value to check
+
+**Returns:** `true` if the address has valid SS58 format
+
+**Example:**
+```typescript
+import { isValidAddressFormat } from "@/lib/validation";
+
+isValidAddressFormat("5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"); // true
+isValidAddressFormat("HNZata7iMYWmk5RvZRTiAsSDhV8366zq2YGb3tLH5Upf74F");  // true (Kusama)
+isValidAddressFormat("invalid");  // false
+isValidAddressFormat("");         // false
+```
+
+**Validation rules:**
+- Must be a non-empty string
+- Length between 46-50 characters
+- Uses Base58 character set (no 0, O, I, l)
+
+### isValidHexFormat()
+
+Check if a value has valid hex string format.
+
+```typescript
+function isValidHexFormat(value: unknown): boolean
+```
+
+**Parameters:**
+- `value` - The value to check
+
+**Returns:** `true` if the value is a valid hex string
+
+**Example:**
+```typescript
+import { isValidHexFormat } from "@/lib/validation";
+
+isValidHexFormat("0x1234abcd"); // true
+isValidHexFormat("0x");         // true (empty hex)
+isValidHexFormat("0xABCDEF");   // true (uppercase)
+isValidHexFormat("1234abcd");   // false (no 0x prefix)
+isValidHexFormat("0xghij");     // false (invalid characters)
+```
+
+### validateVectorConstraints()
+
+Validate vector/array constraints including min/max items and empty values.
+
+```typescript
+function validateVectorConstraints(
+  items: unknown[],
+  minItems?: number,
+  maxItems?: number,
+  fieldName?: string
+): ValidationResult
+```
+
+**Parameters:**
+- `items` - The array to validate
+- `minItems` - Minimum required items (optional)
+- `maxItems` - Maximum allowed items (optional)
+- `fieldName` - Field name for error messages (default: "Vector")
+
+**Returns:** `ValidationResult`
+
+**Example:**
+```typescript
+import { validateVectorConstraints } from "@/lib/validation";
+
+// Check minimum items
+validateVectorConstraints([1, 2], 3);
+// { valid: false, error: "Vector requires at least 3 items" }
+
+// Check maximum items
+validateVectorConstraints([1, 2, 3, 4], undefined, 3);
+// { valid: false, error: "Vector allows at most 3 items" }
+
+// Check for empty/undefined items
+validateVectorConstraints([1, undefined, 3]);
+// { valid: false, error: "Vector contains 1 empty item" }
+
+// Valid vector
+validateVectorConstraints([1, 2, 3], 2, 5);
+// { valid: true }
+```
+
+### validateStructFields()
+
+Validate that all required struct fields are present and non-empty.
+
+```typescript
+function validateStructFields(
+  values: Record<string, unknown>,
+  requiredFields: string[]
+): ValidationResult
+```
+
+**Parameters:**
+- `values` - Object with field values
+- `requiredFields` - Array of required field names
+
+**Returns:** `ValidationResult`
+
+**Example:**
+```typescript
+import { validateStructFields } from "@/lib/validation";
+
+const values = { name: "Alice", age: 30 };
+
+validateStructFields(values, ["name", "age"]);
+// { valid: true }
+
+validateStructFields(values, ["name", "age", "email"]);
+// { valid: false, error: "Missing required fields: email" }
+
+validateStructFields({ name: "", age: null }, ["name", "age"]);
+// { valid: false, error: "Missing required fields: name, age" }
+```
+
+**Notes:**
+- Considers `undefined`, `null`, and empty string `""` as missing
+- Falsy values like `0` and `false` are considered valid
+
+## Integration with Form Submission
+
+Validation should be performed before encoding and submitting extrinsics:
+
+```typescript
+import { validateAllArgs, encodeAllArgs } from "@/lib";
+
+function handleSubmit(fields, values) {
+  // Step 1: Validate
+  const validation = validateAllArgs(client, fields, values);
+
+  if (!validation.valid) {
+    // Show errors to user
+    validation.results.forEach((result, fieldName) => {
+      if (!result.valid) {
+        setFieldError(fieldName, result.error);
+      }
+    });
+    return;
+  }
+
+  // Step 2: Encode
+  const encoded = encodeAllArgs(client, fields, values);
+
+  if (encoded.hasErrors) {
+    // Handle encoding errors
+    return;
+  }
+
+  // Step 3: Submit
+  submitExtrinsic(encoded.concatenated);
+}
+```

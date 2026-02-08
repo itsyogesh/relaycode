@@ -1,0 +1,15 @@
+{
+  "title": "Relaycode",
+  "root": true,
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "getting-started",
+    "---Guide---",
+    "...guide",
+    "---API Reference---",
+    "...api",
+    "---Components---",
+    "...components"
+  ]
+}
