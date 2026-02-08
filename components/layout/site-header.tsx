@@ -32,13 +32,11 @@ export function NavBar({
       <div className="container flex items-center justify-between py-4">
         <MainNav items={items}>{children}</MainNav>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 sm:space-x-3">
           {rightElements}
           <ChainSelector />
           <ConnectButton />
-          <div className="ml-8">
-            <ModeToggle />
-          </div>
+          <ModeToggle />
         </div>
       </div>
     </header>

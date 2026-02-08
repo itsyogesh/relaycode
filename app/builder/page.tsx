@@ -64,7 +64,7 @@ function BuilderContent() {
               builderForm={form}
             />
           </div>
-          <div className="w-full lg:w-1/2 bg-gray-100 rounded-lg p-6">
+          <div className="w-full lg:w-1/2 bg-muted rounded-lg p-6">
             <InformationPane
               client={client}
               tx={tx}

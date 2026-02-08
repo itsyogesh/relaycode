@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Copy, Check, AlertCircle } from "lucide-react";
 import { stringCamelCase } from "dedot/utils";
 import type { HexTreeNode } from "@/lib/codec";
+import { cn } from "@/lib/utils";
+
+const HEX_INPUT_CLASS = "bg-muted/50 disabled:opacity-70";
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = React.useState(false);
@@ -65,7 +68,7 @@ export const FieldHexDisplay: React.FC<FieldHexDisplayProps> = ({
             value={hex || "0x"}
             onChange={(e) => onHexChange(e.target.value)}
             disabled={!editing}
-            className={`font-mono text-blue-500 ${hasError ? "border-red-500" : ""}`}
+            className={cn("font-mono text-blue-500", HEX_INPUT_CLASS, hasError && "border-red-500")}
           />
           {hex && hex !== "0x" && <CopyButton text={hex} />}
         </div>
@@ -91,7 +94,7 @@ export const FieldHexDisplay: React.FC<FieldHexDisplayProps> = ({
           value={hex || "0x"}
           onChange={(e) => onHexChange(e.target.value)}
           disabled={!editing}
-          className={`font-mono text-blue-500 ${hasError ? "border-red-500" : ""}`}
+          className={cn("font-mono text-blue-500", HEX_INPUT_CLASS, hasError && "border-red-500")}
         />
         {hex && hex !== "0x" && <CopyButton text={hex} />}
       </div>
@@ -148,7 +151,7 @@ const SubHexNode: React.FC<SubHexNodeProps> = ({
             value={child.hex || "0x"}
             onChange={(e) => onSubHexChange?.(path, e.target.value, child.typeId)}
             disabled={!editing}
-            className="font-mono text-blue-400 text-sm h-8"
+            className={cn("font-mono text-blue-400 text-sm h-8", HEX_INPUT_CLASS)}
           />
           {child.hex && child.hex !== "0x" && <CopyButton text={child.hex} />}
         </div>
@@ -183,7 +186,7 @@ const SubHexNode: React.FC<SubHexNodeProps> = ({
           value={child.hex || "0x"}
           onChange={(e) => onSubHexChange?.(path, e.target.value, child.typeId)}
           disabled={!editing}
-          className="font-mono text-blue-400 text-sm h-8"
+          className={cn("font-mono text-blue-400 text-sm h-8", HEX_INPUT_CLASS)}
         />
         {child.hex && child.hex !== "0x" && <CopyButton text={child.hex} />}
       </div>
