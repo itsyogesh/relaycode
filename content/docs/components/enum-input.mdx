@@ -3,6 +3,31 @@ title: Enum Input
 description: Variant selector for Substrate enum types with dynamic inner value resolution
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <EnumDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Enum } from "@/components/params/inputs/enum";
+
+<Enum
+  name="threshold"
+  label="Vote Threshold"
+  client={client}
+  variants={[
+    { name: "SuperMajorityApprove", docs: ["A supermajority of aye votes..."] },
+    { name: "SuperMajorityAgainst", docs: ["A supermajority of nay votes..."] },
+    { name: "SimpleMajority", docs: ["A simple majority..."] },
+  ]}
+  onChange={(val) => console.log("Selected:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Enum Input
 
 The Enum input handles all Substrate enum (variant) types from chain metadata. It presents a dropdown for selecting which variant is active, then dynamically renders the appropriate sub-inputs for that variant's fields. Enums are one of the most common composite types in Substrate -- used for calls, errors, events, and configuration options throughout every pallet.

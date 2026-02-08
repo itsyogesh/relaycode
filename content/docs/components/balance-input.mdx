@@ -3,6 +3,29 @@ title: Balance Input
 description: Token amount input with denomination selector and balance display
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <BalanceDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Balance } from "@/components/params/inputs/balance";
+
+<Balance
+  name="value"
+  label="Amount"
+  description="The amount to transfer"
+  client={client}
+  typeId={6}
+  isRequired
+  onChange={(planck) => console.log("Planck value:", planck)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Balance Input
 
 The Balance input provides a denomination-aware numeric field for entering token amounts. It handles the conversion between human-readable values (e.g. `1.5 DOT`) and on-chain planck values (e.g. `15000000000`), displays the user's available balance, and warns when a transfer would drop the account below the existential deposit.
