@@ -1,10 +1,5 @@
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { redirect } from "next/navigation";
 
 export default function ComponentsPage() {
-  return (
-    <ComingSoon
-      title="UI Components"
-      description="Reusable Substrate-aware UI components for your dApp. Coming soon."
-    />
-  );
+  redirect("/docs/components");
 }

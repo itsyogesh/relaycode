@@ -1,0 +1,103 @@
+---
+title: Components
+description: Substrate-aware input components for the Polkadot ecosystem
+---
+
+# Component Library
+
+Relaycode ships a library of **22 input components** and **10 contextual selectors** that map directly to Substrate runtime types. Each component understands the SCALE type it represents, validates input accordingly, and emits values ready for SCALE encoding.
+
+## Type Resolution
+
+Components are resolved automatically from chain metadata through a **priority-based registry**. When the extrinsic builder encounters a parameter, the `findComponent` function walks the registry from highest to lowest priority, matching the parameter's type name against registered string literals and regular expressions.
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Returns { component: Account, schema, typeId }
+const resolved = findComponent("AccountId32", typeId, client);
+
+// Returns { component: Balance, schema, typeId }
+const resolved = findComponent("Compact<Balance>", typeId, client);
+```
+
+If no pattern matches, the system falls back to metadata introspection: it reads the `TypeDef` from the chain registry and routes `Enum` types to `EnumInput` and `Struct` types to `StructInput`. Any remaining unknown type falls back to a plain `TextInput`.
+
+## Available Components
+
+| Component | Substrate Types | Description |
+|---|---|---|
+| [AccountInput](/docs/components/account-input) | `AccountId`, `MultiAddress`, `Address` | Address input with wallet integration and SS58 validation |
+| [BalanceInput](/docs/components/balance-input) | `Balance`, `BalanceOf`, `Compact<Balance>` | Token amount with denomination selector and balance display |
+| AmountInput | `u8`-`u128`, `i8`-`i128`, `Compact<uN>` | Numeric integer input for unsigned and signed integers |
+| BoolInput | `bool` | Toggle switch for boolean parameters |
+| HashInput (H160) | `H160` | 20-byte hex hash input with length validation |
+| HashInput (H256) | `H256`, `Hash` | 32-byte hex hash input with length validation |
+| HashInput (H512) | `H512` | 64-byte hex hash input with length validation |
+| BytesInput | `Bytes`, `Vec<u8>` | Raw bytes hex input |
+| CallInput | `Call`, `RuntimeCall` | Nested extrinsic builder for composing calls |
+| [EnumInput](/docs/components/enum-input) | Enum types from metadata | Variant selector with dynamic inner value resolution |
+| OptionInput | `Option<T>` | Optional value toggle wrapping any inner type |
+| StructInput | Struct types from metadata | Named field grouping with recursive sub-inputs |
+| TextInput | `String`, `Text` | Basic string input for text parameters |
+| TupleInput | `(T1, T2, ...)` | Positional element inputs for tuple types |
+| VectorInput | `Vec<T>`, `BoundedVec<T>` | Dynamic-length array with add/remove controls |
+| VectorFixedInput | `[T; N]` | Fixed-length array with N input slots |
+| BTreeMapInput | `BTreeMap<K, V>` | Key-value pair entries |
+| BTreeSetInput | `BTreeSet<T>` | Unique value set entries |
+| MomentInput | `Moment` | Timestamp input for time-based parameters |
+| VoteInput | `AccountVote` | Voting preference input (Standard/Split) |
+| VoteThresholdInput | `VoteThreshold` | Threshold selector (SuperMajorityApprove/Against/SimpleMajority) |
+| KeyValueInput | `KeyValue` | Single key-value pair input |
+
+## Priority System
+
+The registry assigns each component a numeric priority. When a type name matches multiple patterns, the highest-priority component wins. This prevents ambiguity -- for example, `Compact<Balance>` (priority 95) is caught by the Balance component before the generic Amount component's `Compact<` regex (priority 90).
+
+| Priority | Component |
+|---|---|
+| 100 | AccountInput |
+| 95 | BalanceInput |
+| 90 | AmountInput |
+| 85 | BoolInput |
+| 82 | HashInput (H160) |
+| 80 | HashInput (H256) |
+| 78 | HashInput (H512) |
+| 75 | BytesInput |
+| 70 | CallInput |
+| 65 | MomentInput |
+| 60 | VoteInput |
+| 55 | VoteThresholdInput |
+| 50 | KeyValueInput |
+| 45 | OptionInput |
+| 43 | VectorFixedInput |
+| 42 | BTreeMapInput |
+| 41 | BTreeSetInput |
+| 40 | VectorInput |
+| 38 | TupleInput |
+| 35 | StructInput |
+| 30 | EnumInput |
+
+## Shared Props
+
+Every input component implements the `ParamInputProps` interface:
+
+```ts
+interface ParamInputProps {
+  name: string;
+  label?: string;
+  description?: string;
+  typeName?: string;
+  isDisabled?: boolean;
+  isRequired?: boolean;
+  error?: string;
+  client: DedotClient<PolkadotApi>;
+  typeId?: number;
+  value?: any;
+  onChange?: (value: unknown) => void;
+  palletContext?: PalletContextData | null;
+  isContextLoading?: boolean;
+}
+```
+
+See individual component pages for type-specific props and behavior details.

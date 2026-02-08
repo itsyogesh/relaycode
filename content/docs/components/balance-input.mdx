@@ -1,0 +1,109 @@
+---
+title: Balance Input
+description: Token amount input with denomination selector and balance display
+---
+
+# Balance Input
+
+The Balance input provides a denomination-aware numeric field for entering token amounts. It handles the conversion between human-readable values (e.g. `1.5 DOT`) and on-chain planck values (e.g. `15000000000`), displays the user's available balance, and warns when a transfer would drop the account below the existential deposit.
+
+## Supported Type Names
+
+The Balance component matches the following type names at **priority 95**:
+
+- `Balance`
+- `BalanceOf`
+- `T::Balance`
+- `Compact<Balance>`
+- `Compact<BalanceOf>`
+- Any type name matching `/^Balance/` or `/::Balance$/`
+
+This priority ensures that `Compact<Balance>` is caught here rather than by the generic Amount component's `Compact<` pattern at priority 90.
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"Balance"`) |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for reading chain token metadata |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled planck value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the planck value as a string |
+
+## Features
+
+- **Denomination selector**: A dropdown next to the input lets users switch between denominations. For Polkadot this includes `DOT`, `mDOT`, `uDOT`, and `planck`. The display value automatically converts when switching denominations.
+- **Percentage buttons (25% / 50% / 75% / Max)**: When a wallet is connected, quick-fill buttons calculate amounts relative to the transferable balance. The Max button subtracts the existential deposit to avoid reaping.
+- **Available balance display**: Shows the connected account's transferable balance alongside the token symbol.
+- **Existential deposit warning**: A yellow warning appears when the entered amount would drop the sender's balance below the chain's existential deposit.
+- **Planck paste detection**: When a large integer is pasted that looks like a raw planck value, the component auto-converts it to the selected denomination and shows a hint ("Converted from planck").
+- **Numeric formatting**: Strips commas, spaces, and other formatting characters from pasted values so users can paste amounts from block explorers.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// All of these resolve to the Balance component
+findComponent("Balance", typeId, client);
+findComponent("BalanceOf", typeId, client);
+findComponent("Compact<Balance>", typeId, client);
+findComponent("Compact<BalanceOf>", typeId, client);
+```
+
+## Usage
+
+The Balance component is rendered by the extrinsic builder when a parameter resolves to a balance type. Direct usage:
+
+```tsx
+import { Balance } from "@/components/params/inputs/balance";
+
+<Balance
+  name="value"
+  label="Amount"
+  description="The amount to transfer"
+  client={client}
+  typeId={6}
+  isRequired
+  onChange={(planck) => console.log("Planck value:", planck)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that checks whether the value can be parsed as a `BigInt`:
+
+```ts
+const schema = z.string().refine(
+  (value) => {
+    try {
+      BigInt(value);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid balance amount" }
+);
+```
+
+## Value Format
+
+The `onChange` callback always receives a **string** representing the amount in **planck** (the chain's smallest indivisible unit). For example, entering `1.5 DOT` on Polkadot (10 decimals) emits `"15000000000"`. If the input is cleared, `undefined` is emitted.
+
+## Notes on Planck Conversion
+
+All on-chain balance values are stored as integers in planck. The conversion uses the chain's token decimals:
+
+- **Polkadot**: 1 DOT = 10^10 planck
+- **Kusama**: 1 KSM = 10^12 planck
+
+The `toPlanck` and `fromPlanck` utilities in `lib/denominations.ts` handle the conversion with arbitrary precision to avoid floating-point errors.

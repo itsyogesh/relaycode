@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@luno-kit/ui/styles.css";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 @plugin "@tailwindcss/typography";
 
@@ -141,6 +143,28 @@
       "rlig" 1,
       "calt" 1;
   }
+
+  /* Remove underlines from fumadocs heading anchor links */
+  a[data-card] {
+    text-decoration: none !important;
+  }
+
+}
+
+/* Improve table spacing in docs prose — outside @layer to override fumadocs */
+.prose table th,
+.prose table td {
+  padding: 0.75rem 1rem !important;
+  vertical-align: top;
+}
+
+.prose table th:first-child,
+.prose table td:first-child {
+  white-space: nowrap;
+}
+
+.prose table {
+  table-layout: auto !important;
 }
 
 @utility step {

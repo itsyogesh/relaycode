@@ -1,0 +1,84 @@
+---
+title: Architecture
+description: Relaycode architecture and design patterns.
+---
+
+# Architecture
+
+Relaycode is built on a layered architecture designed to cleanly separate concerns between blockchain infrastructure, reusable UI components, and application-level routing and layout.
+
+## Three-Layer Architecture
+
+### 1. Infrastructure Layer
+
+The infrastructure layer handles all blockchain connectivity, client management, and wallet integration.
+
+- **Dedot Client** — Relaycode uses [Dedot](https://github.com/dedotdev/dedot) as its Polkadot client (not the deprecated `@polkadot/api`). Dedot provides type-safe chain interactions via `DedotClient<PolkadotApi>`.
+- **Wallet Connection** — LunoKit handles wallet integration, supporting Polkadot.js extension, Talisman, SubWallet, and other compatible wallets.
+- **Chain Switching** — LunoKit's `useSwitchChain()` hook enables switching between Polkadot, Kusama, Westend, and other supported chains using genesis hash as the chain identifier.
+- **React Context** — Providers expose the Dedot client, wallet state, and chain metadata to the component tree via React Context API.
+
+### 2. Components Layer
+
+The components layer provides reusable UI building blocks.
+
+- **Parameter Inputs** (`components/params/inputs/`) — Specialized input components for each Substrate type (Account, Balance, Amount, Hash, Vector, etc.).
+- **Builder Components** (`components/builder/`) — The extrinsic builder panes, pallet/method selectors, and encoding controls.
+- **Base UI** (`components/ui/`) — shadcn/ui components providing consistent styling and behavior. These are generated via `npx shadcn-ui add <component>` and should not be modified directly.
+
+### 3. App Layer
+
+The app layer handles routing, page layouts, and top-level composition.
+
+- **Next.js App Router** — Pages live under `app/` using Next.js 14 App Router conventions (`page.tsx`, `layout.tsx`).
+- **Builder Page** (`app/builder/`) — The main extrinsic builder tool.
+- **Marketing Pages** (`app/(marketing)/`) — Landing and informational pages.
+
+## Dedot Client Integration
+
+Relaycode connects to Substrate chains exclusively through Dedot. The client provides:
+
+- **Type-safe metadata** — Chain metadata is parsed into TypeScript types, enabling compile-time checks for pallet calls and storage queries.
+- **Codec registry** — The client's `registry` provides codec lookup by type ID, used for encoding form values to SCALE and decoding hex back to form values.
+- **Type definitions** — TypeDef discriminants are `"Struct"`, `"Enum"`, `"Sequence"`, `"SizedVec"`, `"Tuple"`, `"Primitive"`, `"Compact"`, and `"BitSequence"`. Note that Dedot uses these discriminants rather than polkadot-js terminology (e.g., `"Struct"` instead of `"Composite"`).
+
+## Input Component Registry
+
+The input component registry (`lib/input-map.ts`) uses a priority-based pattern matching system to map Substrate type names to the appropriate React input component.
+
+### How It Works
+
+1. Each input component is registered with a set of **patterns** (exact strings or regular expressions) and a **priority** number.
+2. When a type name needs to be rendered, `findComponent()` iterates the registry in priority order (highest first).
+3. The first matching pattern determines which component renders the input.
+4. Unknown types fall back to a plain text input.
+
+### Priority Ordering
+
+Higher priority values are checked first, ensuring more specific types take precedence:
+
+- **Account** (100) — `AccountId`, `MultiAddress`, etc.
+- **Balance** (95) — `Balance`, `Compact<Balance>`, etc.
+- **Amount** (90) — `u32`, `u64`, `u128`, `Compact<u128>`, etc.
+- **Hash variants** — H160 (82), H256 (80), H512 (78)
+- **Collection types** — VectorFixed (43) > BTreeMap (42) > BTreeSet (41) > Vector (40)
+
+This ordering ensures that `Compact<Balance>` matches the Balance component (priority 95) rather than the Amount component's `/Compact</` regex (priority 90).
+
+## Dual-Pane Builder Interface
+
+The extrinsic builder uses a side-by-side dual-pane layout:
+
+- **Form Pane (left)** — Pallet selector, method selector, and dynamically rendered parameter inputs based on the selected call's metadata fields.
+- **Hex Pane (right)** — Live preview of the SCALE-encoded call data, with an editable hex input for decoding in the reverse direction.
+
+Changes in either pane sync to the other in real time, providing bi-directional editing.
+
+## Encoding/Decoding Flow
+
+The encoding and decoding flow connects the form pane to the hex pane:
+
+1. **Form to Hex** — When the user fills in form fields, each value is encoded via `encodeArg()` using the field's `typeId` from chain metadata. Individual hex results are concatenated with the pallet and method index bytes to produce the full call data.
+2. **Hex to Form** — When the user pastes or edits hex in the hex pane, the call data is split into pallet index, method index, and argument bytes. `decodeAllArgs()` sequentially decodes each argument using the expected field types, populating the form fields.
+3. **Validation** — Before encoding, `validateAllArgs()` checks each field value against type-specific rules (SS58 format for accounts, numeric ranges for amounts, hex format for hashes, etc.).
+4. **Value Coercion** — Form inputs always produce strings. The codec module automatically coerces these to the types expected by Dedot codecs (e.g., `"true"` to `true`, numeric strings to `BigInt`).

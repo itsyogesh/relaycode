@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@/.source": [
+        "./.source/server.ts"
       ]
     },
     "target": "ES2017"
