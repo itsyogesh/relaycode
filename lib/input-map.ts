@@ -251,3 +251,5 @@ export function findComponent(typeName: string, typeId?: number, client?: DedotC
   // Fallback to Text for unknown types
   return { component: Text, schema: Text.schema, typeId };
 }
+
+export { findComponentWithContext } from "./pallet-overrides";

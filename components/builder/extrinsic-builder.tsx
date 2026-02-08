@@ -28,11 +28,12 @@ import {
 import ReactMarkdown from "react-markdown";
 import { Separator } from "@/components/ui/separator";
 import { Combobox } from "@/components/builder/combobox";
-import { findComponent } from "@/lib/input-map";
+import { findComponentWithContext } from "@/lib/input-map";
 import { validateAllArgs } from "@/lib/validation";
 import { BuilderFormValues } from "@/app/builder/page";
 import { useAccount, useSendTransaction } from "@luno-kit/react";
 import { toast } from "sonner";
+import { usePalletContext } from "@/hooks/use-pallet-context";
 
 interface ExtrinsicBuilderProps {
   client: DedotClient<PolkadotApi>;
@@ -54,6 +55,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
   >([]);
+
+  // Extract pallet and method names from current selection
+  const sectionValue = builderForm.watch("section");
+  const methodValue = builderForm.watch("method");
+  const palletName = sectionValue ? sectionValue.split(":")[1] : undefined;
+  const methodName = methodValue ? methodValue.split(":")[1] : undefined;
+
+  // Eagerly fetch contextual data when pallet changes
+  const { context: palletContext, isLoading: isContextLoading } =
+    usePalletContext(client, palletName);
 
   useEffect(() => {
     const section = builderForm.watch("section");
@@ -249,7 +260,15 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 control={builderForm.control}
                 name={arg.name || ""}
                 render={({ field }) => {
-                  const resolved = findComponent(arg.typeName || "", arg.typeId, client);
+                  const resolved = findComponentWithContext(
+                    palletName,
+                    methodName,
+                    arg.name || "",
+                    arg.typeName || "",
+                    arg.typeId,
+                    client,
+                    palletContext
+                  );
                   const Component = resolved.component;
                   return (
                     <FormItem className="ml-8">
@@ -264,6 +283,8 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                           label={arg.name || ""}
                           typeName={arg.typeName || ""}
                           typeId={resolved.typeId}
+                          palletContext={palletContext}
+                          isContextLoading={isContextLoading}
                           {...field}
                         />
                       </div>

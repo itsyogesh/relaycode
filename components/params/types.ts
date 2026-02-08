@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { DedotClient } from "dedot";
 import { PolkadotApi } from "@dedot/chaintypes";
+import type { PalletContextData } from "@/types/pallet-context";
 
 export interface ParamInputProps {
   name: string;
@@ -14,6 +15,8 @@ export interface ParamInputProps {
   typeId?: number;
   value?: any;
   onChange?: (value: unknown) => void;
+  palletContext?: PalletContextData | null;
+  isContextLoading?: boolean;
 }
 
 export interface ParamComponentType {
