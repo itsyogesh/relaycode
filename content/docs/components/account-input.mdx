@@ -3,6 +3,29 @@ title: Account Input
 description: Address input with wallet integration and SS58 validation
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <AccountDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Account } from "@/components/params/inputs/account";
+
+<Account
+  name="dest"
+  label="Destination"
+  description="The recipient account"
+  client={client}
+  typeId={0}
+  isRequired
+  onChange={(address) => console.log("Selected:", address)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Account Input
 
 The Account input provides a Substrate address field with connected wallet integration, recent address history, and SS58 format validation. It is used whenever a parameter expects an on-chain account identifier -- transfers, proxies, identity lookups, and any call that targets a specific address.

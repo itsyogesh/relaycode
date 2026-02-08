@@ -7,6 +7,9 @@ import {
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import { ComponentPreview } from "@/components/docs/component-preview";
+import { AccountDemo, BalanceDemo, EnumDemo } from "@/components/docs/demos";
+import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
@@ -25,6 +28,12 @@ export default async function Page(props: {
         <MDX
           components={{
             ...defaultMdxComponents,
+            ComponentPreview,
+            AccountDemo,
+            BalanceDemo,
+            EnumDemo,
+            Tab,
+            Tabs,
           }}
         />
       </DocsBody>
