@@ -1,0 +1,65 @@
+---
+title: Bounty Selector
+description: Searchable combobox for selecting a treasury bounty by index
+---
+
+# Bounty Selector
+
+The Bounty Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a `bounty_id` parameter in bounty-related calls. It displays a searchable combobox populated with live bounty data including titles, reward values, curator information, and status.
+
+## When It Appears
+
+The Bounty Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter |
+|---|---|---|
+| `Bounties` | `approve_bounty` | `bounty_id` |
+| `Bounties` | `propose_curator` | `bounty_id` |
+| `Bounties` | `close_bounty` | `bounty_id` |
+| `Bounties` | `award_bounty` | `bounty_id` |
+| `Bounties` | `claim_bounty` | `bounty_id` |
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Currently selected bounty index |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected bounty index |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Governance context containing the bounties list |
+
+## Features
+
+- **Searchable**: Filters bounties by index, title, description, or curator address.
+- **Reward display**: Shows the bounty reward value converted from planck to the chain's native token denomination (e.g. "100 DOT").
+- **Curator info**: Displays the curator's on-chain identity name when available, otherwise shows a truncated address.
+- **Status badge**: A badge showing the bounty's current status (e.g. Active, CuratorProposed, PendingPayout).
+- **Bounty index**: Each row displays the bounty index in monospace (e.g. "#7") for quick identification.
+- **Title with fallback**: Shows the bounty title, falling back to the first 60 characters of the description, or "Untitled" if neither is available.
+- **Graceful fallback**: Falls back to a plain numeric input via `SelectorFallback` when context data is unavailable.
+
+## Data Source
+
+Bounty data comes from the `GovernanceContext` fetched by `lib/pallet-context/governance.ts`. The primary source is the **Polkassembly API** (`lib/api/polkassembly.ts` -- `fetchBounties`), which provides bounty IDs, titles, descriptions, curators, reward amounts, and statuses. Falls back to **on-chain RPC** (`bounties.bounties.entries()`) when the API is unavailable, though the RPC fallback provides less metadata (no titles or descriptions).
+
+## Usage
+
+The Bounty Selector is resolved automatically by `findComponentWithContext` when pallet overrides match:
+
+```tsx
+import { findComponentWithContext } from "@/lib/input-map";
+
+// When palletName="Bounties", methodName="approve_bounty", fieldName="bounty_id"
+const result = findComponentWithContext(
+  "Bounties", "approve_bounty", "bounty_id", typeName, typeId, client, palletContext
+);
+// result.component === BountySelector
+// result.isOverride === true
+```
+
+## Value Format
+
+The `onChange` callback receives a **number** -- the bounty index of the selected bounty.

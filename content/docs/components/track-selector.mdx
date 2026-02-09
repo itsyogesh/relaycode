@@ -1,0 +1,61 @@
+---
+title: Track Selector
+description: Searchable combobox for selecting an OpenGov governance track
+---
+
+# Track Selector
+
+The Track Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a parameter that expects a governance track ID. It displays a searchable combobox populated with the chain's governance tracks, showing track names, IDs, and the current/maximum number of deciding referenda per track.
+
+## When It Appears
+
+The Track Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter |
+|---|---|---|
+| `ConvictionVoting` | `delegate` | `class` |
+| `ConvictionVoting` | `undelegate` | `class` |
+| `ConvictionVoting` | `remove_vote` | `class` |
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Currently selected track ID |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected track ID |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Governance context containing the tracks list |
+
+## Features
+
+- **Searchable**: Filters tracks by ID or name as the user types.
+- **Track ID prefix**: Each row displays the track ID in monospace (e.g. "#0") for quick identification.
+- **Track name**: Shows the human-readable track name (e.g. "Root", "WhitelistedCaller", "SmallTipper").
+- **Deciding capacity**: Displays the current and maximum number of referenda that can be deciding simultaneously on each track (e.g. "3/10 deciding").
+- **Graceful fallback**: Falls back to a plain numeric input via `SelectorFallback` when context data is unavailable.
+
+## Data Source
+
+Track data comes from the `GovernanceContext` fetched by `lib/pallet-context/governance.ts`. Tracks are read directly from the **on-chain runtime constants** via `client.consts.referenda.tracks`, which provides track IDs, names, and max deciding counts. This data is always available from the connected chain's metadata and does not require an external API.
+
+## Usage
+
+The Track Selector is resolved automatically by `findComponentWithContext` when pallet overrides match:
+
+```tsx
+import { findComponentWithContext } from "@/lib/input-map";
+
+// When palletName="ConvictionVoting", methodName="delegate", fieldName="class"
+const result = findComponentWithContext(
+  "ConvictionVoting", "delegate", "class", typeName, typeId, client, palletContext
+);
+// result.component === TrackSelector
+// result.isOverride === true
+```
+
+## Value Format
+
+The `onChange` callback receives a **number** -- the track ID of the selected governance track.

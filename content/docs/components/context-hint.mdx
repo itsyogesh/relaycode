@@ -1,0 +1,53 @@
+---
+title: ContextHint
+description: Inline hint component for displaying contextual information below inputs
+---
+
+# ContextHint
+
+ContextHint is a small utility component that renders an inline hint below a form input. It displays a text message with an icon (defaulting to an Info icon) in a muted, compact style. It is used by contextual selectors and the Era Selector to surface live chain data as helpful context for the user.
+
+## When It Appears
+
+ContextHint is not a standalone selector -- it is a building block used internally by other selector components. It appears:
+
+- Inside `EraSelector` to show current and active era values.
+- Inside `SelectorFallback` to indicate that context data is unavailable.
+- Can be used in any custom selector to display contextual information.
+
+## Props
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `text` | `string` | Yes | The hint text to display |
+| `icon` | `React.ReactNode` | No | Custom icon element. Defaults to a Lucide `Info` icon (14px) |
+
+## Features
+
+- **Compact layout**: Renders as a flex row with a small icon and text in `text-xs text-muted-foreground` styling.
+- **Customizable icon**: Accepts any React node as the icon. Defaults to the Lucide `Info` icon at 12x12px.
+- **Non-intrusive**: Styled to appear as secondary information below the main input without drawing focus.
+
+## Data Source
+
+ContextHint does not fetch any data itself. It receives pre-formatted text from its parent component.
+
+## Usage
+
+```tsx
+import { ContextHint } from "@/components/params/selectors/context-hint";
+
+// Default Info icon
+<ContextHint text="Current era: 1234 . Active era: 1233" />
+
+// Custom icon
+import { AlertCircle } from "lucide-react";
+<ContextHint
+  text="Context unavailable -- enter value manually"
+  icon={<AlertCircle className="h-3 w-3 shrink-0 text-amber-500" />}
+/>
+```
+
+## Value Format
+
+ContextHint does not emit any value. It is a display-only component.

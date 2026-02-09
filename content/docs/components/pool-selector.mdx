@@ -1,0 +1,64 @@
+---
+title: Pool Selector
+description: Searchable combobox for selecting a nomination pool by ID
+---
+
+# Pool Selector
+
+The Pool Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a `pool_id` parameter in nomination pool calls. It displays a searchable combobox populated with live pool data including names, states, member counts, and total stake.
+
+## When It Appears
+
+The Pool Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter |
+|---|---|---|
+| `NominationPools` | `join` | `pool_id` |
+| `NominationPools` | `bond_extra` | `pool_id` |
+| `NominationPools` | `unbond` | `pool_id` |
+| `NominationPools` | `nominate` | `pool_id` |
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Currently selected pool ID |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected pool ID |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Staking context containing the pools list |
+
+## Features
+
+- **Searchable combobox**: Filters pools by ID or name as the user types.
+- **Pool state badges**: Color-coded badges indicate pool state -- green for Open, amber for Blocked, red for Destroying.
+- **Destroying filter**: A checkbox toggle in the dropdown header lets the user show or hide pools in the Destroying state (hidden by default).
+- **Member count**: Each pool row displays the number of current members with a Users icon.
+- **Total stake**: Shows the pool's total bonded stake when available.
+- **Pool ID prefix**: Each row displays the pool ID in monospace (e.g. "#42") for quick identification.
+- **Graceful fallback**: Falls back to a plain numeric input via `SelectorFallback` when context data is unavailable.
+
+## Data Source
+
+Pool data comes from the `StakingContext` fetched by `lib/pallet-context/staking.ts`. The primary source is the **Subscan API** (`lib/api/subscan.ts` -- `fetchNominationPools`), which provides pool IDs, metadata names, states, member counts, total bonded amounts, and pool account addresses. Falls back to **on-chain RPC** (`nominationPools.bondedPools.entries()` and `nominationPools.metadata.entries()`) when the API is unavailable.
+
+## Usage
+
+The Pool Selector is resolved automatically by `findComponentWithContext` when pallet overrides match:
+
+```tsx
+import { findComponentWithContext } from "@/lib/input-map";
+
+// When palletName="NominationPools", methodName="join", fieldName="pool_id"
+const result = findComponentWithContext(
+  "NominationPools", "join", "pool_id", typeName, typeId, client, palletContext
+);
+// result.component === PoolSelector
+// result.isOverride === true
+```
+
+## Value Format
+
+The `onChange` callback receives a **number** -- the pool ID of the selected pool.

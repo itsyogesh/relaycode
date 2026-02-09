@@ -1,0 +1,66 @@
+---
+title: Referendum Selector
+description: Searchable combobox for selecting an OpenGov referendum by index
+---
+
+# Referendum Selector
+
+The Referendum Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a parameter that expects a referendum index. It displays a searchable combobox with live referendum data including titles, track names, voting tallies, and status badges.
+
+## When It Appears
+
+The Referendum Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter |
+|---|---|---|
+| `ConvictionVoting` | `vote` | `poll_index` |
+| `ConvictionVoting` | `remove_vote` | `index` |
+| `Referenda` | `cancel` | `index` |
+| `Referenda` | `kill` | `index` |
+| `Referenda` | `place_decision_deposit` | `index` |
+| `Referenda` | `refund_decision_deposit` | `index` |
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Currently selected referendum index |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected referendum index |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Governance context containing the referenda list |
+
+## Features
+
+- **Searchable**: Filters referenda by index number, title, or track name.
+- **Active/All filter**: Toggle buttons in the dropdown header switch between showing only active referenda (Deciding, Confirming, Ongoing, Submitted) or all referenda.
+- **Status badges**: Color-coded badges indicate referendum status -- blue for Deciding/Confirming, green for Approved/Executed, red for Rejected/Cancelled/Killed/TimedOut.
+- **Tally display**: Shows the Aye percentage of the current vote tally with a Vote icon.
+- **Track name**: Displays the governance track (e.g. "Root", "SmallTipper") for each referendum.
+- **Referendum index**: Each row displays the index in monospace (e.g. "#1234") for quick identification.
+- **Graceful fallback**: Falls back to a plain numeric input via `SelectorFallback` when context data is unavailable.
+
+## Data Source
+
+Referendum data comes from the `GovernanceContext` fetched by `lib/pallet-context/governance.ts`. The primary source is the **Polkassembly API** (`lib/api/polkassembly.ts` -- `fetchReferenda`), which provides referendum IDs, titles, statuses, track info, proposers, and tally data. Falls back to **on-chain RPC** (`referenda.referendumInfoFor.entries()`) when the API is unavailable, though the RPC fallback provides less metadata (no titles or track names).
+
+## Usage
+
+The Referendum Selector is resolved automatically by `findComponentWithContext` when pallet overrides match:
+
+```tsx
+import { findComponentWithContext } from "@/lib/input-map";
+
+// When palletName="ConvictionVoting", methodName="vote", fieldName="poll_index"
+const result = findComponentWithContext(
+  "ConvictionVoting", "vote", "poll_index", typeName, typeId, client, palletContext
+);
+// result.component === ReferendumSelector
+// result.isOverride === true
+```
+
+## Value Format
+
+The `onChange` callback receives a **number** -- the referendum index of the selected referendum.
