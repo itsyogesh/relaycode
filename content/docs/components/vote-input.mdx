@@ -1,0 +1,109 @@
+---
+title: Vote Input
+description: Conviction voting input with Standard, Split, and SplitAbstain modes
+---
+
+# Vote Input
+
+The Vote input provides a full conviction voting interface for OpenGov referenda. It supports three voting modes -- Standard (single direction with conviction), Split (aye/nay balances), and SplitAbstain (aye/nay/abstain balances). It emits a properly formatted `AccountVote` enum value used by the `ConvictionVoting` pallet.
+
+## Supported Type Names
+
+The Vote component matches the following type names at **priority 60** in the registry:
+
+- `AccountVote`
+- Any type name matching `/^AccountVote/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `isDisabled` | `boolean` | No | Disables all inputs when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | No | Connected Dedot client, passed to nested Balance inputs |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the formatted AccountVote enum |
+
+## Features
+
+- **Three voting modes**: A mode selector dropdown lets the user choose between Standard, Split, and SplitAbstain voting.
+- **Standard mode**: Provides Aye/Nay direction buttons with color-coded visual feedback (green for Aye, red for Nay), a conviction multiplier selector (0x through 6x), and a single balance input.
+- **Conviction selector**: Shows all seven conviction levels (None through 6x) with human-readable lock period descriptions (e.g. "Lock for 1 enactment period (~28 days)").
+- **Split mode**: Displays separate balance inputs for Aye and Nay amounts, allowing the user to split their vote.
+- **SplitAbstain mode**: Extends Split with an additional Abstain balance input.
+- **Nested Balance inputs**: Each balance field uses the Balance component internally, inheriting chain-aware denomination formatting.
+- **Vote byte encoding**: In Standard mode, the vote direction and conviction are encoded into a single byte per the `PalletConvictionVotingVote` format (high bit 0x80 = aye, low bits = conviction 0-6).
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// These resolve to the Vote component
+findComponent("AccountVote", typeId, client);
+findComponent("AccountVoteSplit", typeId, client);
+```
+
+## Usage
+
+The Vote component is rendered by the extrinsic builder when `findComponent` resolves a parameter type matching `AccountVote`. Direct usage:
+
+```tsx
+import { Vote } from "@/components/params/inputs/vote";
+
+<Vote
+  name="vote"
+  label="Vote"
+  description="Your vote on this referendum"
+  client={client}
+  isRequired
+  onChange={(vote) => console.log("Vote:", vote)}
+/>
+```
+
+## Validation
+
+The component uses a permissive `z.any()` schema. Structural validation is handled internally by the mode-specific form layout -- each mode enforces its own required fields through the nested Balance inputs.
+
+## Value Format
+
+The `onChange` callback receives an **object** representing the `AccountVote` enum. The shape depends on the selected mode:
+
+**Standard:**
+```ts
+{
+  type: "Standard",
+  value: {
+    vote: 128,       // encoded byte: direction (0x80=aye, 0x00=nay) | conviction (0-6)
+    balance: "1000000000000"  // planck string
+  }
+}
+```
+
+**Split:**
+```ts
+{
+  type: "Split",
+  value: {
+    aye: "500000000000",   // planck string
+    nay: "500000000000"    // planck string
+  }
+}
+```
+
+**SplitAbstain:**
+```ts
+{
+  type: "SplitAbstain",
+  value: {
+    aye: "300000000000",
+    nay: "300000000000",
+    abstain: "400000000000"
+  }
+}
+```

@@ -1,0 +1,52 @@
+---
+title: Era Selector
+description: Numeric input with contextual hints showing current and active era
+---
+
+# Era Selector
+
+The Era Selector is a contextual component that enhances a plain numeric input with live era information from the chain. Rather than replacing the input with a dropdown, it augments the field with a `ContextHint` showing the current and active era values, helping the user enter the correct era index.
+
+## When It Appears
+
+The Era Selector is not currently mapped in `PALLET_OVERRIDES`. It is available as a contextual enhancement for any parameter that expects an era index, and can be wired into overrides for staking-related calls that accept era parameters (e.g. `Staking.payoutStakers`).
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the input |
+| `value` | `any` | No | Currently entered era value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the entered number |
+| `palletContext` | `PalletContextData` | No | Staking context containing current and active era |
+
+## Features
+
+- **Numeric input**: A standard number input field for entering the era index.
+- **Era hints**: Displays contextual information below the input showing the chain's current era and active era, separated by a dot separator (e.g. "Current era: 1234 . Active era: 1233").
+- **Dynamic hints**: Only shows hints when era data is available in the staking context. If neither `currentEra` nor `activeEra` is present, no hint is displayed.
+
+## Data Source
+
+Era data comes from the `StakingContext` fetched by `lib/pallet-context/staking.ts`. The values are queried via **on-chain RPC** -- `client.query.staking.currentEra()` and `client.query.staking.activeEra()`. These are direct chain state queries and do not depend on any external API.
+
+## Usage
+
+The Era Selector can be used directly or resolved via pallet overrides:
+
+```tsx
+import { EraSelector } from "@/components/params/selectors/era-selector";
+
+<EraSelector
+  label="Era"
+  value={1234}
+  onChange={(era) => console.log("Era:", era)}
+  palletContext={stakingContext}
+/>
+```
+
+## Value Format
+
+The `onChange` callback receives a **number** -- the era index entered by the user.

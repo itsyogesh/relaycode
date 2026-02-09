@@ -1,0 +1,66 @@
+---
+title: SelectorFallback
+description: Fallback input shown when contextual data is unavailable for a selector
+---
+
+# SelectorFallback
+
+SelectorFallback is a fallback component used by all contextual selectors when their required context data is unavailable or empty. Instead of showing a broken or empty dropdown, it renders a plain text or number input with an amber warning hint indicating that the user must enter the value manually.
+
+## When It Appears
+
+SelectorFallback is rendered automatically by other selectors in two scenarios:
+
+- **No context**: The `palletContext` prop is undefined or null (e.g. the pallet context fetch failed or has not completed).
+- **Empty data**: The context exists but the relevant data array is empty (e.g. no validators, no pools, no referenda).
+
+It is used as the fallback in: `ValidatorSelector`, `ValidatorMultiSelector`, `PoolSelector`, `ReferendumSelector`, `BountySelector`, and `TrackSelector`.
+
+## Props
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the input |
+| `value` | `string \| number` | No | Current input value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the entered value |
+| `placeholder` | `string` | No | Placeholder text. Defaults to `"Enter {label}"` |
+| `type` | `"text" \| "number"` | No | Input type. Defaults to `"number"` |
+
+## Features
+
+- **Plain input**: Renders a standard Input component (text or number) without any dropdown or combobox behavior.
+- **Warning hint**: Displays a `ContextHint` with an amber `AlertCircle` icon and the message "Context unavailable -- enter value manually".
+- **Type-aware parsing**: When `type` is `"number"`, the input value is parsed with `Number()` before being passed to `onChange`. When `type` is `"text"`, the raw string is passed.
+- **Customizable placeholder**: Accepts a custom placeholder or generates one from the label.
+
+## Data Source
+
+SelectorFallback does not fetch any data. It is a pure input component that accepts user-typed values.
+
+## Usage
+
+SelectorFallback is typically used internally by selectors, not directly:
+
+```tsx
+import { SelectorFallback } from "@/components/params/selectors/selector-fallback";
+
+// Numeric fallback (default)
+<SelectorFallback
+  label="Pool ID"
+  value={42}
+  onChange={(v) => console.log("Value:", v)}
+/>
+
+// Text fallback for validator addresses
+<SelectorFallback
+  label="Validator"
+  value=""
+  onChange={(v) => console.log("Address:", v)}
+  type="text"
+  placeholder="Enter validator address"
+/>
+```
+
+## Value Format
+
+The `onChange` callback receives either a **number** (when `type="number"`, the default) or a **string** (when `type="text"`), depending on the configured input type.

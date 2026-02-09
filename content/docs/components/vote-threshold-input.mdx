@@ -1,0 +1,72 @@
+---
+title: VoteThreshold Input
+description: Dropdown selector for referendum vote threshold types
+---
+
+# VoteThreshold Input
+
+The VoteThreshold input provides a dropdown for selecting the vote threshold type used in legacy (pre-OpenGov) referendum mechanics. It presents three options -- SuperMajorityApprove, SuperMajorityAgainst, and SimpleMajority -- as a simple select menu.
+
+## Supported Type Names
+
+The VoteThreshold component matches the following type names at **priority 55** in the registry:
+
+- `VoteThreshold`
+- Any type name matching `/VoteThreshold/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `isDisabled` | `boolean` | No | Disables the select dropdown when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected threshold string |
+
+## Features
+
+- **Three threshold options**: SuperMajorityApprove, SuperMajorityAgainst, and SimpleMajority.
+- **Select dropdown**: Uses the standard shadcn/ui Select component with a placeholder prompt.
+- **Enum-based validation**: The Zod schema restricts values to the three valid threshold variants.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// These resolve to the VoteThreshold component
+findComponent("VoteThreshold", typeId, client);
+```
+
+## Usage
+
+The VoteThreshold component is rendered by the extrinsic builder when `findComponent` resolves a `VoteThreshold` type. Direct usage:
+
+```tsx
+import { VoteThreshold } from "@/components/params/inputs/vote-threshold";
+
+<VoteThreshold
+  name="threshold"
+  label="Vote Threshold"
+  description="The threshold required for the referendum to pass"
+  isRequired
+  onChange={(threshold) => console.log("Threshold:", threshold)}
+/>
+```
+
+## Validation
+
+The component uses a Zod enum schema that only accepts the three valid threshold values:
+
+```ts
+const schema = z.enum(["SuperMajorityApprove", "SuperMajorityAgainst", "SimpleMajority"]);
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- one of `"SuperMajorityApprove"`, `"SuperMajorityAgainst"`, or `"SimpleMajority"`.

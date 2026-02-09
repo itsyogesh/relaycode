@@ -1,0 +1,57 @@
+---
+title: Validator Selector
+description: Searchable combobox for selecting a single validator from on-chain data
+---
+
+# Validator Selector
+
+The Validator Selector is a contextual selector that replaces the default text input when the extrinsic builder detects a parameter that expects a single validator address. It displays a searchable combobox populated with live validator data including identity names, commission rates, and active/waiting status.
+
+## When It Appears
+
+The Validator Selector is not currently mapped to any pallet override in `PALLET_OVERRIDES`. It serves as the single-select counterpart to `ValidatorMultiSelector` and can be used directly where a single validator address is needed. The multi-select variant (`ValidatorMultiSelector`) is used for the `targets` parameter in staking nomination calls.
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Currently selected validator address |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected validator address |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Staking context containing the validators list |
+
+## Features
+
+- **Searchable combobox**: Filters validators by address or on-chain identity name as the user types.
+- **Identity display**: Shows the validator's on-chain identity name when available, otherwise displays a truncated address.
+- **Verified badge**: Displays a green shield icon next to validators with verified identity judgements.
+- **Commission rate**: Shows each validator's commission percentage alongside their name.
+- **Active/Waiting status**: Color-coded badges indicate whether a validator is in the active set (green) or waiting (muted).
+- **Sort order**: Validators are sorted with active validators first, then by ascending commission rate.
+- **Virtualized list**: Renders up to 100 items at a time for performance.
+- **Graceful fallback**: When context data is unavailable, falls back to a plain text input via `SelectorFallback`.
+
+## Data Source
+
+Validator data comes from the `StakingContext` which is fetched by `lib/pallet-context/staking.ts`. The primary source is the **Subscan API** (`lib/api/subscan.ts` -- `fetchValidators`), which provides validator addresses, identity information, commission rates, total stake, and nominator counts. If the Subscan API is unavailable, the system falls back to an **on-chain RPC** query (`staking.validators.entries()`) which provides addresses and commission prefs but no identity data.
+
+## Usage
+
+The Validator Selector is resolved automatically by `findComponentWithContext` when contextual overrides match. It is not typically used directly:
+
+```tsx
+// Automatic resolution via pallet overrides
+import { findComponentWithContext } from "@/lib/input-map";
+
+const result = findComponentWithContext(
+  palletName, methodName, fieldName, typeName, typeId, client, palletContext
+);
+// result.component may be ValidatorSelector when overrides match
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- the SS58-encoded validator address selected from the list.

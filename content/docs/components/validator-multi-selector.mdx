@@ -1,0 +1,69 @@
+---
+title: Validator Multi-Selector
+description: Multi-select combobox for choosing up to 16 validators for staking nominations
+---
+
+# Validator Multi-Selector
+
+The Validator Multi-Selector is a contextual selector that replaces the default input when the extrinsic builder detects a parameter that expects a list of validator addresses. It provides a multi-select combobox with checkbox-style selection, removable chips for selected validators, and a cap of 16 nominations matching the Polkadot runtime limit.
+
+## When It Appears
+
+The Validator Multi-Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter |
+|---|---|---|
+| `Staking` | `nominate` | `targets` |
+| `NominationPools` | `nominate` | `validators` |
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface with context extensions:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `label` | `string` | No | Display label shown above the selector |
+| `value` | `any` | No | Array of currently selected validator addresses |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the updated array of addresses |
+| `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
+| `palletContext` | `PalletContextData` | No | Staking context containing the validators list |
+
+## Features
+
+- **Multi-select with checkboxes**: Each validator row has a checkbox indicator. Clicking toggles selection.
+- **16-nomination cap**: Enforces the Polkadot maximum of 16 nominations. Items beyond the limit are visually dimmed and disabled.
+- **Selection counter**: A badge in the header shows the current count (e.g. "3/16 selected").
+- **Removable chips**: Selected validators appear as removable badge chips below the combobox, each showing the validator's identity or truncated address with an X button.
+- **Searchable**: Filters the validator list by address or identity name.
+- **Verified badge**: Green shield icon for validators with verified on-chain identity.
+- **Commission and status**: Each row shows the commission percentage and an Active/Waiting status badge.
+- **Sort order**: Active validators first, then sorted by ascending commission.
+- **Virtualized list**: Renders up to 100 items at a time.
+- **Graceful fallback**: Falls back to a text input (comma-separated addresses) when context data is unavailable.
+
+## Data Source
+
+Validator data comes from the `StakingContext` fetched by `lib/pallet-context/staking.ts`. The primary source is the **Subscan API** (`lib/api/subscan.ts` -- `fetchValidators`), which provides addresses, identity names, commission rates, stake totals, and nominator counts. Falls back to **on-chain RPC** (`staking.validators.entries()`) when the API is unavailable.
+
+## Usage
+
+The Validator Multi-Selector is resolved automatically by `findComponentWithContext` when pallet overrides match. It is not used directly:
+
+```tsx
+import { findComponentWithContext } from "@/lib/input-map";
+
+// When palletName="Staking", methodName="nominate", fieldName="targets"
+const result = findComponentWithContext(
+  "Staking", "nominate", "targets", typeName, typeId, client, palletContext
+);
+// result.component === ValidatorMultiSelector
+// result.isOverride === true
+```
+
+## Value Format
+
+The `onChange` callback receives a **string array** -- an array of SS58-encoded validator addresses:
+
+```ts
+["5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY", "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"]
+```
