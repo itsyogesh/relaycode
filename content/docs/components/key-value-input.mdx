@@ -1,0 +1,86 @@
+---
+title: KeyValue Input
+description: Two-field key/value pair input with automatic type resolution
+---
+
+# KeyValue Input
+
+The KeyValue input renders a side-by-side key and value pair within a card. It resolves the types of both fields from chain metadata when available, falling back to plain text inputs. This component is used for `KeyValue` storage items and similar two-field structures.
+
+## Supported Type Names
+
+The KeyValue component matches the following type names at **priority 50**:
+
+- `KeyValue`
+- Any type name matching `/KeyValue/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface plus optional component overrides:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the card |
+| `description` | `string` | No | Help text shown below the card |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"KeyValue"`) |
+| `isDisabled` | `boolean` | No | Disables both key and value inputs when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for type resolution |
+| `typeId` | `number` | No | Metadata type ID used to resolve inner key/value types |
+| `value` | `any` | No | Externally controlled value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the `{ key, value }` object |
+| `keyComponent` | `React.ReactNode` | No | Custom React element to use for the key field |
+| `valueComponent` | `React.ReactNode` | No | Custom React element to use for the value field |
+
+## Features
+
+- **Automatic type resolution**: When a `typeId` is provided and the metadata describes a Tuple with two fields, the component resolves each field's type through `findComponent` and renders the appropriate typed input (e.g. an Account input for an `AccountId` key, an Amount input for a `u64` value).
+- **Custom component injection**: The `keyComponent` and `valueComponent` props allow parent components to override the default type resolution with specific React elements. The KeyValue component clones these elements with the appropriate `name`, `label`, `isDisabled`, `isRequired`, and `onChange` props.
+- **Card layout**: The key and value fields are displayed side by side in a two-column grid within a card, visually grouping them as a pair.
+- **Fallback to text**: When no metadata is available and no custom components are provided, both fields render as plain text inputs.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Resolves to the KeyValue component
+findComponent("KeyValue", typeId, client);
+```
+
+## Usage
+
+The KeyValue component is rendered by the extrinsic builder when a parameter resolves to a `KeyValue` type. Direct usage:
+
+```tsx
+import { KeyValue } from "@/components/params/inputs/key-value";
+
+<KeyValue
+  name="entry"
+  label="Storage Entry"
+  description="A key-value storage pair"
+  client={client}
+  typeId={20}
+  isRequired
+  onChange={(pair) => console.log("Key-Value:", pair)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that validates an object with `key` and `value` fields:
+
+```ts
+const schema = z.object({
+  key: z.any(),
+  value: z.any(),
+});
+```
+
+Inner field validation is delegated to the resolved child components.
+
+## Value Format
+
+The `onChange` callback receives an **object** with `key` and `value` properties (e.g. `{ key: "0xabc", value: "42" }`). Both fields must have a value before the object is emitted. If either field is cleared, `undefined` is emitted.

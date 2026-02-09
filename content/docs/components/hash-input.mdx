@@ -1,0 +1,109 @@
+---
+title: Hash Input
+description: Fixed-length hex hash input for H160, H256, and H512 types
+---
+
+# Hash Input
+
+The Hash input provides a hex string field for fixed-length hash types. Three variants are exported -- `Hash160`, `Hash256`, and `Hash512` -- each validating against the expected byte length. A live validation icon shows whether the current value matches the required format.
+
+## Supported Type Names
+
+The three Hash variants are registered at different priorities to ensure correct matching:
+
+**Hash160** -- priority **82**:
+- `H160`
+- Any type name matching `/^H160$/`
+
+**Hash256** -- priority **80**:
+- `H256`
+- `Hash`
+- Any type name matching `/H256/` or `/Hash/`
+
+**Hash512** -- priority **78**:
+- `H512`
+- Any type name matching `/^H512$/`
+
+## Props
+
+All three variants accept the standard `ParamInputProps` interface. The internal `Hash` component also receives a `hashType` prop, but this is set automatically by each exported variant:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"H256"`) |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled hex value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the hex hash string |
+
+## Features
+
+- **Fixed-length validation**: Each variant enforces the correct hex character count -- 40 for H160 (20 bytes), 64 for H256 (32 bytes), 128 for H512 (64 bytes).
+- **Live validation icon**: A green checkmark or red X icon appears in the input suffix to indicate whether the current value is a valid hash of the expected length.
+- **Auto `0x` prefix on paste**: When pasting a hex string without the `0x` prefix, the component automatically prepends it using the `autoPrefix0x` utility.
+- **Lowercase normalization**: Input is automatically lowercased for consistent hex formatting.
+- **Contextual placeholder**: Each variant shows a placeholder of the correct length so the user can see the expected format at a glance.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Each hash type resolves to its specific variant
+findComponent("H160", typeId, client);  // -> Hash160
+findComponent("H256", typeId, client);  // -> Hash256
+findComponent("Hash", typeId, client);  // -> Hash256
+findComponent("H512", typeId, client);  // -> Hash512
+```
+
+## Usage
+
+The Hash components are rendered by the extrinsic builder when a parameter resolves to a hash type. Direct usage:
+
+```tsx
+import { Hash256 } from "@/components/params/inputs/hash";
+
+<Hash256
+  name="codeHash"
+  label="Code Hash"
+  description="The hash of the contract code"
+  client={client}
+  typeId={11}
+  isRequired
+  onChange={(hash) => console.log("Hash:", hash)}
+/>
+```
+
+## Validation
+
+Each variant uses a Zod schema that validates the hex string length:
+
+```ts
+// H160: 40 hex characters (20 bytes)
+const hash160Schema = z.string().refine(
+  (value) => /^0x[0-9a-fA-F]{40}$/.test(value),
+  { message: "Invalid H160 hash (should be 40 hex characters with 0x prefix)" }
+);
+
+// H256: 64 hex characters (32 bytes)
+const hash256Schema = z.string().refine(
+  (value) => /^0x[0-9a-fA-F]{64}$/.test(value),
+  { message: "Invalid H256 hash (should be 64 hex characters with 0x prefix)" }
+);
+
+// H512: 128 hex characters (64 bytes)
+const hash512Schema = z.string().refine(
+  (value) => /^0x[0-9a-fA-F]{128}$/.test(value),
+  { message: "Invalid H512 hash (should be 128 hex characters with 0x prefix)" }
+);
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- a `0x`-prefixed lowercase hex string of the appropriate length. If the input is cleared, `undefined` is emitted.
