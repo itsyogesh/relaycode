@@ -3,7 +3,6 @@ import "@/styles/globals.css";
 import { Nunito } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
-import { Analytics } from "@vercel/analytics/next";
 
 import { RootProvider } from "fumadocs-ui/provider/next";
 
@@ -47,7 +46,6 @@ export default function RootLayout({ children }: RootLayoutProps) {
           </WalletProvider>
           <Toaster richColors closeButton />
         </RootProvider>
-        <Analytics />
       </body>
     </html>
   );

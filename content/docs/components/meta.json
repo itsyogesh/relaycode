@@ -1,4 +1,37 @@
 {
   "title": "Components",
-  "pages": ["index", "account-input", "balance-input", "enum-input"]
+  "pages": [
+    "index",
+    "---Input Components---",
+    "account-input",
+    "balance-input",
+    "amount-input",
+    "bool-input",
+    "hash-input",
+    "bytes-input",
+    "call-input",
+    "moment-input",
+    "vote-input",
+    "vote-threshold-input",
+    "key-value-input",
+    "option-input",
+    "vector-fixed-input",
+    "btree-map-input",
+    "btree-set-input",
+    "vector-input",
+    "tuple-input",
+    "struct-input",
+    "enum-input",
+    "text-input",
+    "---Contextual Selectors---",
+    "validator-selector",
+    "validator-multi-selector",
+    "pool-selector",
+    "referendum-selector",
+    "bounty-selector",
+    "track-selector",
+    "era-selector",
+    "context-hint",
+    "selector-fallback"
+  ]
 }
