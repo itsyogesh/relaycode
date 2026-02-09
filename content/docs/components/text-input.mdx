@@ -1,0 +1,76 @@
+---
+title: Text Input
+description: Generic string input and fallback for unknown types
+---
+
+# Text Input
+
+The Text input is a plain string field that serves as the fallback component for any parameter type that does not match a more specific input in the registry. It accepts arbitrary text and emits it as a raw string.
+
+## Supported Type Names
+
+The Text component is not registered with explicit patterns in the input map. Instead, it is the **fallback** returned by `findComponent` when no other component matches the given type name. Any type that does not match Account, Balance, Amount, Bool, Hash, Bytes, Call, Moment, Vote, VoteThreshold, KeyValue, Option, Vector, Tuple, Struct, or Enum will resolve to Text.
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) -- converted to string via `String()` |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the string value |
+
+## Features
+
+- **Universal fallback**: Any unrecognized type name in the metadata resolves to this component, ensuring every parameter has an input.
+- **External value sync**: When an external value is set (e.g. from hex decoding), it is coerced to a string via `String()` and displayed.
+- **Monospace font**: Uses a monospace font for consistency with other technical inputs.
+- **Error styling**: The input border turns red when a validation error is present.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Unknown types fall back to the Text component
+findComponent("SomeUnknownType", typeId, client);
+findComponent("Foo", typeId, client);
+```
+
+## Usage
+
+The Text component is rendered by the extrinsic builder as the default fallback. It can also be used directly:
+
+```tsx
+import { Text } from "@/components/params/inputs/text";
+
+<Text
+  name="remark"
+  label="Remark"
+  description="An arbitrary string"
+  client={client}
+  typeId={10}
+  onChange={(value) => console.log("Text:", value)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that accepts any string:
+
+```ts
+const schema = z.string();
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- the raw text entered by the user. If the input is cleared, an empty string `""` is emitted.

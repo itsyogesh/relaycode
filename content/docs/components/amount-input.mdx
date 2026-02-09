@@ -1,0 +1,92 @@
+---
+title: Amount Input
+description: Numeric input for integer types with range validation and hex mode
+---
+
+# Amount Input
+
+The Amount input provides a numeric field for entering integer values such as `u32`, `u64`, `u128`, and their signed and compact variants. It displays the valid range for the type, supports decimal and hexadecimal input modes for large integers, and offers denomination support for balance-like compact types like `Compact<u128>`.
+
+## Supported Type Names
+
+The Amount component matches the following type names at **priority 90**:
+
+- `Compact<u128>`
+- `Compact<u64>`
+- `Compact<u32>`
+- `u128`, `u64`, `u32`, `u16`, `u8`
+- `i128`, `i64`, `i32`, `i16`, `i8`
+- Any type name matching `/Compact</`
+
+Note: `Compact<Balance>` and `Compact<BalanceOf>` are caught by the Balance component at priority 95, not by Amount.
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface plus an optional `typeName`:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"u64"`, `"Compact<u128>"`). Determines range, denomination, and hex toggle behavior |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for chain metadata |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the numeric value as a string |
+
+## Features
+
+- **Automatic range display**: Shows the valid range beneath the input based on the integer type. For example, `u8` shows `0 -- 255` and `i16` shows `-32768 -- 32767`.
+- **Hex/Decimal toggle**: For large integer types (`u128`, `u256`, `i128`, `i256`, `Compact<u128>`), a mode toggle lets the user switch between decimal and hexadecimal input. Converting between modes preserves the value.
+- **Denomination support**: For `Compact<u128>` and `u128`, the input shows a denomination selector (e.g. DOT, mDOT, planck) similar to the Balance component, using the chain's native token metadata.
+- **Range validation**: Values outside the type's min/max range produce an inline error. For unsigned types the minimum is 0; for signed types it is the negative two's complement bound.
+- **Paste formatting**: Strips commas, spaces, and other numeric formatting characters from pasted values so users can paste amounts from block explorers.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// All of these resolve to the Amount component
+findComponent("u32", typeId, client);
+findComponent("u128", typeId, client);
+findComponent("i64", typeId, client);
+findComponent("Compact<u64>", typeId, client);
+```
+
+## Usage
+
+The Amount component is rendered by the extrinsic builder when a parameter resolves to a numeric integer type. Direct usage:
+
+```tsx
+import { Amount } from "@/components/params/inputs/amount";
+
+<Amount
+  name="weight"
+  label="Weight"
+  description="The dispatch weight"
+  typeName="u64"
+  client={client}
+  typeId={8}
+  isRequired
+  onChange={(value) => console.log("Value:", value)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that checks for a non-negative number:
+
+```ts
+const schema = z.number().min(0);
+```
+
+Additional runtime range validation is performed against the integer type bounds (e.g. `u8` rejects values above 255).
+
+## Value Format
+
+The `onChange` callback receives a **string** representing the integer value in decimal (e.g. `"42"`, `"1000000000000"`). For denominated types, the value is emitted in planck. If the input is cleared, `undefined` is emitted.

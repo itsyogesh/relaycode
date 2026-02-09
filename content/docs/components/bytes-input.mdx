@@ -1,0 +1,92 @@
+---
+title: Bytes Input
+description: Multi-mode byte array input with hex, text, JSON, Base64, and file upload
+---
+
+# Bytes Input
+
+The Bytes input provides a multi-mode editor for entering raw byte data. It supports five input modes -- hex, plain text, JSON, Base64, and file upload -- and automatically converts between them. All modes emit the same hex-encoded byte string to the parent form.
+
+## Supported Type Names
+
+The Bytes component matches the following type names at **priority 75**:
+
+- `Bytes`
+- `Vec<u8>`
+- Any type name matching `/Bytes/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"Bytes"`, `"Vec<u8>"`) |
+| `isDisabled` | `boolean` | No | Disables the input when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled hex value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the hex-encoded bytes string |
+
+## Features
+
+- **Five input modes**: A mode toggle at the top switches between Hex, Text, JSON, B64 (Base64), and File modes. Each mode converts the input to hex internally.
+- **Hex mode**: Direct hex input with `0x` prefix. Auto-prefixes `0x` if omitted.
+- **Text mode**: A textarea that encodes the entered UTF-8 text to hex bytes using `TextEncoder`.
+- **JSON mode**: A textarea that validates JSON syntax before encoding. Shows an inline error for invalid JSON. Pretty-prints existing data when switching to JSON mode.
+- **Base64 mode**: Accepts a Base64-encoded string and decodes it to hex bytes. Shows an inline error for invalid Base64.
+- **File upload mode**: A file picker that reads the selected file as an `ArrayBuffer` and converts it to hex. Displays the file name and a truncated hex preview.
+- **Cross-mode sync**: Changing the value in one mode updates the internal hex representation, and switching modes reflects the current data in the new format when possible.
+- **Byte count display**: Shows the byte count of the current data alongside the description.
+- **External value sync**: When an external hex value is set (e.g. from decoding), the component attempts to decode it as UTF-8 text, JSON, and Base64 to pre-populate all modes.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// All of these resolve to the Bytes component
+findComponent("Bytes", typeId, client);
+findComponent("Vec<u8>", typeId, client);
+```
+
+## Usage
+
+The Bytes component is rendered by the extrinsic builder when a parameter resolves to a byte array type. Direct usage:
+
+```tsx
+import { Bytes } from "@/components/params/inputs/bytes";
+
+<Bytes
+  name="data"
+  label="Data"
+  description="The raw byte payload"
+  client={client}
+  typeId={14}
+  isRequired
+  onChange={(hex) => console.log("Hex bytes:", hex)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that validates the value is a valid hex string with an even number of characters:
+
+```ts
+const schema = z.string().refine(
+  (value) => {
+    if (value === "") return true;
+    return isHex(value) && value.length % 2 === 0;
+  },
+  { message: "Invalid bytes (must be hex string with 0x prefix and even length)" }
+);
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** -- a `0x`-prefixed hex string representing the byte data (e.g. `"0x48656c6c6f"` for the text "Hello"). If the input is cleared, `undefined` is emitted.

@@ -1,0 +1,79 @@
+---
+title: Moment Input
+description: Date-time picker with quick presets for timestamp parameters
+---
+
+# Moment Input
+
+The Moment input provides a date-time picker for Substrate `Moment` parameters. It uses the browser's native `datetime-local` input and offers quick preset buttons for common time offsets. The selected date-time is converted to a Unix timestamp in milliseconds.
+
+## Supported Type Names
+
+The Moment component matches the following type names at **priority 65**:
+
+- `Moment`
+- Any type name matching `/Moment/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (`"Moment"`) |
+| `isDisabled` | `boolean` | No | Disables the input and preset buttons when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled timestamp in milliseconds (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the timestamp as a string |
+
+## Features
+
+- **Native date-time picker**: Uses the browser's `datetime-local` input type for a familiar date and time selection interface.
+- **Quick preset buttons**: Five preset buttons for common time values -- "Now", "+1h", "+6h", "+24h", and "+7d" -- that calculate timestamps relative to the current time.
+- **Timezone display**: Shows the user's local timezone (e.g. "America/New_York") beneath the input so there is no ambiguity about the time reference.
+- **External value sync**: When an external timestamp is set (e.g. from hex decoding), it is converted to a `datetime-local` string and displayed in the picker.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Resolves to the Moment component
+findComponent("Moment", typeId, client);
+```
+
+## Usage
+
+The Moment component is rendered by the extrinsic builder when a parameter resolves to a `Moment` type. Direct usage:
+
+```tsx
+import { Moment } from "@/components/params/inputs/moment";
+
+<Moment
+  name="when"
+  label="Schedule Time"
+  description="The time at which to execute"
+  client={client}
+  typeId={4}
+  isRequired
+  onChange={(timestamp) => console.log("Timestamp:", timestamp)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that checks for a non-negative integer:
+
+```ts
+const schema = z.number().int().min(0);
+```
+
+## Value Format
+
+The `onChange` callback receives a **string** representing the Unix timestamp in milliseconds (e.g. `"1700000000000"`). This format is compatible with BigInt conversion for SCALE encoding. If the input is cleared, `undefined` is emitted.
