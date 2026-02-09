@@ -1,0 +1,98 @@
+---
+title: VectorFixed Input
+description: Fixed-length array input for Substrate [T; N] types with specialized byte array handling
+---
+
+# VectorFixed Input
+
+The VectorFixed input handles Substrate fixed-length array types (`[T; N]`) with two rendering strategies: byte arrays (`[u8; N]`) get a specialized hex/base64 text input, while other element types render N individual sub-inputs. Fixed-length arrays appear in Substrate for cryptographic data (signatures, public keys), fixed-size identifiers, and any parameter with a compile-time known length.
+
+## Supported Type Names
+
+The VectorFixed component matches the following type name pattern at **priority 43**:
+
+- Any type name matching `/^\[.+;\s*\d+\]$/` (e.g. `[u8; 32]`, `[u8; 64]`, `[AccountId32; 3]`)
+
+## Props
+
+The component extends `ParamInputProps` with a required `typeId`:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the input |
+| `description` | `string` | No | Help text shown below the input |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"[u8; 32]"`) |
+| `isDisabled` | `boolean` | No | Disables the input |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving element types |
+| `typeId` | `number` | Yes | Metadata type ID used to look up the `SizedVec` structure |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the array value |
+
+## Features
+
+- **Byte array mode** (`[u8; N]`): Renders a single text input with a hex/base64 mode toggle. Validates that the decoded byte length matches the expected `N`.
+- **Hex input**: Accepts `0x`-prefixed hex strings; auto-prepends `0x` if missing. Shows the expected hex character count as a placeholder.
+- **Base64 input**: Accepts standard Base64 strings. Automatically syncs with the hex representation.
+- **Per-element mode** (non-u8 types): Renders `N` individual sub-inputs, each resolved via `findComponent` for the inner type.
+- **Registry fallback**: Parses the length and inner type from the `typeName` string first, then falls back to the `SizedVec` typeDef in the chain metadata.
+- **External value sync**: Accepts external byte arrays (e.g. from hex decoding) and populates both hex and base64 fields.
+- **Length validation**: Byte length mismatches produce a clear error message showing expected vs. actual length.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by /^\[.+;\s*\d+\]$/ at priority 43
+findComponent("[u8; 32]", 8, client);
+findComponent("[u8; 64]", 9, client);
+findComponent("[AccountId32; 3]", 14, client);
+```
+
+## Usage
+
+The VectorFixed component is rendered by the extrinsic builder when a parameter type matches the fixed array syntax. Direct usage:
+
+```tsx
+import { VectorFixed } from "@/components/params/inputs/vector-fixed";
+
+<VectorFixed
+  name="signature"
+  label="Signature"
+  description="Ed25519 signature bytes"
+  client={client}
+  typeId={8}
+  typeName="[u8; 64]"
+  onChange={(val) => console.log("Bytes:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an array of any values:
+
+```ts
+const schema = z.array(z.any());
+```
+
+For byte arrays, additional runtime validation ensures the decoded byte length matches `N`. Invalid hex or base64 strings produce specific error messages.
+
+## Value Format
+
+The `onChange` callback receives an **array of values** whose shape depends on the inner type:
+
+```ts
+// [u8; 32] — byte array as number array
+[0, 1, 2, ..., 31]
+
+// [u8; 64] — 64-byte signature
+[72, 101, 108, ..., 0]
+
+// [AccountId32; 3] — fixed array of accounts
+["5GrwvaEF...", "5FHneW46...", "5DAAnrj7..."]
+```
+
+For `[u8; N]` types, the value is always a `number[]` of length `N` derived from the hex or base64 input. For other inner types, each element is the output of its resolved sub-component.

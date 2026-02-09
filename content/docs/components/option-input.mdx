@@ -1,0 +1,94 @@
+---
+title: Option Input
+description: Toggle-based wrapper for Substrate Option<T> types with automatic inner type resolution
+---
+
+# Option Input
+
+The Option input handles Substrate `Option<T>` types by presenting a toggle switch that lets the user choose between `None` (disabled) and `Some(value)` (enabled). When enabled, it automatically resolves and renders the appropriate sub-input for the inner type `T` using chain metadata. Options appear throughout Substrate pallets wherever a parameter is not strictly required -- tips, era selection, and optional configuration fields.
+
+## Supported Type Names
+
+The Option component matches the following type name patterns at **priority 45**:
+
+- Any type name matching `/^Option</` (e.g. `Option<u128>`, `Option<AccountId32>`, `Option<BalanceOf>`)
+
+## Props
+
+The component extends `ParamInputProps` with an optional `children` prop:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown above the toggle |
+| `description` | `string` | No | Help text shown below the component |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"Option<AccountId32>"`) |
+| `isDisabled` | `boolean` | No | Disables the toggle and inner input |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving the inner type from metadata |
+| `typeId` | `number` | No | Metadata type ID for the Option type |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the inner value or `undefined` |
+| `children` | `React.ReactNode` | No | Legacy: explicit child component instead of metadata resolution |
+
+## Features
+
+- **None/Some toggle**: A switch control toggles between `None` (off) and `Some` (on). When off, `undefined` is emitted. When on, the inner input is shown.
+- **Auto-resolves inner type**: Reads the Option's enum definition from chain metadata to find the `Some` variant's inner type, then uses `findComponent` to render the correct input.
+- **Animated transition**: The inner input slides in and out using Framer Motion when the toggle changes.
+- **External value sync**: If a value is provided externally (e.g. from hex decoding), the toggle automatically enables.
+- **Legacy children support**: Can accept explicit child components that are cloned with the appropriate props.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by the /^Option</ pattern at priority 45
+findComponent("Option<AccountId32>", 10, client);
+findComponent("Option<u128>", 15, client);
+findComponent("Option<BalanceOf>", 20, client);
+```
+
+## Usage
+
+The Option component is rendered by the extrinsic builder when a parameter type starts with `Option<`. Direct usage:
+
+```tsx
+import { Option } from "@/components/params/inputs/option";
+
+<Option
+  name="tip"
+  label="Tip"
+  description="Optional tip for the block author"
+  client={client}
+  typeId={10}
+  onChange={(val) => console.log("Value:", val)}
+/>
+```
+
+## Validation
+
+The component uses a permissive Zod schema since the inner value validation is delegated to the resolved sub-component:
+
+```ts
+const schema = z.any().optional();
+```
+
+## Value Format
+
+The `onChange` callback receives the **inner value directly** when the toggle is on, or `undefined` when toggled off:
+
+```ts
+// Toggle off (None)
+undefined
+
+// Toggle on (Some) with an AccountId inner type
+"5GrwvaEF..."
+
+// Toggle on (Some) with a numeric inner type
+"1000000000000"
+```
+
+The value shape depends entirely on the resolved inner component's output. The Option wrapper does not add any envelope -- it passes through the inner value as-is.

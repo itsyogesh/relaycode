@@ -1,0 +1,107 @@
+---
+title: Vector Input
+description: Dynamic-length list input for Substrate Vec<T> types with bulk entry support
+---
+
+# Vector Input
+
+The Vector input handles Substrate `Vec<T>` and `BoundedVec<T>` types by rendering a dynamic list of sub-inputs where items can be added, removed, and reordered. It supports both a form mode with individual item inputs and a bulk mode for pasting JSON arrays or line-separated values. Vectors are used extensively in Substrate for batch operations, multi-sig signatories, validator lists, and any parameter that accepts a variable-length collection.
+
+## Supported Type Names
+
+The Vector component matches the following type name patterns at **priority 40**:
+
+- Any type name matching `/^Vec</` (e.g. `Vec<AccountId32>`, `Vec<u8>`)
+- Any type name matching `/^BoundedVec</` (e.g. `BoundedVec<u8, MaxLen>`)
+
+Note: `Vec<u8>` is handled by the higher-priority Bytes component (priority 75) before reaching Vector.
+
+## Props
+
+The component extends `ParamInputProps` with additional collection props:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used as a prefix for item IDs |
+| `label` | `string` | No | Display label shown above the list |
+| `description` | `string` | No | Help text shown below the list |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"Vec<AccountId32>"`) |
+| `isDisabled` | `boolean` | No | Disables all controls and item inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving the element type |
+| `typeId` | `number` | No | Metadata type ID for the vector type |
+| `value` | `any` | No | Externally controlled value (e.g. from hex decode) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the array of defined values |
+| `children` | `React.ReactNode` | No | Legacy: explicit child component to clone per item |
+| `minItems` | `number` | No | Minimum number of items (default: `0`) |
+| `maxItems` | `number` | No | Maximum number of items (no limit by default) |
+
+## Features
+
+- **Auto-resolves element type**: Reads the vector's `Sequence` typeDef from metadata to find the element type, then uses `findComponent` to render the correct input for each item.
+- **Add/Remove items**: An "Add" button appends new items; each item has a remove button (respecting `minItems`).
+- **Reorder items**: Up/down chevron buttons let users reorder items within the list.
+- **Bulk entry mode**: A toggle switches between form mode (individual inputs) and bulk mode (a textarea accepting JSON arrays or line-separated values).
+- **Duplicate detection**: Warns when duplicate values are detected in form mode.
+- **Constraint display**: Shows min/max item constraints when configured.
+- **External value sync**: Accepts external arrays (e.g. from hex decoding) and syncs them into the form state.
+- **Validation**: Uses `validateVectorConstraints` to check min/max item counts.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by /^Vec</ or /^BoundedVec</ at priority 40
+findComponent("Vec<AccountId32>", 12, client);
+findComponent("BoundedVec<u8, MaxLen>", 18, client);
+```
+
+## Usage
+
+The Vector component is rendered by the extrinsic builder when a parameter type starts with `Vec<` or `BoundedVec<`. Direct usage:
+
+```tsx
+import { Vector } from "@/components/params/inputs/vector";
+
+<Vector
+  name="signatories"
+  label="Signatories"
+  description="List of signatory accounts"
+  client={client}
+  typeId={12}
+  minItems={2}
+  onChange={(val) => console.log("Items:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an array of any values:
+
+```ts
+const schema = z.array(z.any());
+```
+
+Additionally, `validateVectorConstraints` checks that the number of defined items falls within the configured `minItems` and `maxItems` bounds.
+
+## Value Format
+
+The `onChange` callback receives an **array of defined values** (items that are `undefined` are filtered out):
+
+```ts
+// Vec<AccountId32>
+["5GrwvaEF...", "5FHneW46..."]
+
+// Vec<u128>
+["1000000000000", "2000000000000"]
+
+// Vec with complex inner types
+[
+  { type: "Staked" },
+  { type: "Account", value: "5GrwvaEF..." }
+]
+```
+
+The value shape of each element depends on the resolved inner component's output.
