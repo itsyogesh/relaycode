@@ -1,0 +1,77 @@
+---
+title: Bool Input
+description: Toggle switch for boolean parameters
+---
+
+# Bool Input
+
+The Bool input renders a toggle switch for Substrate boolean parameters. It provides a simple on/off control that maps directly to SCALE `bool` encoding.
+
+## Supported Type Names
+
+The Boolean component matches the following type name at **priority 85**:
+
+- `bool`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
+| `label` | `string` | No | Display label shown next to the switch |
+| `description` | `string` | No | Help text shown below the label |
+| `typeName` | `string` | No | The SCALE type name (`"bool"`) |
+| `isDisabled` | `boolean` | No | Disables the switch when true |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client |
+| `typeId` | `number` | No | Metadata type ID for this parameter |
+| `value` | `any` | No | Externally controlled value -- accepts `true`, `false`, `"true"`, or `"false"` |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the boolean value |
+
+## Features
+
+- **Toggle switch UI**: Uses a shadcn/ui `Switch` component instead of a checkbox, providing a clear visual on/off state.
+- **Horizontal layout**: The label and description are placed on the left, the switch on the right, in a single row for compact display.
+- **String coercion**: Accepts both boolean `true`/`false` and string `"true"`/`"false"` as external values, handling the common case where decoded hex values arrive as strings.
+- **Accessible**: The switch is linked to the label via `aria-label` for screen reader compatibility.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Resolves to the Boolean component
+findComponent("bool", typeId, client);
+```
+
+## Usage
+
+The Bool component is rendered by the extrinsic builder when a parameter resolves to a `bool` type. Direct usage:
+
+```tsx
+import { Boolean } from "@/components/params/inputs/boolean";
+
+<Boolean
+  name="approve"
+  label="Approve"
+  description="Whether to approve the proposal"
+  client={client}
+  typeId={1}
+  onChange={(value) => console.log("Checked:", value)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that validates a boolean value:
+
+```ts
+const schema = z.boolean();
+```
+
+## Value Format
+
+The `onChange` callback receives a **boolean** (`true` or `false`). The initial state is unchecked (`false`). If the switch is toggled, the new boolean value is emitted immediately.
