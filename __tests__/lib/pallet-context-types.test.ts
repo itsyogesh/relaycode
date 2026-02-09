@@ -58,6 +58,7 @@ describe("networkFromGenesisHash", () => {
 });
 
 describe("PALLET_CONTEXT_GROUP", () => {
+  // Existing governance pallets
   it("maps ConvictionVoting to governance", () => {
     expect(PALLET_CONTEXT_GROUP["ConvictionVoting"]).toBe("governance");
   });
@@ -74,6 +75,7 @@ describe("PALLET_CONTEXT_GROUP", () => {
     expect(PALLET_CONTEXT_GROUP["Treasury"]).toBe("governance");
   });
 
+  // Existing staking pallets
   it("maps Staking to staking", () => {
     expect(PALLET_CONTEXT_GROUP["Staking"]).toBe("staking");
   });
@@ -82,6 +84,36 @@ describe("PALLET_CONTEXT_GROUP", () => {
     expect(PALLET_CONTEXT_GROUP["NominationPools"]).toBe("staking");
   });
 
+  // New pallet groups
+  it("maps Proxy to proxy", () => {
+    expect(PALLET_CONTEXT_GROUP["Proxy"]).toBe("proxy");
+  });
+
+  it("maps Assets to assets", () => {
+    expect(PALLET_CONTEXT_GROUP["Assets"]).toBe("assets");
+  });
+
+  it("maps Vesting to vesting", () => {
+    expect(PALLET_CONTEXT_GROUP["Vesting"]).toBe("vesting");
+  });
+
+  it("maps Broker to coretime", () => {
+    expect(PALLET_CONTEXT_GROUP["Broker"]).toBe("coretime");
+  });
+
+  it("maps XcmPallet to xcm", () => {
+    expect(PALLET_CONTEXT_GROUP["XcmPallet"]).toBe("xcm");
+  });
+
+  it("maps PolkadotXcm to xcm", () => {
+    expect(PALLET_CONTEXT_GROUP["PolkadotXcm"]).toBe("xcm");
+  });
+
+  it("maps Multisig to multisig", () => {
+    expect(PALLET_CONTEXT_GROUP["Multisig"]).toBe("multisig");
+  });
+
+  // Unmapped pallets
   it("returns undefined for Balances (not mapped)", () => {
     expect(PALLET_CONTEXT_GROUP["Balances"]).toBeUndefined();
   });
