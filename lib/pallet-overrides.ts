@@ -5,6 +5,12 @@ import { TrackSelector } from "@/components/params/selectors/track-selector";
 import { BountySelector } from "@/components/params/selectors/bounty-selector";
 import { ValidatorMultiSelector } from "@/components/params/selectors/validator-multi-selector";
 import { PoolSelector } from "@/components/params/selectors/pool-selector";
+import { ProxyTypeSelector } from "@/components/params/selectors/proxy-type-selector";
+import { AssetSelector } from "@/components/params/selectors/asset-selector";
+import { VestingInfoDisplay } from "@/components/params/selectors/vesting-info-display";
+import { CoreSelector } from "@/components/params/selectors/core-selector";
+import { DestinationChainSelector } from "@/components/params/selectors/destination-chain-selector";
+import { MultisigCallSelector } from "@/components/params/selectors/multisig-call-selector";
 import { findComponent } from "./input-map";
 import type { ParamComponentType } from "@/components/params/types";
 import type { DedotClient } from "dedot";
@@ -78,6 +84,92 @@ const PALLET_OVERRIDES: Record<
     },
     claim_bounty: {
       bounty_id: BountySelector,
+    },
+  },
+  Proxy: {
+    add_proxy: {
+      proxy_type: ProxyTypeSelector,
+    },
+    remove_proxy: {
+      proxy_type: ProxyTypeSelector,
+    },
+    proxy: {
+      force_proxy_type: ProxyTypeSelector,
+    },
+  },
+  Assets: {
+    transfer: {
+      id: AssetSelector,
+    },
+    transfer_keep_alive: {
+      id: AssetSelector,
+    },
+    approve_transfer: {
+      id: AssetSelector,
+    },
+    mint: {
+      id: AssetSelector,
+    },
+    burn: {
+      id: AssetSelector,
+    },
+    freeze: {
+      id: AssetSelector,
+    },
+    thaw: {
+      id: AssetSelector,
+    },
+  },
+  Vesting: {
+    vest: {
+      _context_hint: VestingInfoDisplay,
+    },
+    vest_other: {
+      _context_hint: VestingInfoDisplay,
+    },
+    vested_transfer: {
+      _context_hint: VestingInfoDisplay,
+    },
+  },
+  Broker: {
+    purchase: {
+      _context_hint: CoreSelector,
+    },
+    assign: {
+      core: CoreSelector,
+    },
+    interlace: {
+      core: CoreSelector,
+    },
+  },
+  XcmPallet: {
+    limited_teleport_assets: {
+      dest: DestinationChainSelector,
+    },
+    reserve_transfer_assets: {
+      dest: DestinationChainSelector,
+    },
+    transfer_assets: {
+      dest: DestinationChainSelector,
+    },
+  },
+  PolkadotXcm: {
+    limited_teleport_assets: {
+      dest: DestinationChainSelector,
+    },
+    reserve_transfer_assets: {
+      dest: DestinationChainSelector,
+    },
+    transfer_assets: {
+      dest: DestinationChainSelector,
+    },
+  },
+  Multisig: {
+    approve_as_multi: {
+      call_hash: MultisigCallSelector,
+    },
+    as_multi: {
+      call_hash: MultisigCallSelector,
     },
   },
 };

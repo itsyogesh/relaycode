@@ -4,6 +4,12 @@ import type { PalletContextData, ContextGroup, ChainTokenMeta } from "@/types/pa
 import { PALLET_CONTEXT_GROUP } from "@/types/pallet-context";
 import { fetchGovernanceContext } from "./governance";
 import { fetchStakingContext } from "./staking";
+import { fetchProxyContext } from "./proxy";
+import { fetchAssetsContext } from "./assets";
+import { fetchVestingContext } from "./vesting";
+import { fetchCoretimeContext } from "./coretime";
+import { fetchXcmContext } from "./xcm";
+import { fetchMultisigContext } from "./multisig";
 
 export function getContextGroup(palletName: string): ContextGroup | undefined {
   return PALLET_CONTEXT_GROUP[palletName];
@@ -41,6 +47,18 @@ export async function fetchPalletContext(
       return fetchGovernanceContext(client, network, tokenMeta);
     case "staking":
       return fetchStakingContext(client, network, tokenMeta);
+    case "proxy":
+      return fetchProxyContext(client, network, tokenMeta);
+    case "assets":
+      return fetchAssetsContext(client, network, tokenMeta);
+    case "vesting":
+      return fetchVestingContext(client, network, tokenMeta);
+    case "coretime":
+      return fetchCoretimeContext(client, network, tokenMeta);
+    case "xcm":
+      return fetchXcmContext(client, network, tokenMeta);
+    case "multisig":
+      return fetchMultisigContext(client, network, tokenMeta);
     default:
       return null;
   }
