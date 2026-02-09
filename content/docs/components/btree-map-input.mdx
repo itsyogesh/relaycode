@@ -1,0 +1,89 @@
+---
+title: BTreeMap Input
+description: Key-value pair editor for Substrate BTreeMap types with JSON bulk entry
+---
+
+# BTreeMap Input
+
+The BTreeMap input handles Substrate `BTreeMap<K, V>` types by rendering a list of key-value pair editors. Each pair has its key and value types resolved from the chain metadata and rendered with the appropriate sub-input components. It supports both form mode for individual pair editing and a JSON mode for bulk entry. BTreeMaps appear in Substrate for configuration maps, storage deposits, and any parameter that expects an ordered key-value collection.
+
+## Supported Type Names
+
+The BTreeMap component matches the following type name pattern at **priority 42**:
+
+- Any type name matching `/^BTreeMap</` (e.g. `BTreeMap<AccountId32, Balance>`, `BTreeMap<u32, Vec<u8>>`)
+
+## Props
+
+The component extends `ParamInputProps` with a required `typeId`:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used as a prefix for pair IDs |
+| `label` | `string` | No | Display label shown above the editor |
+| `description` | `string` | No | Help text shown below the editor |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"BTreeMap<u32, Balance>"`) |
+| `isDisabled` | `boolean` | No | Disables all controls and pair inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving key and value types |
+| `typeId` | `number` | Yes | Metadata type ID for the BTreeMap type |
+| `value` | `any` | No | Externally controlled value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the array of key-value tuples |
+
+## Features
+
+- **Auto-resolves key and value types**: Reads the BTreeMap's metadata structure (a `Sequence` of `Tuple`s in SCALE) to find the key and value type IDs, then resolves each to the correct input component via `findComponent`.
+- **Card-per-entry layout**: Each key-value pair renders inside its own `Card` with "Key" and "Value" labeled sub-inputs.
+- **Add/Remove entries**: An "Add Entry" button appends new pairs; each pair has a remove button (minimum one pair).
+- **JSON bulk mode**: A toggle switches between form mode and JSON mode, where users can paste a JSON object (`{"key": "value"}`) or an array of tuples (`[["key", "value"]]`).
+- **Bidirectional sync**: Switching between form and JSON modes preserves data by serializing/deserializing the current entries.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by /^BTreeMap</ at priority 42
+findComponent("BTreeMap<AccountId32, Balance>", 35, client);
+findComponent("BTreeMap<u32, Vec<u8>>", 40, client);
+```
+
+## Usage
+
+The BTreeMap component is rendered by the extrinsic builder when a parameter type starts with `BTreeMap<`. Direct usage:
+
+```tsx
+import { BTreeMap } from "@/components/params/inputs/btree-map";
+
+<BTreeMap
+  name="deposits"
+  label="Deposits"
+  description="Map of account deposits"
+  client={client}
+  typeId={35}
+  onChange={(val) => console.log("Map:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an array of two-element tuples:
+
+```ts
+const schema = z.array(z.tuple([z.any(), z.any()]));
+```
+
+## Value Format
+
+The `onChange` callback receives an **array of `[key, value]` tuples**, filtered to only include pairs where both the key and value are defined:
+
+```ts
+// BTreeMap<u32, Balance>
+[["1", "1000000000000"], ["2", "2000000000000"]]
+
+// BTreeMap<AccountId32, bool>
+[["5GrwvaEF...", true], ["5FHneW46...", false]]
+```
+
+This matches the SCALE encoding format for `BTreeMap`, which serializes as a sequence of `(K, V)` tuples.

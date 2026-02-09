@@ -1,0 +1,88 @@
+---
+title: Tuple Input
+description: Positional element group for Substrate tuple types with auto-resolved sub-inputs
+---
+
+# Tuple Input
+
+The Tuple input handles Substrate tuple types by rendering a fixed-length group of positional sub-inputs inside a card. Each element's type is resolved from the chain metadata and rendered with the appropriate component. Tuples appear in Substrate when a parameter combines multiple values without named fields -- for example `(AccountId, Balance)` or `(u32, u32)`.
+
+## Supported Type Names
+
+The Tuple component matches the following type name patterns at **priority 38**:
+
+- Any type name matching `/^\(/` (e.g. `(AccountId32, u128)`, `(u32, u32)`)
+- Any type name matching `/^Tuple/`
+
+## Props
+
+The component extends `ParamInputProps` with a required `typeId`:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used as a prefix for element IDs |
+| `label` | `string` | No | Display label shown above the card |
+| `description` | `string` | No | Help text shown below the card |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"(AccountId32, u128)"`) |
+| `isDisabled` | `boolean` | No | Disables all element inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for resolving element types |
+| `typeId` | `number` | Yes | Metadata type ID used to look up the tuple's element types |
+| `value` | `any` | No | Externally controlled value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the tuple array |
+
+## Features
+
+- **Auto-resolves element types**: Reads the tuple's field type IDs from the chain metadata (`typeDef.type === "Tuple"`) and resolves each element to the correct input component via `findComponent`.
+- **Indexed labels**: Each element is labeled with a short type name and its positional index (e.g. `AccountId [0]`, `Balance [1]`).
+- **Card layout**: Elements render inside a `Card` with consistent spacing.
+- **Fallback message**: If the tuple structure cannot be resolved from metadata, a fallback message is displayed instead of broken inputs.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by the /^\(/ or /^Tuple/ patterns at priority 38
+findComponent("(AccountId32, u128)", 25, client);
+findComponent("(u32, u32, u32)", 30, client);
+```
+
+## Usage
+
+The Tuple component is rendered by the extrinsic builder when a parameter type starts with `(` or `Tuple`. Direct usage:
+
+```tsx
+import { Tuple } from "@/components/params/inputs/tuple";
+
+<Tuple
+  name="range"
+  label="Block Range"
+  client={client}
+  typeId={25}
+  onChange={(val) => console.log("Tuple:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an array of any values:
+
+```ts
+const schema = z.array(z.any());
+```
+
+## Value Format
+
+The `onChange` callback receives an **array** where each element corresponds to a positional field in the tuple:
+
+```ts
+// (AccountId32, u128) tuple
+["5GrwvaEF...", "1000000000000"]
+
+// (u32, u32, u32) tuple
+["100", "200", "300"]
+```
+
+The array length always matches the number of fields in the tuple definition. Each element's value type depends on the resolved sub-component's output.

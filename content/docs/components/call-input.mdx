@@ -1,0 +1,123 @@
+---
+title: Call Input
+description: Nested extrinsic call builder for Substrate RuntimeCall parameters
+---
+
+# Call Input
+
+The Call input provides a nested extrinsic call builder for parameters that expect a `RuntimeCall` value. It presents pallet and method selectors followed by dynamic parameter inputs, effectively embedding a mini extrinsic builder inside a parameter field. Call inputs appear in Substrate for utility batch calls, proxy executions, multisig approvals, scheduler dispatches, and any extrinsic that wraps another call.
+
+## Supported Type Names
+
+The Call component matches the following type name patterns at **priority 70**:
+
+- `Call`
+- `RuntimeCall`
+- Any type name matching `/Call$/`
+- Any type name matching `/RuntimeCall>/`
+
+## Props
+
+The component accepts the standard `ParamInputProps` interface:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used as a prefix for nested field IDs |
+| `label` | `string` | No | Display label shown above the card |
+| `description` | `string` | No | Help text shown below the label |
+| `typeName` | `string` | No | The SCALE type name (e.g. `"RuntimeCall"`) |
+| `isDisabled` | `boolean` | No | Disables the pallet/method selectors and all parameter inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for reading pallets, methods, and parameter types |
+| `typeId` | `number` | No | Metadata type ID |
+| `value` | `any` | No | Externally controlled value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the call structure |
+
+## Features
+
+- **Pallet selector**: A searchable combobox lists all pallets from the chain metadata.
+- **Method selector**: After selecting a pallet, a second combobox lists all callable methods (extrinsics) for that pallet.
+- **Dynamic parameter inputs**: Once a method is selected, its parameters are resolved from the metadata and rendered using `findComponent`, creating a fully recursive call builder.
+- **Auto-reset**: Changing the pallet resets the method and arguments. Changing the method resets the arguments.
+- **No-params indicator**: Methods with no parameters display an informational message instead of empty space.
+- **Recursive nesting**: Since Call uses `findComponent` for its parameters, nested calls (e.g. `utility.batch` containing more calls) are fully supported.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Matched by exact strings and regex patterns at priority 70
+findComponent("Call", 100, client);
+findComponent("RuntimeCall", 100, client);
+findComponent("Box<RuntimeCall>", 100, client);
+```
+
+## Usage
+
+The Call component is rendered by the extrinsic builder when a parameter type matches a call pattern. Direct usage:
+
+```tsx
+import { Call } from "@/components/params/inputs/call";
+
+<Call
+  name="call"
+  label="Proposal Call"
+  description="The call to be executed"
+  client={client}
+  onChange={(val) => console.log("Call:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects an object with a `type` string and a `value`:
+
+```ts
+const schema = z.object({
+  type: z.string(),
+  value: z.any(),
+});
+```
+
+## Value Format
+
+The `onChange` callback receives a **nested call structure** in the format Dedot expects:
+
+```ts
+// utility.batch call
+{
+  type: "utility",
+  value: {
+    type: "batch",
+    calls: [...]
+  }
+}
+
+// balances.transferKeepAlive call
+{
+  type: "balances",
+  value: {
+    type: "transferKeepAlive",
+    dest: "5GrwvaEF...",
+    value: "1000000000000"
+  }
+}
+
+// proxy.proxy wrapping a call
+{
+  type: "proxy",
+  value: {
+    type: "proxy",
+    real: "5GrwvaEF...",
+    forceProxyType: undefined,
+    call: {
+      type: "balances",
+      value: { type: "transferKeepAlive", dest: "...", value: "..." }
+    }
+  }
+}
+```
+
+The `type` field at the top level is the camelCase pallet name. The nested `value.type` is the camelCase method name. All method arguments are spread into the `value` object alongside `type`.

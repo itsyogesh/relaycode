@@ -1,0 +1,130 @@
+---
+title: Struct Input
+description: Composite field group for Substrate struct types with per-field validation
+---
+
+# Struct Input
+
+The Struct input renders a group of named fields inside a card, where each field has its own resolved sub-input component. Structs are Substrate's equivalent of named record types -- they appear in extrinsic parameters for multi-field configurations like `IdentityInfo`, `ProxyDefinition`, and any call argument that the metadata defines as a `Struct` TypeDef.
+
+## Supported Types
+
+The Struct component sits at **priority 35** in the registry with no explicit type name patterns. Instead, it is resolved through the **TypeDef fallback** mechanism: when no higher-priority pattern matches and the chain metadata reports the type's `TypeDef` as `"Struct"`, `findComponent` returns the Struct component.
+
+This means the Struct component handles any type that the metadata declares as a struct, regardless of its name.
+
+## Props
+
+The component extends `ParamInputProps` with a required `fields` prop:
+
+| Prop | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Field identifier used as a prefix for child field IDs |
+| `label` | `string` | No | Display label shown above the card |
+| `description` | `string` | No | Help text shown below the card |
+| `typeName` | `string` | No | The SCALE type name |
+| `isDisabled` | `boolean` | No | Disables all child inputs |
+| `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
+| `error` | `string` | No | Validation error message to display |
+| `client` | `DedotClient<PolkadotApi>` | Yes | Connected Dedot client for metadata |
+| `typeId` | `number` | No | Metadata type ID for this struct |
+| `value` | `any` | No | Externally controlled value |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the struct record |
+| `fields` | `StructField[]` | Yes | Field definitions including pre-resolved components |
+
+### StructField Interface
+
+```ts
+interface StructField {
+  name: string;
+  label: string;
+  description?: string;
+  typeName?: string;
+  component: React.ReactNode;
+  required?: boolean;
+}
+```
+
+The `fields` array is injected by the extrinsic builder at render time after resolving each field's component from the chain metadata.
+
+## Features
+
+- **Card layout**: Fields render inside a `Card` component with consistent spacing and visual grouping.
+- **Per-field components**: Each field receives its own pre-resolved React component, which is cloned with the correct `name`, `label`, `isDisabled`, and `onChange` props.
+- **Type badge**: Each field label shows a small code badge with its SCALE type name for clarity.
+- **Required field validation**: Uses `validateStructFields` to check that all required fields have values, displaying a validation error when they are missing.
+- **Composable**: Struct fields can themselves be enums, vectors, or other structs, enabling deeply nested composite types.
+
+## Type Resolution
+
+```ts
+import { findComponent } from "@/lib/input-map";
+
+// Struct is resolved via the TypeDef fallback, not by type name patterns.
+// When the metadata reports typeId 50 as a Struct:
+const resolved = findComponent("SomeCustomStruct", 50, client);
+// Returns { component: Struct, schema, typeId: 50 }
+```
+
+## Usage
+
+The Struct component is rendered by the extrinsic builder when a parameter's metadata type is a struct. Direct usage requires pre-resolved field components:
+
+```tsx
+import { Struct } from "@/components/params/inputs/struct";
+
+<Struct
+  name="identity"
+  label="Identity Info"
+  client={client}
+  typeId={50}
+  fields={[
+    {
+      name: "display",
+      label: "Display Name",
+      typeName: "Data",
+      component: <TextInput />,
+      required: true,
+    },
+    {
+      name: "email",
+      label: "Email",
+      typeName: "Data",
+      component: <TextInput />,
+    },
+  ]}
+  onChange={(val) => console.log("Struct:", val)}
+/>
+```
+
+## Validation
+
+The component uses a Zod schema that expects a record of string keys to any values:
+
+```ts
+const schema = z.record(z.string(), z.any());
+```
+
+Additionally, `validateStructFields` checks that all fields marked as `required` are present and non-undefined in the values record.
+
+## Value Format
+
+The `onChange` callback receives a **flat record** mapping field names to their values:
+
+```ts
+// Example: IdentityInfo struct
+{
+  display: "Alice",
+  email: "alice@example.com",
+  web: undefined
+}
+
+// Example: ProxyDefinition struct
+{
+  delegate: "5GrwvaEF...",
+  proxyType: { type: "Any" },
+  delay: "0"
+}
+```
+
+Each key corresponds to a `StructField.name`, and the value is whatever the field's resolved component emits. Fields that have not been filled in will have `undefined` values.
