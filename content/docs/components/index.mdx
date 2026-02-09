@@ -29,26 +29,24 @@ If no pattern matches, the system falls back to metadata introspection: it reads
 |---|---|---|
 | [AccountInput](/docs/components/account-input) | `AccountId`, `MultiAddress`, `Address` | Address input with wallet integration and SS58 validation |
 | [BalanceInput](/docs/components/balance-input) | `Balance`, `BalanceOf`, `Compact<Balance>` | Token amount with denomination selector and balance display |
-| AmountInput | `u8`-`u128`, `i8`-`i128`, `Compact<uN>` | Numeric integer input for unsigned and signed integers |
-| BoolInput | `bool` | Toggle switch for boolean parameters |
-| HashInput (H160) | `H160` | 20-byte hex hash input with length validation |
-| HashInput (H256) | `H256`, `Hash` | 32-byte hex hash input with length validation |
-| HashInput (H512) | `H512` | 64-byte hex hash input with length validation |
-| BytesInput | `Bytes`, `Vec<u8>` | Raw bytes hex input |
-| CallInput | `Call`, `RuntimeCall` | Nested extrinsic builder for composing calls |
+| [AmountInput](/docs/components/amount-input) | `u8`-`u128`, `i8`-`i128`, `Compact<uN>` | Numeric integer input for unsigned and signed integers |
+| [BoolInput](/docs/components/bool-input) | `bool` | Toggle switch for boolean parameters |
+| [HashInput](/docs/components/hash-input) | `H160`, `H256`, `H512`, `Hash` | Fixed-length hex hash input with length validation |
+| [BytesInput](/docs/components/bytes-input) | `Bytes`, `Vec<u8>` | Raw bytes hex input with multiple input modes |
+| [CallInput](/docs/components/call-input) | `Call`, `RuntimeCall` | Nested extrinsic builder for composing calls |
 | [EnumInput](/docs/components/enum-input) | Enum types from metadata | Variant selector with dynamic inner value resolution |
-| OptionInput | `Option<T>` | Optional value toggle wrapping any inner type |
-| StructInput | Struct types from metadata | Named field grouping with recursive sub-inputs |
-| TextInput | `String`, `Text` | Basic string input for text parameters |
-| TupleInput | `(T1, T2, ...)` | Positional element inputs for tuple types |
-| VectorInput | `Vec<T>`, `BoundedVec<T>` | Dynamic-length array with add/remove controls |
-| VectorFixedInput | `[T; N]` | Fixed-length array with N input slots |
-| BTreeMapInput | `BTreeMap<K, V>` | Key-value pair entries |
-| BTreeSetInput | `BTreeSet<T>` | Unique value set entries |
-| MomentInput | `Moment` | Timestamp input for time-based parameters |
-| VoteInput | `AccountVote` | Voting preference input (Standard/Split) |
-| VoteThresholdInput | `VoteThreshold` | Threshold selector (SuperMajorityApprove/Against/SimpleMajority) |
-| KeyValueInput | `KeyValue` | Single key-value pair input |
+| [OptionInput](/docs/components/option-input) | `Option<T>` | Optional value toggle wrapping any inner type |
+| [StructInput](/docs/components/struct-input) | Struct types from metadata | Named field grouping with recursive sub-inputs |
+| [TextInput](/docs/components/text-input) | `String`, `Text` | Basic string input and fallback for unknown types |
+| [TupleInput](/docs/components/tuple-input) | `(T1, T2, ...)` | Positional element inputs for tuple types |
+| [VectorInput](/docs/components/vector-input) | `Vec<T>`, `BoundedVec<T>` | Dynamic-length array with add/remove controls |
+| [VectorFixedInput](/docs/components/vector-fixed-input) | `[T; N]` | Fixed-length array with N input slots |
+| [BTreeMapInput](/docs/components/btree-map-input) | `BTreeMap<K, V>` | Key-value pair entries |
+| [BTreeSetInput](/docs/components/btree-set-input) | `BTreeSet<T>` | Unique value set entries |
+| [MomentInput](/docs/components/moment-input) | `Moment` | Timestamp input with date picker and presets |
+| [VoteInput](/docs/components/vote-input) | `AccountVote` | Voting preference input (Standard/Split) |
+| [VoteThresholdInput](/docs/components/vote-threshold-input) | `VoteThreshold` | Threshold selector (SuperMajorityApprove/Against/SimpleMajority) |
+| [KeyValueInput](/docs/components/key-value-input) | `KeyValue` | Single key-value pair input |
 
 ## Priority System
 
@@ -101,3 +99,19 @@ interface ParamInputProps {
 ```
 
 See individual component pages for type-specific props and behavior details.
+
+## Contextual Selectors
+
+When the extrinsic builder detects specific pallet and method combinations, it replaces generic inputs with **contextual selectors** that display live chain data. These are resolved via `findComponentWithContext` before falling back to the standard registry.
+
+| Selector | Pallets | Description |
+|---|---|---|
+| [ValidatorSelector](/docs/components/validator-selector) | Staking | Searchable combobox for selecting a single validator |
+| [ValidatorMultiSelector](/docs/components/validator-multi-selector) | Staking, NominationPools | Multi-select for validator nomination targets |
+| [PoolSelector](/docs/components/pool-selector) | NominationPools | Searchable dropdown for nomination pool selection |
+| [ReferendumSelector](/docs/components/referendum-selector) | ConvictionVoting, Referenda | Dropdown for selecting active referenda |
+| [BountySelector](/docs/components/bounty-selector) | Bounties | Selector for on-chain bounty IDs |
+| [TrackSelector](/docs/components/track-selector) | ConvictionVoting | Dropdown for OpenGov track selection |
+| [EraSelector](/docs/components/era-selector) | Staking | Era index input with current era context |
+| [ContextHint](/docs/components/context-hint) | Various | Informational display for contextual data |
+| [SelectorFallback](/docs/components/selector-fallback) | Various | Loading/error state wrapper for selectors |
