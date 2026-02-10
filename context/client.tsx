@@ -37,22 +37,32 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let cancelled = false;
 
+    // Capture previous client before clearing the ref, so only connect()
+    // handles disconnection (avoids a race with the cleanup function).
+    const prevClient = clientRef.current;
+    clientRef.current = null;
+
     // Immediately clear client and show loading when chain changes
     setClient(null);
     setLoading(true);
 
     const connect = async () => {
-      // Disconnect previous client
-      if (clientRef.current) {
-        await clientRef.current.disconnect();
-        clientRef.current = null;
+      // Defer disconnect of previous client so other cleanup effects
+      // (e.g. LunoKit subscription teardown) can run first.
+      if (prevClient) {
+        setTimeout(() => {
+          prevClient.disconnect().catch(() => {});
+        }, 100);
       }
+
+      if (cancelled) return;
+
       try {
         const newClient = await DedotClient.new<PolkadotApi>(
           new WsProvider(rpcUrl)
         );
         if (cancelled) {
-          await newClient.disconnect();
+          newClient.disconnect().catch(() => {});
           return;
         }
         clientRef.current = newClient;
@@ -68,7 +78,6 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       cancelled = true;
-      clientRef.current?.disconnect();
     };
   }, [rpcUrl]);
 
