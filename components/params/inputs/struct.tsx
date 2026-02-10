@@ -36,7 +36,7 @@ export function Struct({
 
   // Get list of required field names
   const requiredFieldNames = React.useMemo(() => {
-    return fields.filter((f) => f.required).map((f) => f.name);
+    return (fields || []).filter((f) => f.required).map((f) => f.name);
   }, [fields]);
 
   const validateAndEmit = (newValues: Record<string, any>) => {
@@ -64,7 +64,7 @@ export function Struct({
 
   // Render each field with its component
   const renderFields = () => {
-    return fields.map((field) => {
+    return (fields || []).map((field) => {
       if (React.isValidElement(field.component)) {
         return (
           <div key={field.name} className="mb-4 last:mb-0">

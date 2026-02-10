@@ -1,10 +1,36 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@luno-kit/ui/styles.css";
-@import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
-@plugin "@tailwindcss/typography";
+/* Map fumadocs variables to our shadcn theme so dark mode stays consistent.
+   Using @theme inline so var() references are preserved at runtime,
+   allowing .dark overrides of --foreground etc. to propagate correctly
+   into Fumadocs typography prose variables (--tw-prose-body, etc.). */
+@theme inline {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-popover: var(--popover);
+  --color-fd-popover-foreground: var(--popover-foreground);
+  --color-fd-card: var(--card);
+  --color-fd-card-foreground: var(--card-foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--primary);
+  --color-fd-primary-foreground: var(--primary-foreground);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-secondary-foreground: var(--secondary-foreground);
+  --color-fd-accent: var(--accent);
+  --color-fd-accent-foreground: var(--accent-foreground);
+  --color-fd-ring: var(--ring);
+}
+
+/* Note: Do NOT add @plugin "@tailwindcss/typography" here.
+   Fumadocs preset.css already includes its own typography plugin that
+   uses --color-fd-* variables for proper dark mode support. The standard
+   @tailwindcss/typography plugin would override those with pre-resolved
+   light-mode oklch values, breaking dark mode prose text. */
 
 @custom-variant dark (&:is(.dark *));
 
