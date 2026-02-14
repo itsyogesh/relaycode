@@ -3,6 +3,28 @@ title: Referendum Selector
 description: Searchable combobox for selecting an OpenGov referendum by index
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <ReferendumSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { ReferendumSelector } from "@/components/params/selectors/referendum-selector";
+
+<ReferendumSelector
+  name="pollIndex"
+  label="Referendum"
+  client={client}
+  palletContext={governanceContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Referendum Selector
 
 The Referendum Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a parameter that expects a referendum index. It displays a searchable combobox with live referendum data including titles, track names, voting tallies, and status badges.

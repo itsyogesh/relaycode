@@ -3,6 +3,28 @@ title: Validator Selector
 description: Searchable combobox for selecting a single validator from on-chain data
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <ValidatorSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { ValidatorSelector } from "@/components/params/selectors/validator-selector";
+
+<ValidatorSelector
+  name="target"
+  label="Validator"
+  client={client}
+  palletContext={stakingContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Validator Selector
 
 The Validator Selector is a contextual selector that replaces the default text input when the extrinsic builder detects a parameter that expects a single validator address. It displays a searchable combobox populated with live validator data including identity names, commission rates, and active/waiting status.

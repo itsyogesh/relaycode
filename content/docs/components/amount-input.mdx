@@ -3,6 +3,30 @@ title: Amount Input
 description: Numeric input for integer types with range validation and hex mode
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <AmountDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Amount } from "@/components/params/inputs/amount";
+
+<Amount
+  name="weight"
+  label="Weight"
+  description="The dispatch weight"
+  typeName="u64"
+  client={client}
+  typeId={8}
+  isRequired
+  onChange={(value) => console.log("Value:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Amount Input
 
 The Amount input provides a numeric field for entering integer values such as `u32`, `u64`, `u128`, and their signed and compact variants. It displays the valid range for the type, supports decimal and hexadecimal input modes for large integers, and offers denomination support for balance-like compact types like `Compact<u128>`.

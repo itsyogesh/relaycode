@@ -3,6 +3,29 @@ title: Vector Input
 description: Dynamic-length list input for Substrate Vec<T> types with bulk entry support
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <VectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Vector } from "@/components/params/inputs/vector";
+
+<Vector
+  name="signatories"
+  label="Signatories"
+  description="List of signatory accounts"
+  client={client}
+  typeId={12}
+  minItems={2}
+  onChange={(val) => console.log("Items:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Vector Input
 
 The Vector input handles Substrate `Vec<T>` and `BoundedVec<T>` types by rendering a dynamic list of sub-inputs where items can be added, removed, and reordered. It supports both a form mode with individual item inputs and a bulk mode for pasting JSON arrays or line-separated values. Vectors are used extensively in Substrate for batch operations, multi-sig signatories, validator lists, and any parameter that accepts a variable-length collection.

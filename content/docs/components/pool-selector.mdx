@@ -3,6 +3,28 @@ title: Pool Selector
 description: Searchable combobox for selecting a nomination pool by ID
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <PoolSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { PoolSelector } from "@/components/params/selectors/pool-selector";
+
+<PoolSelector
+  name="poolId"
+  label="Pool"
+  client={client}
+  palletContext={stakingContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Pool Selector
 
 The Pool Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a `pool_id` parameter in nomination pool calls. It displays a searchable combobox populated with live pool data including names, states, member counts, and total stake.

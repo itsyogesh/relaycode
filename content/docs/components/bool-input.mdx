@@ -3,6 +3,28 @@ title: Bool Input
 description: Toggle switch for boolean parameters
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <BoolDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Boolean } from "@/components/params/inputs/boolean";
+
+<Boolean
+  name="approve"
+  label="Approve"
+  description="Whether to approve the proposal"
+  client={client}
+  typeId={1}
+  onChange={(value) => console.log("Checked:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Bool Input
 
 The Bool input renders a toggle switch for Substrate boolean parameters. It provides a simple on/off control that maps directly to SCALE `bool` encoding.

@@ -8,7 +8,25 @@ import {
 import { notFound } from "next/navigation";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { ComponentPreview } from "@/components/docs/component-preview";
-import { AccountDemo, BalanceDemo, EnumDemo } from "@/components/docs/demos";
+import {
+  AccountDemo,
+  BalanceDemo,
+  EnumDemo,
+  BoolDemo,
+  TextDemo,
+  HashDemo,
+  BytesDemo,
+  AmountDemo,
+  OptionDemo,
+  VectorDemo,
+  ValidatorSelectorDemo,
+  ValidatorMultiSelectorDemo,
+  PoolSelectorDemo,
+  EraSelectorDemo,
+  ReferendumSelectorDemo,
+  TrackSelectorDemo,
+  BountySelectorDemo,
+} from "@/components/docs/demos";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
 export default async function Page(props: {
@@ -32,6 +50,20 @@ export default async function Page(props: {
             AccountDemo,
             BalanceDemo,
             EnumDemo,
+            BoolDemo,
+            TextDemo,
+            HashDemo,
+            BytesDemo,
+            AmountDemo,
+            OptionDemo,
+            VectorDemo,
+            ValidatorSelectorDemo,
+            ValidatorMultiSelectorDemo,
+            PoolSelectorDemo,
+            EraSelectorDemo,
+            ReferendumSelectorDemo,
+            TrackSelectorDemo,
+            BountySelectorDemo,
             Tab,
             Tabs,
           }}

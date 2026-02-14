@@ -3,6 +3,28 @@ title: Option Input
 description: Toggle-based wrapper for Substrate Option<T> types with automatic inner type resolution
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <OptionDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Option } from "@/components/params/inputs/option";
+
+<Option
+  name="tip"
+  label="Tip"
+  description="Optional tip for the block author"
+  client={client}
+  typeId={10}
+  onChange={(val) => console.log("Value:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Option Input
 
 The Option input handles Substrate `Option<T>` types by presenting a toggle switch that lets the user choose between `None` (disabled) and `Some(value)` (enabled). When enabled, it automatically resolves and renders the appropriate sub-input for the inner type `T` using chain metadata. Options appear throughout Substrate pallets wherever a parameter is not strictly required -- tips, era selection, and optional configuration fields.

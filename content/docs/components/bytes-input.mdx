@@ -3,6 +3,29 @@ title: Bytes Input
 description: Multi-mode byte array input with hex, text, JSON, Base64, and file upload
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <BytesDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Bytes } from "@/components/params/inputs/bytes";
+
+<Bytes
+  name="data"
+  label="Data"
+  description="The raw byte payload"
+  client={client}
+  typeId={14}
+  isRequired
+  onChange={(hex) => console.log("Hex bytes:", hex)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Bytes Input
 
 The Bytes input provides a multi-mode editor for entering raw byte data. It supports five input modes -- hex, plain text, JSON, Base64, and file upload -- and automatically converts between them. All modes emit the same hex-encoded byte string to the parent form.
