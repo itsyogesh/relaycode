@@ -3,6 +3,28 @@ title: Validator Multi-Selector
 description: Multi-select combobox for choosing up to 16 validators for staking nominations
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <ValidatorMultiSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { ValidatorMultiSelector } from "@/components/params/selectors/validator-multi-selector";
+
+<ValidatorMultiSelector
+  name="targets"
+  label="Validators"
+  client={client}
+  palletContext={stakingContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Validator Multi-Selector
 
 The Validator Multi-Selector is a contextual selector that replaces the default input when the extrinsic builder detects a parameter that expects a list of validator addresses. It provides a multi-select combobox with checkbox-style selection, removable chips for selected validators, and a cap of 16 nominations matching the Polkadot runtime limit.

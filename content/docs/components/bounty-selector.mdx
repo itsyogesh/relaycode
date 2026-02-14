@@ -3,6 +3,28 @@ title: Bounty Selector
 description: Searchable combobox for selecting a treasury bounty by index
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <BountySelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { BountySelector } from "@/components/params/selectors/bounty-selector";
+
+<BountySelector
+  name="bountyId"
+  label="Bounty"
+  client={client}
+  palletContext={governanceContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Bounty Selector
 
 The Bounty Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a `bounty_id` parameter in bounty-related calls. It displays a searchable combobox populated with live bounty data including titles, reward values, curator information, and status.

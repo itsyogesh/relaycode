@@ -3,6 +3,28 @@ title: Track Selector
 description: Searchable combobox for selecting an OpenGov governance track
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <TrackSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { TrackSelector } from "@/components/params/selectors/track-selector";
+
+<TrackSelector
+  name="trackId"
+  label="Track"
+  client={client}
+  palletContext={governanceContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Track Selector
 
 The Track Selector is a contextual selector that replaces the default numeric input when the extrinsic builder detects a parameter that expects a governance track ID. It displays a searchable combobox populated with the chain's governance tracks, showing track names, IDs, and the current/maximum number of deciding referenda per track.

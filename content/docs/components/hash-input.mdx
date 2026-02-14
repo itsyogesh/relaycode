@@ -3,6 +3,29 @@ title: Hash Input
 description: Fixed-length hex hash input for H160, H256, and H512 types
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <HashDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Hash256 } from "@/components/params/inputs/hash";
+
+<Hash256
+  name="codeHash"
+  label="Code Hash"
+  description="The hash of the contract code"
+  client={client}
+  typeId={11}
+  isRequired
+  onChange={(hash) => console.log("Hash:", hash)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Hash Input
 
 The Hash input provides a hex string field for fixed-length hash types. Three variants are exported -- `Hash160`, `Hash256`, and `Hash512` -- each validating against the expected byte length. A live validation icon shows whether the current value matches the required format.

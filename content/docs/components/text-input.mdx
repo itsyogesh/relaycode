@@ -3,6 +3,28 @@ title: Text Input
 description: Generic string input and fallback for unknown types
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <TextDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Text } from "@/components/params/inputs/text";
+
+<Text
+  name="remark"
+  label="Remark"
+  description="An arbitrary string"
+  client={client}
+  typeId={10}
+  onChange={(value) => console.log("Text:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Text Input
 
 The Text input is a plain string field that serves as the fallback component for any parameter type that does not match a more specific input in the registry. It accepts arbitrary text and emits it as a raw string.

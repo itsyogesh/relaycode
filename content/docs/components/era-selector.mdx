@@ -3,6 +3,27 @@ title: Era Selector
 description: Numeric input with contextual hints showing current and active era
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <EraSelectorDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { EraSelector } from "@/components/params/selectors/era-selector";
+
+<EraSelector
+  name="era"
+  label="Era"
+  client={client}
+  palletContext={stakingContext}
+  onChange={(value) => console.log("Era:", value)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Era Selector
 
 The Era Selector is a contextual component that enhances a plain numeric input with live era information from the chain. Rather than replacing the input with a dropdown, it augments the field with a `ContextHint` showing the current and active era values, helping the user enter the correct era index.
