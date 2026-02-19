@@ -84,6 +84,7 @@ jest.mock("../components/params/inputs/tuple", () => ({
 }));
 
 import { findComponent } from "../lib/input-map";
+import { createMockDedotClient } from "./helpers/mock-client";
 import { Account } from "../components/params/inputs/account";
 import { Balance } from "../components/params/inputs/balance";
 import { Amount } from "../components/params/inputs/amount";
@@ -374,6 +375,72 @@ describe("findComponent", () => {
 
     it("should prefer Hash512 over Hash256 for H512", () => {
       expect(findComponent("H512").component).toBe(Hash512);
+    });
+  });
+
+  describe("Path-based fallback with client", () => {
+    it("resolves component from metadata path when typeName does not match", () => {
+      const client = createMockDedotClient({
+        registry: {
+          findType: jest.fn().mockReturnValue({
+            path: ["sp_runtime", "multiaddress", "MultiAddress"],
+            typeDef: { type: "Enum", value: { members: [] } },
+          }),
+          findCodec: jest.fn(),
+        },
+      });
+      // Use an unknown typeName so pattern matching falls through to path lookup
+      const result = findComponent("SomeUnknownType", 113, client);
+      // "MultiAddress" from path should match Account
+      expect(result.component).toBe(Account);
+    });
+
+    it("falls back to Enum component via typeDef when path also fails", () => {
+      const Enum = require("../components/params/inputs/enum").Enum;
+      const client = createMockDedotClient({
+        registry: {
+          findType: jest.fn().mockReturnValue({
+            path: ["some", "unknown"],
+            typeDef: { type: "Enum", value: { members: [] } },
+          }),
+          findCodec: jest.fn(),
+        },
+      });
+      const result = findComponent("SomeUnknownType", 42, client);
+      expect(result.component).toBe(Enum);
+    });
+
+    it("falls back to Struct component via typeDef", () => {
+      const Struct = require("../components/params/inputs/struct").Struct;
+      const client = createMockDedotClient({
+        registry: {
+          findType: jest.fn().mockReturnValue({
+            path: ["some", "unknown"],
+            typeDef: { type: "Struct", value: { fields: [] } },
+          }),
+          findCodec: jest.fn(),
+        },
+      });
+      const result = findComponent("SomeUnknownType", 42, client);
+      expect(result.component).toBe(Struct);
+    });
+
+    it("falls back to Text when findType throws", () => {
+      const Text = require("../components/params/inputs/text").Text;
+      const client = createMockDedotClient({
+        registry: {
+          findType: jest.fn().mockImplementation(() => { throw new Error("not found"); }),
+          findCodec: jest.fn(),
+        },
+      });
+      const result = findComponent("SomeUnknownType", 999, client);
+      expect(result.component).toBe(Text);
+    });
+
+    it("falls back to Text when no client is provided", () => {
+      const Text = require("../components/params/inputs/text").Text;
+      const result = findComponent("SomeUnknownType");
+      expect(result.component).toBe(Text);
     });
   });
 });

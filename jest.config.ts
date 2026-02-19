@@ -30,6 +30,7 @@ const config: Config = {
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  testPathIgnorePatterns: ["/node_modules/", "__tests__/helpers/"],
 };
 
 // Use async config to modify transformIgnorePatterns after next/jest builds them
