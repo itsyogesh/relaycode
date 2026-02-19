@@ -4,6 +4,8 @@ import {
   isValidAddressFormat,
   isValidHexFormat,
   validateAmount,
+  validateField,
+  validateAllArgs,
 } from "../../lib/validation";
 
 describe("validateVectorConstraints", () => {
@@ -253,5 +255,100 @@ describe("validateAmount", () => {
 
   it("should handle number input by converting to string", () => {
     expect(validateAmount(100 as any).valid).toBe(true);
+  });
+});
+
+describe("validateField", () => {
+  it("returns error for empty value", () => {
+    const result = validateField("AccountId", "");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("required");
+  });
+
+  it("returns error for undefined value", () => {
+    const result = validateField("AccountId", undefined);
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("required");
+  });
+
+  it("validates AccountId type with valid address", () => {
+    const result = validateField("AccountId", "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY");
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects invalid AccountId", () => {
+    const result = validateField("AccountId", "invalid-address");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("SS58 address");
+  });
+
+  it("validates H256 with correct 66-char hex", () => {
+    const hex66 = "0x" + "ab".repeat(32); // 2 + 64 = 66 chars
+    const result = validateField("H256", hex66);
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects H256 with wrong length", () => {
+    const result = validateField("H256", "0xabcdef");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("32-byte hex");
+  });
+
+  it("validates numeric types (u128)", () => {
+    const result = validateField("u128", "12345");
+    expect(result.valid).toBe(true);
+  });
+
+  it("rejects non-numeric value for numeric type", () => {
+    const result = validateField("u128", "not-a-number");
+    expect(result.valid).toBe(false);
+    expect(result.error).toContain("valid number");
+  });
+
+  it("passes non-special types with any value", () => {
+    const result = validateField("SomeCustomType", "any-value");
+    expect(result.valid).toBe(true);
+  });
+});
+
+describe("validateAllArgs", () => {
+  it("validates all fields and returns aggregated valid result", () => {
+    const fields = [
+      { name: "amount", typeName: "u128" },
+      { name: "enabled", typeName: "bool" },
+    ];
+    const values = { amount: "100", enabled: true };
+    const result = validateAllArgs(null, fields, values);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("collects errors from invalid fields", () => {
+    const fields = [
+      { name: "dest", typeName: "AccountId" },
+      { name: "amount", typeName: "u128" },
+    ];
+    const values = { dest: "bad-address", amount: "not-a-number" };
+    const result = validateAllArgs(null, fields, values);
+    expect(result.valid).toBe(false);
+    expect(result.errors.length).toBe(2);
+    expect(result.errors[0]).toContain("SS58 address");
+    expect(result.errors[1]).toContain("valid number");
+  });
+
+  it("handles missing values as errors", () => {
+    const fields = [{ name: "dest", typeName: "AccountId" }];
+    const values = {};
+    const result = validateAllArgs(null, fields, values);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toContain("required");
+  });
+
+  it("uses typeId fallback for field name", () => {
+    const fields = [{ typeName: "u128", typeId: 42 }];
+    const values = { field_42: "100" };
+    const result = validateAllArgs(null, fields, values);
+    expect(result.valid).toBe(true);
+    expect(result.results.has("field_42")).toBe(true);
   });
 });

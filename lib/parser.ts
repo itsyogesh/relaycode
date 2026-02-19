@@ -70,10 +70,6 @@ export function createMethodOptions(
  */
 export function getArgType(client: DedotClient<PolkadotApi>, typeId: number) {
   const type = client.registry.findType(typeId);
-  console.log("codec", client.registry.findCodec(typeId));
-  if (type.typeDef.type === "Enum") {
-    console.log("enum types", client.registry.getEnumOptions(typeId));
-  }
   return getTypeDetails(type.typeDef);
 }
 
