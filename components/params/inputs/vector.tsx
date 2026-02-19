@@ -15,6 +15,7 @@ interface VectorProps extends ParamInputProps {
   children?: React.ReactNode;
   minItems?: number;
   maxItems?: number;
+  unique?: boolean;
 }
 
 const schema = z.array(z.any());
@@ -35,13 +36,14 @@ export function Vector({
   typeId,
   minItems = 0,
   maxItems,
+  unique = false,
 }: VectorProps) {
   const [items, setItems] = React.useState<any[]>([undefined]);
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [mode, setMode] = React.useState<VectorMode>("form");
   const [bulkText, setBulkText] = React.useState("");
   const [bulkError, setBulkError] = React.useState<string | null>(null);
-  const [duplicateWarning, setDuplicateWarning] = React.useState<string | null>(null);
+  const [duplicateMessage, setDuplicateMessage] = React.useState<string | null>(null);
   const lastEmittedRef = React.useRef<string>("");
 
   // Resolve the inner element type from metadata
@@ -82,7 +84,7 @@ export function Vector({
   React.useEffect(() => {
     const defined = items.filter((item) => item !== undefined);
     if (defined.length < 2) {
-      setDuplicateWarning(null);
+      setDuplicateMessage(null);
       return;
     }
     const strings = defined.map((v) => JSON.stringify(v));
@@ -95,11 +97,15 @@ export function Vector({
     const dupes = Array.from(seen.values()).filter((positions) => positions.length > 1);
     if (dupes.length > 0) {
       const positions = dupes.flat().join(", ");
-      setDuplicateWarning(`Duplicate values at positions ${positions}`);
+      if (unique) {
+        setDuplicateMessage(`Set contains duplicate values at positions ${positions}`);
+      } else {
+        setDuplicateMessage(`Duplicate values at positions ${positions}`);
+      }
     } else {
-      setDuplicateWarning(null);
+      setDuplicateMessage(null);
     }
-  }, [items]);
+  }, [items, unique]);
 
   const validateAndEmit = (newItems: any[]) => {
     // Validate constraints
@@ -132,7 +138,7 @@ export function Vector({
   const handleRemove = (index: number) => {
     if (items.length <= minItems) return;
     const newItems = items.filter((_, i) => i !== index);
-    setItems(newItems);
+    setItems(newItems.length === 0 ? [undefined] : newItems);
     validateAndEmit(newItems);
   };
 
@@ -168,7 +174,9 @@ export function Vector({
         try {
           setBulkText(JSON.stringify(defined, null, 2));
         } catch {
-          setBulkText(defined.map(String).join("\n"));
+          if (!unique) {
+            setBulkText(defined.map(String).join("\n"));
+          }
         }
       }
     } else if (m === "form" && bulkText.trim()) {
@@ -177,7 +185,8 @@ export function Vector({
       if (jsonResult.success) {
         setItems(jsonResult.values);
         validateAndEmit(jsonResult.values);
-      } else {
+      } else if (!unique) {
+        // Line-separated fallback only for non-unique (Vector) mode
         const lineResult = parseSeparatedValues(bulkText);
         if (lineResult.success && lineResult.count > 0) {
           setItems(lineResult.values);
@@ -207,13 +216,15 @@ export function Vector({
       return;
     }
 
-    // Try line-separated
-    const lineResult = parseSeparatedValues(text);
-    if (lineResult.success && lineResult.count > 0) {
-      setBulkError(null);
-      setItems(lineResult.values);
-      validateAndEmit(lineResult.values);
-      return;
+    // Try line-separated (only for non-unique / Vector mode)
+    if (!unique) {
+      const lineResult = parseSeparatedValues(text);
+      if (lineResult.success && lineResult.count > 0) {
+        setBulkError(null);
+        setItems(lineResult.values);
+        validateAndEmit(lineResult.values);
+        return;
+      }
     }
 
     setBulkError(jsonResult.error || "Could not parse input");
@@ -246,7 +257,7 @@ export function Vector({
           <InnerComponent
             client={client}
             name={`${name}-${index}`}
-            label={`${label || name} [${index}]`}
+            label={unique ? `Item ${index}` : `${label || name} [${index}]`}
             typeId={innerType.typeId}
             typeName={innerType.typeName}
             isDisabled={isDisabled}
@@ -261,7 +272,8 @@ export function Vector({
       return (
         <div key={index} className="flex items-start gap-1">
           <div className="flex-1">{itemComponent}</div>
-          {!isDisabled && (
+          {/* Reorder controls: only for ordered collections (not sets) */}
+          {!isDisabled && !unique && (
             <div className="flex flex-col gap-0.5 mt-8">
               <Button
                 variant="ghost"
@@ -283,7 +295,7 @@ export function Vector({
               </Button>
             </div>
           )}
-          {!isDisabled && items.length > minItems && (
+          {!isDisabled && items.length > (unique ? 1 : minItems) && (
             <Button
               variant="ghost"
               size="icon"
@@ -299,7 +311,18 @@ export function Vector({
   };
 
   const canAddMore = !maxItems || items.length < maxItems;
-  const displayError = externalError || validationError || (mode === "bulk" ? bulkError : null);
+  const bulkModeLabel = unique ? "JSON" : "Bulk";
+  const bulkPlaceholder = unique
+    ? '["value1", "value2", "value3"]'
+    : 'Paste JSON array or one value per line:\n["value1", "value2"]\nor\nvalue1\nvalue2';
+
+  // For unique mode, duplicates are errors (red); for Vector mode, they are warnings (yellow)
+  const duplicateIsError = unique && !!duplicateMessage;
+  const displayError =
+    externalError ||
+    validationError ||
+    (mode === "bulk" ? bulkError : null) ||
+    (duplicateIsError ? duplicateMessage : null);
 
   return (
     <div className="flex flex-col gap-2">
@@ -321,7 +344,7 @@ export function Vector({
           <ModeToggle
             modes={[
               { id: "form", label: "Form" },
-              { id: "bulk", label: "Bulk" },
+              { id: "bulk", label: bulkModeLabel },
             ]}
             activeMode={mode}
             onModeChange={handleModeChange}
@@ -335,7 +358,7 @@ export function Vector({
               className="flex items-center gap-1"
             >
               <Plus className="h-4 w-4" />
-              Add
+              {unique ? "Add Item" : "Add"}
             </Button>
           )}
         </div>
@@ -351,12 +374,13 @@ export function Vector({
           value={bulkText}
           onChange={handleBulkTextChange}
           className={`font-mono min-h-[120px] ${bulkError ? "border-red-500" : ""}`}
-          placeholder={'Paste JSON array or one value per line:\n["value1", "value2"]\nor\nvalue1\nvalue2'}
+          placeholder={bulkPlaceholder}
         />
       )}
 
-      {duplicateWarning && mode === "form" && (
-        <p className="text-xs text-yellow-600">{duplicateWarning}</p>
+      {/* Duplicate warning (yellow) for Vector mode only; unique mode shows as error above */}
+      {duplicateMessage && !unique && mode === "form" && (
+        <p className="text-xs text-yellow-600">{duplicateMessage}</p>
       )}
       {description && <FormDescription>{description}</FormDescription>}
       {displayError && <p className="text-sm text-red-500">{displayError}</p>}
@@ -365,3 +389,10 @@ export function Vector({
 }
 
 Vector.schema = schema;
+
+// BTreeSet convenience wrapper — unique-value collection
+export function BTreeSet(props: ParamInputProps) {
+  return <Vector {...props} unique />;
+}
+
+BTreeSet.schema = schema;

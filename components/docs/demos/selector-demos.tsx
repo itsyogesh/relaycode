@@ -3,7 +3,6 @@
 import React from "react";
 import { DocsSelectorPreview } from "./docs-selector-preview";
 import { ValidatorSelector } from "@/components/params/selectors/validator-selector";
-import { ValidatorMultiSelector } from "@/components/params/selectors/validator-multi-selector";
 import { PoolSelector } from "@/components/params/selectors/pool-selector";
 import { EraSelector } from "@/components/params/selectors/era-selector";
 import { ReferendumSelector } from "@/components/params/selectors/referendum-selector";
@@ -26,11 +25,12 @@ export function ValidatorSelectorDemo() {
 export function ValidatorMultiSelectorDemo() {
   return (
     <DocsSelectorPreview palletName="Staking">
-      <ValidatorMultiSelector
+      <ValidatorSelector
         name="targets"
         label="Validators"
         client={null as any}
         onChange={() => {}}
+        multi
       />
     </DocsSelectorPreview>
   );

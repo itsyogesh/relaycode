@@ -5,7 +5,7 @@ import { Amount } from "@/components/params/inputs/amount";
 import { Balance } from "@/components/params/inputs/balance";
 import { Boolean } from "@/components/params/inputs/boolean";
 import { BTreeMap } from "@/components/params/inputs/btree-map";
-import { BTreeSet } from "@/components/params/inputs/btree-set";
+import { BTreeSet } from "@/components/params/inputs/vector";
 import { Bytes } from "@/components/params/inputs/bytes";
 import { Call } from "@/components/params/inputs/call";
 import { Enum } from "@/components/params/inputs/enum";

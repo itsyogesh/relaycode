@@ -29,17 +29,29 @@ const hash512Schema = z.string().refine(
   { message: "Invalid H512 hash (should be 128 hex characters with 0x prefix)" }
 );
 
-interface HashInputProps extends ParamInputProps {
-  hashType: "H160" | "H256" | "H512";
-}
-
 const HASH_LENGTHS: Record<string, number> = {
   H160: 40,
   H256: 64,
   H512: 128,
 };
 
-export function Hash({
+const HASH_SCHEMAS: Record<string, z.ZodType> = {
+  H160: hash160Schema,
+  H256: hash256Schema,
+  H512: hash512Schema,
+};
+
+function detectHashType(typeName?: string): "H160" | "H256" | "H512" {
+  if (typeName?.includes("H160")) return "H160";
+  if (typeName?.includes("H512")) return "H512";
+  return "H256"; // default
+}
+
+interface HashInputProps extends ParamInputProps {
+  hashType?: "H160" | "H256" | "H512";
+}
+
+export function HashInput({
   name,
   label,
   description,
@@ -48,10 +60,12 @@ export function Hash({
   error,
   onChange,
   value: externalValue,
-  hashType,
+  typeName,
+  hashType: explicitHashType,
 }: HashInputProps) {
   const [displayValue, setDisplayValue] = React.useState("");
 
+  const hashType = explicitHashType ?? detectHashType(typeName);
   const expectedLength = HASH_LENGTHS[hashType];
 
   React.useEffect(() => {
@@ -120,18 +134,20 @@ export function Hash({
   );
 }
 
-// Export specific hash components with their respective schemas
+HashInput.schema = hash256Schema;
+
+// Thin wrappers for the input-map registry (different priorities)
 export function Hash160(props: ParamInputProps) {
-  return <Hash {...props} hashType="H160" />;
+  return <HashInput {...props} hashType="H160" />;
 }
 Hash160.schema = hash160Schema;
 
 export function Hash256(props: ParamInputProps) {
-  return <Hash {...props} hashType="H256" />;
+  return <HashInput {...props} hashType="H256" />;
 }
 Hash256.schema = hash256Schema;
 
 export function Hash512(props: ParamInputProps) {
-  return <Hash {...props} hashType="H512" />;
+  return <HashInput {...props} hashType="H512" />;
 }
 Hash512.schema = hash512Schema;
