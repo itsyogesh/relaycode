@@ -1,5 +1,10 @@
 # Relaycode: Rethinking Extrinsics in Polkadot
 
+[![CI](https://github.com/itsyogesh/relaycode/actions/workflows/ci.yml/badge.svg)](https://github.com/itsyogesh/relaycode/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/itsyogesh/relaycode/branch/master/graph/badge.svg)](https://codecov.io/gh/itsyogesh/relaycode)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue.svg)](https://www.typescriptlang.org/)
+[![W3F Grant](https://img.shields.io/badge/Web3_Foundation-Grant-green.svg)](https://grants.web3.foundation/)
 
 ## Project Overview
 Relaycode is an intuitive extrinsics builder designed to transform the way developers and users interact with extrinsics in the Polkadot ecosystem. By bridging the gap between complex pallet operations and user-friendly interfaces, Relaycode gives both regular users and developers the ability to harness the full potential of extrinsics the Polkadot ecosystem.
