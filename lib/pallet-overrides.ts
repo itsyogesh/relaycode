@@ -3,7 +3,7 @@ import type { PalletContextData } from "@/types/pallet-context";
 import { ReferendumSelector } from "@/components/params/selectors/referendum-selector";
 import { TrackSelector } from "@/components/params/selectors/track-selector";
 import { BountySelector } from "@/components/params/selectors/bounty-selector";
-import { ValidatorMultiSelector } from "@/components/params/selectors/validator-multi-selector";
+import { ValidatorMultiSelector } from "@/components/params/selectors/validator-selector";
 import { PoolSelector } from "@/components/params/selectors/pool-selector";
 import { ProxyTypeSelector } from "@/components/params/selectors/proxy-type-selector";
 import { AssetSelector } from "@/components/params/selectors/asset-selector";

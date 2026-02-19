@@ -1,6 +1,6 @@
 ---
 title: Validator Selector
-description: Searchable combobox for selecting a single validator from on-chain data
+description: Searchable combobox for selecting validators, with single-select and multi-select modes
 ---
 
 <Tabs items={["Preview", "Code"]}>
@@ -13,9 +13,21 @@ description: Searchable combobox for selecting a single validator from on-chain 
 ```tsx
 import { ValidatorSelector } from "@/components/params/selectors/validator-selector";
 
+// Single-select mode (default)
 <ValidatorSelector
   name="target"
   label="Validator"
+  client={client}
+  palletContext={stakingContext}
+  isContextLoading={false}
+  onChange={(value) => console.log("Selected:", value)}
+/>
+
+// Multi-select mode
+<ValidatorSelector
+  name="targets"
+  label="Validators"
+  multi
   client={client}
   palletContext={stakingContext}
   isContextLoading={false}
@@ -27,53 +39,72 @@ import { ValidatorSelector } from "@/components/params/selectors/validator-selec
 
 # Validator Selector
 
-The Validator Selector is a contextual selector that replaces the default text input when the extrinsic builder detects a parameter that expects a single validator address. It displays a searchable combobox populated with live validator data including identity names, commission rates, and active/waiting status.
+The Validator Selector is a contextual selector for choosing validators from live on-chain data. It supports two modes controlled by the `multi` prop:
+
+- **Single-select** (default): A searchable combobox that selects one validator address.
+- **Multi-select** (`multi`): A checkbox-based selector with removable chips, capped at 16 nominations.
 
 ## When It Appears
 
-The Validator Selector is not currently mapped to any pallet override in `PALLET_OVERRIDES`. It serves as the single-select counterpart to `ValidatorMultiSelector` and can be used directly where a single validator address is needed. The multi-select variant (`ValidatorMultiSelector`) is used for the `targets` parameter in staking nomination calls.
+The Validator Selector activates for these pallet/method/parameter combinations defined in `PALLET_OVERRIDES`:
+
+| Pallet | Method | Parameter | Mode |
+|---|---|---|---|
+| `Staking` | `nominate` | `targets` | Multi |
+| `NominationPools` | `nominate` | `validators` | Multi |
+
+The single-select variant can be used directly wherever a single validator address is needed.
 
 ## Props
 
-The component accepts the standard `ParamInputProps` interface with context extensions:
+The component accepts the standard `ParamInputProps` interface with an additional `multi` prop:
 
 | Prop | Type | Required | Description |
 |---|---|---|---|
 | `label` | `string` | No | Display label shown above the selector |
-| `value` | `any` | No | Currently selected validator address |
-| `onChange` | `(value: unknown) => void` | No | Callback fired with the selected validator address |
+| `value` | `any` | No | Selected validator address (string) or addresses (string array) |
+| `onChange` | `(value: unknown) => void` | No | Callback fired with the selection |
 | `isContextLoading` | `boolean` | No | When true, displays a skeleton loading placeholder |
 | `palletContext` | `PalletContextData` | No | Staking context containing the validators list |
+| `multi` | `boolean` | No | Enables multi-select mode with checkboxes and chips (default: `false`) |
+
+## Multi-Select Mode
+
+<ComponentPreview>
+  <ValidatorMultiSelectorDemo />
+</ComponentPreview>
+
+When `multi` is enabled:
+
+- Each validator row has a checkbox indicator. Clicking toggles selection.
+- A **16-nomination cap** enforces the Polkadot maximum. Items beyond the limit are visually dimmed and disabled.
+- A **selection counter** badge shows the current count (e.g. "3/16 selected").
+- Selected validators appear as **removable chips** below the combobox.
+- The popover stays open after selection to allow picking multiple validators.
+
+A convenience wrapper `ValidatorMultiSelector` is also exported for use in pallet overrides:
+
+```tsx
+import { ValidatorMultiSelector } from "@/components/params/selectors/validator-selector";
+// Equivalent to: <ValidatorSelector {...props} multi />
+```
 
 ## Features
 
-- **Searchable combobox**: Filters validators by address or on-chain identity name as the user types.
+- **Searchable**: Filters validators by address or on-chain identity name.
 - **Identity display**: Shows the validator's on-chain identity name when available, otherwise displays a truncated address.
-- **Verified badge**: Displays a green shield icon next to validators with verified identity judgements.
-- **Commission rate**: Shows each validator's commission percentage alongside their name.
-- **Active/Waiting status**: Color-coded badges indicate whether a validator is in the active set (green) or waiting (muted).
-- **Sort order**: Validators are sorted with active validators first, then by ascending commission rate.
+- **Verified badge**: Green shield icon for validators with verified identity judgements.
+- **Commission rate**: Shows each validator's commission percentage.
+- **Active/Waiting status**: Color-coded badges indicate validator status.
+- **Sort order**: Active validators first, then by ascending commission rate.
 - **Virtualized list**: Renders up to 100 items at a time for performance.
-- **Graceful fallback**: When context data is unavailable, falls back to a plain text input via `SelectorFallback`.
+- **Graceful fallback**: Falls back to a plain text input when context data is unavailable.
 
 ## Data Source
 
-Validator data comes from the `StakingContext` which is fetched by `lib/pallet-context/staking.ts`. The primary source is the **Subscan API** (`lib/api/subscan.ts` -- `fetchValidators`), which provides validator addresses, identity information, commission rates, total stake, and nominator counts. If the Subscan API is unavailable, the system falls back to an **on-chain RPC** query (`staking.validators.entries()`) which provides addresses and commission prefs but no identity data.
-
-## Usage
-
-The Validator Selector is resolved automatically by `findComponentWithContext` when contextual overrides match. It is not typically used directly:
-
-```tsx
-// Automatic resolution via pallet overrides
-import { findComponentWithContext } from "@/lib/input-map";
-
-const result = findComponentWithContext(
-  palletName, methodName, fieldName, typeName, typeId, client, palletContext
-);
-// result.component may be ValidatorSelector when overrides match
-```
+Validator data comes from the `StakingContext` fetched by `lib/pallet-context/staking.ts`. The primary source is the **Subscan API** (`lib/api/subscan.ts` -- `fetchValidators`), which provides addresses, identity names, commission rates, stake totals, and nominator counts. Falls back to **on-chain RPC** (`staking.validators.entries()`) when the API is unavailable.
 
 ## Value Format
 
-The `onChange` callback receives a **string** -- the SS58-encoded validator address selected from the list.
+- **Single-select**: `onChange` receives a **string** -- the SS58-encoded validator address.
+- **Multi-select**: `onChange` receives a **string array** of SS58-encoded validator addresses.

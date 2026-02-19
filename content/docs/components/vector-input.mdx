@@ -1,6 +1,6 @@
 ---
 title: Vector Input
-description: Dynamic-length list input for Substrate Vec<T> types with bulk entry support
+description: Dynamic-length list input for Substrate Vec<T> and BTreeSet<T> types with bulk entry support
 ---
 
 <Tabs items={["Preview", "Code"]}>
@@ -28,7 +28,7 @@ import { Vector } from "@/components/params/inputs/vector";
 
 # Vector Input
 
-The Vector input handles Substrate `Vec<T>` and `BoundedVec<T>` types by rendering a dynamic list of sub-inputs where items can be added, removed, and reordered. It supports both a form mode with individual item inputs and a bulk mode for pasting JSON arrays or line-separated values. Vectors are used extensively in Substrate for batch operations, multi-sig signatories, validator lists, and any parameter that accepts a variable-length collection.
+The Vector input handles Substrate `Vec<T>`, `BoundedVec<T>`, and `BTreeSet<T>` types by rendering a dynamic list of sub-inputs. It supports both a form mode with individual item inputs and a bulk mode for pasting JSON arrays or line-separated values. The `unique` prop enables set semantics with strict duplicate detection.
 
 ## Supported Type Names
 
@@ -36,6 +36,10 @@ The Vector component matches the following type name patterns at **priority 40**
 
 - Any type name matching `/^Vec</` (e.g. `Vec<AccountId32>`, `Vec<u8>`)
 - Any type name matching `/^BoundedVec</` (e.g. `BoundedVec<u8, MaxLen>`)
+
+The `BTreeSet` wrapper matches at **priority 41**:
+
+- Any type name matching `/^BTreeSet</` (e.g. `BTreeSet<AccountId32>`, `BTreeSet<u32>`)
 
 Note: `Vec<u8>` is handled by the higher-priority Bytes component (priority 75) before reaching Vector.
 
@@ -59,17 +63,43 @@ The component extends `ParamInputProps` with additional collection props:
 | `children` | `React.ReactNode` | No | Legacy: explicit child component to clone per item |
 | `minItems` | `number` | No | Minimum number of items (default: `0`) |
 | `maxItems` | `number` | No | Maximum number of items (no limit by default) |
+| `unique` | `boolean` | No | Enables set semantics: hard duplicate errors, no reorder controls, JSON-only bulk (default: `false`) |
 
 ## Features
 
 - **Auto-resolves element type**: Reads the vector's `Sequence` typeDef from metadata to find the element type, then uses `findComponent` to render the correct input for each item.
 - **Add/Remove items**: An "Add" button appends new items; each item has a remove button (respecting `minItems`).
-- **Reorder items**: Up/down chevron buttons let users reorder items within the list.
+- **Reorder items**: Up/down chevron buttons let users reorder items within the list (disabled in `unique` mode since sets are unordered).
 - **Bulk entry mode**: A toggle switches between form mode (individual inputs) and bulk mode (a textarea accepting JSON arrays or line-separated values).
 - **Duplicate detection**: Warns when duplicate values are detected in form mode.
 - **Constraint display**: Shows min/max item constraints when configured.
 - **External value sync**: Accepts external arrays (e.g. from hex decoding) and syncs them into the form state.
 - **Validation**: Uses `validateVectorConstraints` to check min/max item counts.
+
+## Unique Mode (BTreeSet)
+
+When `unique` is enabled (either directly or via the `BTreeSet` wrapper):
+
+- **Duplicate values are errors** (red), not soft warnings (yellow).
+- **No reorder controls** since sets are unordered.
+- **Bulk mode label** shows "JSON" instead of "Bulk".
+- **JSON-only parsing** in bulk mode (no line-separated fallback).
+
+```tsx
+import { BTreeSet } from "@/components/params/inputs/vector";
+
+<BTreeSet
+  name="validators"
+  label="Validator Set"
+  description="Set of unique validator accounts"
+  client={client}
+  typeId={22}
+  onChange={(val) => console.log("Set:", val)}
+/>
+
+// Equivalent to:
+<Vector {...props} unique />
+```
 
 ## Type Resolution
 
@@ -79,24 +109,9 @@ import { findComponent } from "@/lib/input-map";
 // Matched by /^Vec</ or /^BoundedVec</ at priority 40
 findComponent("Vec<AccountId32>", 12, client);
 findComponent("BoundedVec<u8, MaxLen>", 18, client);
-```
 
-## Usage
-
-The Vector component is rendered by the extrinsic builder when a parameter type starts with `Vec<` or `BoundedVec<`. Direct usage:
-
-```tsx
-import { Vector } from "@/components/params/inputs/vector";
-
-<Vector
-  name="signatories"
-  label="Signatories"
-  description="List of signatory accounts"
-  client={client}
-  typeId={12}
-  minItems={2}
-  onChange={(val) => console.log("Items:", val)}
-/>
+// Matched by /^BTreeSet</ at priority 41
+findComponent("BTreeSet<AccountId32>", 22, client);
 ```
 
 ## Validation
@@ -107,7 +122,7 @@ The component uses a Zod schema that expects an array of any values:
 const schema = z.array(z.any());
 ```
 
-Additionally, `validateVectorConstraints` checks that the number of defined items falls within the configured `minItems` and `maxItems` bounds.
+Additionally, `validateVectorConstraints` checks that the number of defined items falls within the configured `minItems` and `maxItems` bounds. In `unique` mode, duplicate values are treated as validation errors.
 
 ## Value Format
 
@@ -120,11 +135,8 @@ The `onChange` callback receives an **array of defined values** (items that are 
 // Vec<u128>
 ["1000000000000", "2000000000000"]
 
-// Vec with complex inner types
-[
-  { type: "Staked" },
-  { type: "Account", value: "5GrwvaEF..." }
-]
+// BTreeSet<u32> — same array format, must contain unique values
+["1", "2", "3"]
 ```
 
 The value shape of each element depends on the resolved inner component's output.

@@ -16,7 +16,8 @@ jest.mock("../../components/params/selectors/bounty-selector", () => ({
   BountySelector: { displayName: "BountySelector" },
 }));
 
-jest.mock("../../components/params/selectors/validator-multi-selector", () => ({
+jest.mock("../../components/params/selectors/validator-selector", () => ({
+  ValidatorSelector: { displayName: "ValidatorSelector" },
   ValidatorMultiSelector: { displayName: "ValidatorMultiSelector" },
 }));
 
@@ -74,15 +75,13 @@ jest.mock("../../components/params/inputs/option", () => ({
 }));
 jest.mock("../../components/params/inputs/vector", () => ({
   Vector: { displayName: "Vector", schema: {} },
+  BTreeSet: { displayName: "BTreeSet", schema: {} },
 }));
 jest.mock("../../components/params/inputs/vector-fixed", () => ({
   VectorFixed: { displayName: "VectorFixed", schema: {} },
 }));
 jest.mock("../../components/params/inputs/btree-map", () => ({
   BTreeMap: { displayName: "BTreeMap", schema: {} },
-}));
-jest.mock("../../components/params/inputs/btree-set", () => ({
-  BTreeSet: { displayName: "BTreeSet", schema: {} },
 }));
 jest.mock("../../components/params/inputs/call", () => ({
   Call: { displayName: "Call", schema: {} },
@@ -116,7 +115,7 @@ import { findComponentWithContext } from "../../lib/pallet-overrides";
 import { ReferendumSelector } from "../../components/params/selectors/referendum-selector";
 import { TrackSelector } from "../../components/params/selectors/track-selector";
 import { BountySelector } from "../../components/params/selectors/bounty-selector";
-import { ValidatorMultiSelector } from "../../components/params/selectors/validator-multi-selector";
+import { ValidatorMultiSelector } from "../../components/params/selectors/validator-selector";
 import { PoolSelector } from "../../components/params/selectors/pool-selector";
 import { ProxyTypeSelector } from "../../components/params/selectors/proxy-type-selector";
 import { AssetSelector } from "../../components/params/selectors/asset-selector";

@@ -1,6 +1,6 @@
 ---
 title: Hash Input
-description: Fixed-length hex hash input for H160, H256, and H512 types
+description: Fixed-length hex hash input for H160, H256, and H512 types with auto-detection
 ---
 
 <Tabs items={["Preview", "Code"]}>
@@ -11,15 +11,26 @@ description: Fixed-length hex hash input for H160, H256, and H512 types
 </Tab>
 <Tab value="Code">
 ```tsx
-import { Hash256 } from "@/components/params/inputs/hash";
+import { HashInput } from "@/components/params/inputs/hash";
 
-<Hash256
+// Auto-detects hash type from typeName
+<HashInput
   name="codeHash"
   label="Code Hash"
-  description="The hash of the contract code"
+  typeName="H256"
   client={client}
   typeId={11}
   isRequired
+  onChange={(hash) => console.log("Hash:", hash)}
+/>
+
+// Explicit hash type override
+<HashInput
+  name="ethAddress"
+  label="Ethereum Address"
+  hashType="H160"
+  client={client}
+  typeId={8}
   onChange={(hash) => console.log("Hash:", hash)}
 />
 ```
@@ -28,7 +39,7 @@ import { Hash256 } from "@/components/params/inputs/hash";
 
 # Hash Input
 
-The Hash input provides a hex string field for fixed-length hash types. Three variants are exported -- `Hash160`, `Hash256`, and `Hash512` -- each validating against the expected byte length. A live validation icon shows whether the current value matches the required format.
+The Hash input provides a hex string field for fixed-length hash types. The primary component `HashInput` auto-detects the hash type from the `typeName` prop, or accepts an explicit `hashType` override. Three thin wrappers -- `Hash160`, `Hash256`, and `Hash512` -- are also exported for use in the input-map registry at different priorities.
 
 ## Supported Type Names
 
@@ -47,16 +58,25 @@ The three Hash variants are registered at different priorities to ensure correct
 - `H512`
 - Any type name matching `/^H512$/`
 
-## Props
+## Auto-Detection
 
-All three variants accept the standard `ParamInputProps` interface. The internal `Hash` component also receives a `hashType` prop, but this is set automatically by each exported variant:
+When using `HashInput` directly, the hash type is auto-detected from the `typeName` prop:
+
+- If `typeName` contains `"H160"` -> H160 (20 bytes, 40 hex chars)
+- If `typeName` contains `"H512"` -> H512 (64 bytes, 128 hex chars)
+- Otherwise -> H256 (32 bytes, 64 hex chars) as the default
+
+An explicit `hashType` prop overrides auto-detection.
+
+## Props
 
 | Prop | Type | Required | Description |
 |---|---|---|---|
 | `name` | `string` | Yes | Field identifier used for the HTML `id` and form state |
 | `label` | `string` | No | Display label shown above the input |
 | `description` | `string` | No | Help text shown below the input |
-| `typeName` | `string` | No | The SCALE type name (e.g. `"H256"`) |
+| `typeName` | `string` | No | The SCALE type name, used for auto-detection (e.g. `"H256"`) |
+| `hashType` | `"H160" \| "H256" \| "H512"` | No | Explicit hash type override |
 | `isDisabled` | `boolean` | No | Disables the input when true |
 | `isRequired` | `boolean` | No | Shows a red asterisk next to the label |
 | `error` | `string` | No | Validation error message to display |
@@ -87,20 +107,14 @@ findComponent("H512", typeId, client);  // -> Hash512
 
 ## Usage
 
-The Hash components are rendered by the extrinsic builder when a parameter resolves to a hash type. Direct usage:
-
 ```tsx
-import { Hash256 } from "@/components/params/inputs/hash";
+import { HashInput, Hash256 } from "@/components/params/inputs/hash";
 
-<Hash256
-  name="codeHash"
-  label="Code Hash"
-  description="The hash of the contract code"
-  client={client}
-  typeId={11}
-  isRequired
-  onChange={(hash) => console.log("Hash:", hash)}
-/>
+// Auto-detecting (recommended for generic use)
+<HashInput name="hash" label="Hash" typeName="H256" client={client} />
+
+// Explicit variant (used by input-map registry)
+<Hash256 name="codeHash" label="Code Hash" client={client} />
 ```
 
 ## Validation
@@ -109,22 +123,13 @@ Each variant uses a Zod schema that validates the hex string length:
 
 ```ts
 // H160: 40 hex characters (20 bytes)
-const hash160Schema = z.string().refine(
-  (value) => /^0x[0-9a-fA-F]{40}$/.test(value),
-  { message: "Invalid H160 hash (should be 40 hex characters with 0x prefix)" }
-);
+hash160Schema: /^0x[0-9a-fA-F]{40}$/
 
 // H256: 64 hex characters (32 bytes)
-const hash256Schema = z.string().refine(
-  (value) => /^0x[0-9a-fA-F]{64}$/.test(value),
-  { message: "Invalid H256 hash (should be 64 hex characters with 0x prefix)" }
-);
+hash256Schema: /^0x[0-9a-fA-F]{64}$/
 
 // H512: 128 hex characters (64 bytes)
-const hash512Schema = z.string().refine(
-  (value) => /^0x[0-9a-fA-F]{128}$/.test(value),
-  { message: "Invalid H512 hash (should be 128 hex characters with 0x prefix)" }
-);
+hash512Schema: /^0x[0-9a-fA-F]{128}$/
 ```
 
 ## Value Format

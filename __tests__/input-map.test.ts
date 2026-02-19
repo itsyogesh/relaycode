@@ -34,10 +34,6 @@ jest.mock("../components/params/inputs/option", () => ({
   Option: { displayName: "Option", schema: {} },
 }));
 
-jest.mock("../components/params/inputs/vector", () => ({
-  Vector: { displayName: "Vector", schema: {} },
-}));
-
 jest.mock("../components/params/inputs/vector-fixed", () => ({
   VectorFixed: { displayName: "VectorFixed", schema: {} },
 }));
@@ -46,7 +42,8 @@ jest.mock("../components/params/inputs/btree-map", () => ({
   BTreeMap: { displayName: "BTreeMap", schema: {} },
 }));
 
-jest.mock("../components/params/inputs/btree-set", () => ({
+jest.mock("../components/params/inputs/vector", () => ({
+  Vector: { displayName: "Vector", schema: {} },
   BTreeSet: { displayName: "BTreeSet", schema: {} },
 }));
 
@@ -97,7 +94,7 @@ import { Option } from "../components/params/inputs/option";
 import { Vector } from "../components/params/inputs/vector";
 import { VectorFixed } from "../components/params/inputs/vector-fixed";
 import { BTreeMap } from "../components/params/inputs/btree-map";
-import { BTreeSet } from "../components/params/inputs/btree-set";
+import { BTreeSet } from "../components/params/inputs/vector";
 import { Call } from "../components/params/inputs/call";
 import { Text } from "../components/params/inputs/text";
 import { Moment } from "../components/params/inputs/moment";
