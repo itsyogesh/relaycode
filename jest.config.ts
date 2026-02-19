@@ -31,6 +31,16 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/$1",
   },
   testPathIgnorePatterns: ["/node_modules/", "__tests__/helpers/"],
+  collectCoverageFrom: [
+    "lib/**/*.{ts,tsx}",
+    "components/**/*.{ts,tsx}",
+    "hooks/**/*.{ts,tsx}",
+    "config/**/*.{ts,tsx}",
+    "context/**/*.{ts,tsx}",
+    "!**/*.d.ts",
+    "!**/index.ts",
+  ],
+  coverageReporters: ["lcov", "text", "text-summary"],
 };
 
 // Use async config to modify transformIgnorePatterns after next/jest builds them
