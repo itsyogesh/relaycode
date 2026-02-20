@@ -23,8 +23,9 @@ Relaycode is an intuitive extrinsics builder designed to transform the way devel
 
 6. **Educational Tools**: Built-in guides and tooltips help users understand the intricacies of extrinsics, making Relaycode an excellent learning platform for Polkadot users.
 
-<img src="docs/demo.gif"/>
-</div>
+<p align="center">
+  <img src="docs/demo.gif" alt="Relaycode Demo" width="800"/>
+</p>
 
 ## Technical Architecture
 - Frontend: Next.js 15 with App Router, React, TypeScript
