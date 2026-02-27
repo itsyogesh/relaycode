@@ -3,6 +3,42 @@ title: Struct Input
 description: Composite field group for Substrate struct types with per-field validation
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <StructDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Struct } from "@/components/params/inputs/struct";
+
+<Struct
+  name="identity"
+  label="Identity Info"
+  client={client}
+  typeId={50}
+  fields={[
+    {
+      name: "display",
+      label: "Display Name",
+      typeName: "Data",
+      component: <TextInput />,
+      required: true,
+    },
+    {
+      name: "email",
+      label: "Email",
+      typeName: "Data",
+      component: <TextInput />,
+    },
+  ]}
+  onChange={(val) => console.log("Struct:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Struct Input
 
 The Struct input renders a group of named fields inside a card, where each field has its own resolved sub-input component. Structs are Substrate's equivalent of named record types -- they appear in extrinsic parameters for multi-field configurations like `IdentityInfo`, `ProxyDefinition`, and any call argument that the metadata defines as a `Struct` TypeDef.

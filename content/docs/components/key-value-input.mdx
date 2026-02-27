@@ -3,6 +3,29 @@ title: KeyValue Input
 description: Two-field key/value pair input with automatic type resolution
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <KeyValueDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { KeyValue } from "@/components/params/inputs/key-value";
+
+<KeyValue
+  name="entry"
+  label="Storage Entry"
+  description="A key-value storage pair"
+  client={client}
+  typeId={20}
+  isRequired
+  onChange={(pair) => console.log("Key-Value:", pair)}
+/>
+```
+</Tab>
+</Tabs>
+
 # KeyValue Input
 
 The KeyValue input renders a side-by-side key and value pair within a card. It resolves the types of both fields from chain metadata when available, falling back to plain text inputs. This component is used for `KeyValue` storage items and similar two-field structures.

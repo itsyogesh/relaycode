@@ -3,6 +3,28 @@ title: Vote Input
 description: Conviction voting input with Standard, Split, and SplitAbstain modes
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <VoteDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Vote } from "@/components/params/inputs/vote";
+
+<Vote
+  name="vote"
+  label="Vote"
+  description="Your vote on this referendum"
+  client={client}
+  isRequired
+  onChange={(vote) => console.log("Vote:", vote)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Vote Input
 
 The Vote input provides a full conviction voting interface for OpenGov referenda. It supports three voting modes -- Standard (single direction with conviction), Split (aye/nay balances), and SplitAbstain (aye/nay/abstain balances). It emits a properly formatted `AccountVote` enum value used by the `ConvictionVoting` pallet.

@@ -1,27 +1,13 @@
 ---
-title: Components
+title: Overview
 description: Substrate-aware input components for the Polkadot ecosystem
 ---
 
-# Component Library
+# Component Overview
 
 Relaycode ships a library of **22 input components** and **10 contextual selectors** that map directly to Substrate runtime types. Each component understands the SCALE type it represents, validates input accordingly, and emits values ready for SCALE encoding.
 
-## Type Resolution
-
-Components are resolved automatically from chain metadata through a **priority-based registry**. When the extrinsic builder encounters a parameter, the `findComponent` function walks the registry from highest to lowest priority, matching the parameter's type name against registered string literals and regular expressions.
-
-```ts
-import { findComponent } from "@/lib/input-map";
-
-// Returns { component: Account, schema, typeId }
-const resolved = findComponent("AccountId32", typeId, client);
-
-// Returns { component: Balance, schema, typeId }
-const resolved = findComponent("Compact<Balance>", typeId, client);
-```
-
-If no pattern matches, the system falls back to metadata introspection: it reads the `TypeDef` from the chain registry and routes `Enum` types to `EnumInput` and `Struct` types to `StructInput`. Any remaining unknown type falls back to a plain `TextInput`.
+Components are resolved automatically through a [priority-based type resolution system](/docs/api/input-map#type-resolution).
 
 ## Available Components
 
@@ -47,33 +33,7 @@ If no pattern matches, the system falls back to metadata introspection: it reads
 | [VoteThresholdInput](/docs/components/vote-threshold-input) | `VoteThreshold` | Threshold selector (SuperMajorityApprove/Against/SimpleMajority) |
 | [KeyValueInput](/docs/components/key-value-input) | `KeyValue` | Single key-value pair input |
 
-## Priority System
-
-The registry assigns each component a numeric priority. When a type name matches multiple patterns, the highest-priority component wins. This prevents ambiguity -- for example, `Compact<Balance>` (priority 95) is caught by the Balance component before the generic Amount component's `Compact<` regex (priority 90).
-
-| Priority | Component |
-|---|---|
-| 100 | AccountInput |
-| 95 | BalanceInput |
-| 90 | AmountInput |
-| 85 | BoolInput |
-| 82 | HashInput (H160) |
-| 80 | HashInput (H256) |
-| 78 | HashInput (H512) |
-| 75 | BytesInput |
-| 70 | CallInput |
-| 65 | MomentInput |
-| 60 | VoteInput |
-| 55 | VoteThresholdInput |
-| 50 | KeyValueInput |
-| 45 | OptionInput |
-| 43 | VectorFixedInput |
-| 42 | BTreeMapInput |
-| 41 | BTreeSetInput |
-| 40 | VectorInput |
-| 38 | TupleInput |
-| 35 | StructInput |
-| 30 | EnumInput |
+For the full priority ordering and pattern matching details, see the [Input Map API reference](/docs/api/input-map#priority-order).
 
 ## Shared Props
 

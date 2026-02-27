@@ -3,6 +3,29 @@ title: Moment Input
 description: Date-time picker with quick presets for timestamp parameters
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <MomentDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Moment } from "@/components/params/inputs/moment";
+
+<Moment
+  name="when"
+  label="Schedule Time"
+  description="The time at which to execute"
+  client={client}
+  typeId={4}
+  isRequired
+  onChange={(timestamp) => console.log("Timestamp:", timestamp)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Moment Input
 
 The Moment input provides a date-time picker for Substrate `Moment` parameters. It uses the browser's native `datetime-local` input and offers quick preset buttons for common time offsets. The selected date-time is converted to a Unix timestamp in milliseconds.

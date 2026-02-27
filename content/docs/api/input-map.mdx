@@ -54,28 +54,28 @@ The system uses a priority-based registry to match types. Higher priority patter
 
 | Priority | Component | Patterns |
 |----------|-----------|----------|
-| 100 | Account | `AccountId`, `AccountId32`, `AccountId20`, `MultiAddress`, `Address`, `LookupSource`, `/^AccountId/`, `/^MultiAddress/` |
-| 95 | Balance | `Balance`, `BalanceOf`, `Compact<Balance>`, `Compact<BalanceOf>`, `/^Balance/` |
-| 90 | Amount | `Compact<u128>`, `Compact<u64>`, `u128`, `u64`, `u32`, `u16`, `u8`, `i128`, `i64`, `i32`, `i16`, `i8`, `/Compact</` |
-| 85 | Boolean | `bool` |
-| 82 | Hash160 | `H160`, `/^H160$/` |
-| 80 | Hash256 | `H256`, `Hash`, `/H256/`, `/Hash/` |
-| 78 | Hash512 | `H512`, `/^H512$/` |
-| 75 | Bytes | `Bytes`, `Vec<u8>`, `/Bytes/` |
-| 70 | Call | `Call`, `RuntimeCall`, `/Call$/`, `/RuntimeCall>/` |
-| 65 | Moment | `Moment`, `/Moment/` |
-| 60 | Vote | `Vote`, `/^Vote$/` |
-| 55 | VoteThreshold | `VoteThreshold`, `/VoteThreshold/` |
-| 50 | KeyValue | `KeyValue`, `/KeyValue/` |
-| 45 | Option | `/^Option</` |
-| 43 | VectorFixed | `/^\[.+;\s*\d+\]$/` (e.g., `[u8; 32]`) |
-| 42 | BTreeMap | `/^BTreeMap</` |
-| 41 | BTreeSet | `/^BTreeSet</` |
-| 40 | Vector | `/^Vec</`, `/^BoundedVec</` |
-| 38 | Tuple | `/^\(/`, `/^Tuple/` |
-| 35 | Struct | (no patterns - fallback for composite types) |
-| 30 | Enum | (no patterns - fallback for enum types) |
-| — | Text | (default fallback for unknown types) |
+| 100 | [Account](/docs/components/account-input) | `AccountId`, `AccountId32`, `AccountId20`, `MultiAddress`, `Address`, `LookupSource`, `/^AccountId/`, `/^MultiAddress/` |
+| 95 | [Balance](/docs/components/balance-input) | `Balance`, `BalanceOf`, `Compact<Balance>`, `Compact<BalanceOf>`, `/^Balance/` |
+| 90 | [Amount](/docs/components/amount-input) | `Compact<u128>`, `Compact<u64>`, `u128`, `u64`, `u32`, `u16`, `u8`, `i128`, `i64`, `i32`, `i16`, `i8`, `/Compact</` |
+| 85 | [Boolean](/docs/components/bool-input) | `bool` |
+| 82 | [Hash160](/docs/components/hash-input) | `H160`, `/^H160$/` |
+| 80 | [Hash256](/docs/components/hash-input) | `H256`, `Hash`, `/H256/`, `/Hash/` |
+| 78 | [Hash512](/docs/components/hash-input) | `H512`, `/^H512$/` |
+| 75 | [Bytes](/docs/components/bytes-input) | `Bytes`, `Vec<u8>`, `/Bytes/` |
+| 70 | [Call](/docs/components/call-input) | `Call`, `RuntimeCall`, `/Call$/`, `/RuntimeCall>/` |
+| 65 | [Moment](/docs/components/moment-input) | `Moment`, `/Moment/` |
+| 60 | [Vote](/docs/components/vote-input) | `Vote`, `/^Vote$/` |
+| 55 | [VoteThreshold](/docs/components/vote-threshold-input) | `VoteThreshold`, `/VoteThreshold/` |
+| 50 | [KeyValue](/docs/components/key-value-input) | `KeyValue`, `/KeyValue/` |
+| 45 | [Option](/docs/components/option-input) | `/^Option</` |
+| 43 | [VectorFixed](/docs/components/vector-fixed-input) | `/^\[.+;\s*\d+\]$/` (e.g., `[u8; 32]`) |
+| 42 | [BTreeMap](/docs/components/btree-map-input) | `/^BTreeMap</` |
+| 41 | [BTreeSet](/docs/components/vector-input) | `/^BTreeSet</` |
+| 40 | [Vector](/docs/components/vector-input) | `/^Vec</`, `/^BoundedVec</` |
+| 38 | [Tuple](/docs/components/tuple-input) | `/^\(/`, `/^Tuple/` |
+| 35 | [Struct](/docs/components/struct-input) | (no patterns - fallback for composite types) |
+| 30 | [Enum](/docs/components/enum-input) | (no patterns - fallback for enum types) |
+| — | [Text](/docs/components/text-input) | (default fallback for unknown types) |
 
 ### Pattern Matching
 
@@ -239,23 +239,23 @@ Common Substrate type patterns and their expected components:
 
 | Type | Component | Notes |
 |------|-----------|-------|
-| `AccountId`, `AccountId32` | Account | SS58 address input |
-| `MultiAddress` | Account | Supports Id, Index, Raw variants |
-| `Balance`, `BalanceOf<T>` | Balance | With denomination selector |
-| `Compact<Balance>`, `Compact<BalanceOf>` | Balance | Compact-wrapped balances get denomination support |
-| `Compact<u128>` | Amount | Integer input |
-| `u32`, `u64`, `u128` | Amount | Unsigned integers |
-| `bool` | Boolean | Toggle switch |
-| `H160` | Hash160 | 20-byte hex input |
-| `H256`, `BlockHash` | Hash256 | 32-byte hex input |
-| `H512` | Hash512 | 64-byte hex input |
-| `Vec<u8>`, `Bytes` | Bytes | Hex byte array |
-| `[T; N]` | VectorFixed | Fixed-length array (e.g., `[u8; 32]`) |
-| `BTreeMap<K, V>` | BTreeMap | Key-value pair list |
-| `BTreeSet<T>` | BTreeSet | Unique value set |
-| `Vec<T>` | Vector | Dynamic array |
-| `Option<T>` | Option | Optional with toggle |
-| `(T1, T2, ...)` | Tuple | Positional elements |
-| `{ field: T }` | Struct | Named fields |
-| `enum { A, B }` | Enum | Variant selector |
-| `Call`, `RuntimeCall` | Call | Nested extrinsic |
+| `AccountId`, `AccountId32` | [Account](/docs/components/account-input) | SS58 address input |
+| `MultiAddress` | [Account](/docs/components/account-input) | Supports Id, Index, Raw variants |
+| `Balance`, `BalanceOf<T>` | [Balance](/docs/components/balance-input) | With denomination selector |
+| `Compact<Balance>`, `Compact<BalanceOf>` | [Balance](/docs/components/balance-input) | Compact-wrapped balances get denomination support |
+| `Compact<u128>` | [Amount](/docs/components/amount-input) | Integer input |
+| `u32`, `u64`, `u128` | [Amount](/docs/components/amount-input) | Unsigned integers |
+| `bool` | [Boolean](/docs/components/bool-input) | Toggle switch |
+| `H160` | [Hash160](/docs/components/hash-input) | 20-byte hex input |
+| `H256`, `BlockHash` | [Hash256](/docs/components/hash-input) | 32-byte hex input |
+| `H512` | [Hash512](/docs/components/hash-input) | 64-byte hex input |
+| `Vec<u8>`, `Bytes` | [Bytes](/docs/components/bytes-input) | Hex byte array |
+| `[T; N]` | [VectorFixed](/docs/components/vector-fixed-input) | Fixed-length array (e.g., `[u8; 32]`) |
+| `BTreeMap<K, V>` | [BTreeMap](/docs/components/btree-map-input) | Key-value pair list |
+| `BTreeSet<T>` | [BTreeSet](/docs/components/vector-input) | Unique value set |
+| `Vec<T>` | [Vector](/docs/components/vector-input) | Dynamic array |
+| `Option<T>` | [Option](/docs/components/option-input) | Optional with toggle |
+| `(T1, T2, ...)` | [Tuple](/docs/components/tuple-input) | Positional elements |
+| `{ field: T }` | [Struct](/docs/components/struct-input) | Named fields |
+| `enum { A, B }` | [Enum](/docs/components/enum-input) | Variant selector |
+| `Call`, `RuntimeCall` | [Call](/docs/components/call-input) | Nested extrinsic |

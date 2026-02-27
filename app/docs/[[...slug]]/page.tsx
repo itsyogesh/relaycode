@@ -26,6 +26,15 @@ import {
   ReferendumSelectorDemo,
   TrackSelectorDemo,
   BountySelectorDemo,
+  MomentDemo,
+  VoteThresholdDemo,
+  KeyValueDemo,
+  VectorFixedDemo,
+  BTreeMapDemo,
+  StructDemo,
+  TupleDemo,
+  VoteDemo,
+  CallDemo,
 } from "@/components/docs/demos";
 import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 
@@ -64,6 +73,15 @@ export default async function Page(props: {
             ReferendumSelectorDemo,
             TrackSelectorDemo,
             BountySelectorDemo,
+            MomentDemo,
+            VoteThresholdDemo,
+            KeyValueDemo,
+            VectorFixedDemo,
+            BTreeMapDemo,
+            StructDemo,
+            TupleDemo,
+            VoteDemo,
+            CallDemo,
             Tab,
             Tabs,
           }}
