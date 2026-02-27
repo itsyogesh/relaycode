@@ -3,6 +3,27 @@ title: Call Input
 description: Nested extrinsic call builder for Substrate RuntimeCall parameters
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <CallDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { Call } from "@/components/params/inputs/call";
+
+<Call
+  name="call"
+  label="Proposal Call"
+  description="The call to be executed"
+  client={client}
+  onChange={(val) => console.log("Call:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # Call Input
 
 The Call input provides a nested extrinsic call builder for parameters that expect a `RuntimeCall` value. It presents pallet and method selectors followed by dynamic parameter inputs, effectively embedding a mini extrinsic builder inside a parameter field. Call inputs appear in Substrate for utility batch calls, proxy executions, multisig approvals, scheduler dispatches, and any extrinsic that wraps another call.

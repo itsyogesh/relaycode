@@ -14,25 +14,17 @@ Relaycode is built on a layered architecture designed to cleanly separate concer
 The infrastructure layer handles all blockchain connectivity, client management, and wallet integration.
 
 - **Dedot Client** — Relaycode uses [Dedot](https://github.com/dedotdev/dedot) as its Polkadot client (not the deprecated `@polkadot/api`). Dedot provides type-safe chain interactions via `DedotClient<PolkadotApi>`.
-- **Wallet Connection** — LunoKit handles wallet integration, supporting Polkadot.js extension, Talisman, SubWallet, and other compatible wallets.
-- **Chain Switching** — LunoKit's `useSwitchChain()` hook enables switching between Polkadot, Kusama, Westend, and other supported chains using genesis hash as the chain identifier.
-- **React Context** — Providers expose the Dedot client, wallet state, and chain metadata to the component tree via React Context API.
+- **Wallet Connection** — [LunoKit](https://lunokit.xyz) handles wallet integration, supporting [Polkadot.js extension](https://polkadot.js.org/extension/), [Talisman](https://www.talisman.xyz/), [SubWallet](https://www.subwallet.app/), and other compatible wallets.
+- **Chain Switching** — [LunoKit](https://lunokit.xyz)'s `useSwitchChain()` hook enables switching between Polkadot, Kusama, Westend, and other supported chains using genesis hash as the chain identifier.
+- **React Context** — Providers expose the [Dedot](https://docs.dedot.dev) client, wallet state, and chain metadata to the component tree via React Context API.
 
 ### 2. Components Layer
 
 The components layer provides reusable UI building blocks.
 
-- **Parameter Inputs** (`components/params/inputs/`) — Specialized input components for each Substrate type (Account, Balance, Amount, Hash, Vector, etc.).
+- **Parameter Inputs** — [Specialized input components](/docs/components) for each Substrate type (Account, Balance, Amount, Hash, Vector, etc.).
 - **Builder Components** (`components/builder/`) — The extrinsic builder panes, pallet/method selectors, and encoding controls.
-- **Base UI** (`components/ui/`) — shadcn/ui components providing consistent styling and behavior. These are generated via `npx shadcn-ui add <component>` and should not be modified directly.
-
-### 3. App Layer
-
-The app layer handles routing, page layouts, and top-level composition.
-
-- **Next.js App Router** — Pages live under `app/` using Next.js 14 App Router conventions (`page.tsx`, `layout.tsx`).
-- **Builder Page** (`app/builder/`) — The main extrinsic builder tool.
-- **Marketing Pages** (`app/(marketing)/`) — Landing and informational pages.
+- **Base UI** (`components/ui/`) — [shadcn/ui](https://ui.shadcn.com/) components providing consistent styling and behavior. These are generated via `npx shadcn-ui add <component>` and should not be modified directly.
 
 ## Dedot Client Integration
 
@@ -44,7 +36,7 @@ Relaycode connects to Substrate chains exclusively through Dedot. The client pro
 
 ## Input Component Registry
 
-The input component registry (`lib/input-map.ts`) uses a priority-based pattern matching system to map Substrate type names to the appropriate React input component.
+The [input component registry](/docs/api/input-map) (`lib/input-map.ts`) uses a priority-based pattern matching system to map Substrate type names to the appropriate React input component.
 
 ### How It Works
 
@@ -65,6 +57,8 @@ Higher priority values are checked first, ensuring more specific types take prec
 
 This ordering ensures that `Compact<Balance>` matches the Balance component (priority 95) rather than the Amount component's `/Compact</` regex (priority 90).
 
+See the [Component Library](/docs/components) for the complete priority table with all components.
+
 ## Dual-Pane Builder Interface
 
 The extrinsic builder uses a side-by-side dual-pane layout:
@@ -73,6 +67,8 @@ The extrinsic builder uses a side-by-side dual-pane layout:
 - **Hex Pane (right)** — Live preview of the SCALE-encoded call data, with an editable hex input for decoding in the reverse direction.
 
 Changes in either pane sync to the other in real time, providing bi-directional editing.
+
+![Dual-pane builder interface](/docs/bidirectional-editing.gif)
 
 ## Encoding/Decoding Flow
 

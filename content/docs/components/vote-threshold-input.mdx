@@ -3,6 +3,27 @@ title: VoteThreshold Input
 description: Dropdown selector for referendum vote threshold types
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <VoteThresholdDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { VoteThreshold } from "@/components/params/inputs/vote-threshold";
+
+<VoteThreshold
+  name="threshold"
+  label="Vote Threshold"
+  description="The threshold required for the referendum to pass"
+  isRequired
+  onChange={(threshold) => console.log("Threshold:", threshold)}
+/>
+```
+</Tab>
+</Tabs>
+
 # VoteThreshold Input
 
 The VoteThreshold input provides a dropdown for selecting the vote threshold type used in legacy (pre-OpenGov) referendum mechanics. It presents three options -- SuperMajorityApprove, SuperMajorityAgainst, and SimpleMajority -- as a simple select menu.

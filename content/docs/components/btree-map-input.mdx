@@ -3,6 +3,28 @@ title: BTreeMap Input
 description: Key-value pair editor for Substrate BTreeMap types with JSON bulk entry
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <BTreeMapDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { BTreeMap } from "@/components/params/inputs/btree-map";
+
+<BTreeMap
+  name="deposits"
+  label="Deposits"
+  description="Map of account deposits"
+  client={client}
+  typeId={35}
+  onChange={(val) => console.log("Map:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # BTreeMap Input
 
 The BTreeMap input handles Substrate `BTreeMap<K, V>` types by rendering a list of key-value pair editors. Each pair has its key and value types resolved from the chain metadata and rendered with the appropriate sub-input components. It supports both form mode for individual pair editing and a JSON mode for bulk entry. BTreeMaps appear in Substrate for configuration maps, storage deposits, and any parameter that expects an ordered key-value collection.

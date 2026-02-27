@@ -18,15 +18,15 @@ Relaycode is an extrinsic builder for the Polkadot ecosystem. It provides a user
 
 ## Prerequisites
 
-- A Polkadot-compatible wallet (Polkadot.js extension, Talisman, SubWallet, etc.)
+- A Polkadot-compatible wallet ([Polkadot.js extension](https://polkadot.js.org/extension/), [Talisman](https://www.talisman.xyz/), [SubWallet](https://www.subwallet.app/), etc.)
 - Some DOT or testnet tokens for transaction fees
 
 ## Selecting a Chain
 
 Before connecting, choose which chain to interact with using the **Chain Selector** dropdown in the navbar:
 
-- **Polkadot** - Mainnet (real DOT)
-- **Kusama** - Canary network (real KSM)
+- **Polkadot** - Mainnet (DOT)
+- **Kusama** - Canary network (KSM)
 - **Westend** - Testnet (free test tokens, marked with "testnet" badge)
 
 For your first time, we recommend selecting **Westend** so you can experiment without spending real tokens.
@@ -46,18 +46,7 @@ Once connected, you'll see your account balance and be able to select accounts f
 
 Relaycode uses a dual-pane interface:
 
-```
-┌─────────────────────────────────┬─────────────────────────────────┐
-│                                 │                                 │
-│         FORM PANE               │         HEX PANE                │
-│                                 │                                 │
-│  Human-readable inputs          │  SCALE-encoded call data        │
-│  - Pallet selector              │  - Live hex preview             │
-│  - Method selector              │  - Editable hex input           │
-│  - Parameter inputs             │  - Auto-decode on edit          │
-│                                 │                                 │
-└─────────────────────────────────┴─────────────────────────────────┘
-```
+![Bidirectional editing in action](/docs/bidirectional-editing.gif)
 
 **Left Pane (Form):** Select pallets, methods, and fill in parameters using friendly input components.
 
@@ -113,58 +102,11 @@ This hex represents your complete extrinsic call:
 
 You'll see a success message with the transaction hash once it's included in a block.
 
-## Input Types Explained
+## Input Types
 
-Relaycode provides specialized inputs for different Substrate types:
+Relaycode provides specialized inputs for every Substrate type. Instead of generic text fields, you get purpose-built components: account inputs with wallet integration and identicons, balance inputs with denomination switching, nested call builders for batch transactions, and more.
 
-### Account Input
-For addresses and account IDs:
-- Dropdown with connected accounts
-- Recent address history
-- Paste any valid SS58 address
-- Automatic format validation
-
-### Balance Input
-For token amounts:
-- Human-readable input (e.g., "1.5")
-- Denomination selector (DOT/mDOT/planck)
-- Automatic conversion to planck
-- Available balance display
-- Existential deposit warning
-
-### Amount Input
-For plain integers (u32, u64, u128):
-- Simple numeric input
-- Supports large numbers (BigInt)
-
-### Boolean Input
-For true/false values:
-- Toggle switch
-
-### Hash Input
-For block hashes, extrinsic hashes:
-- H160 (20-byte), H256 (32-byte), H512 (64-byte)
-- Format and length validation
-
-### Vector Input
-For arrays (Vec\<T\>):
-- Add/remove items
-- Dynamic length
-
-### Fixed Array Input
-For fixed-length arrays (`[T; N]`):
-- Fixed number of elements — no add/remove
-- Each element uses the appropriate typed input
-
-### BTreeMap Input
-For key-value maps (BTreeMap\<K, V\>):
-- Add/remove key-value pairs
-- Typed inputs for keys and values
-
-### Option Input
-For optional values (Option\<T\>):
-- Toggle to enable/disable
-- Inner input when enabled
+See the [Component Library](/docs/components) for the full list of 22 input components and 10 contextual selectors.
 
 ## Common Extrinsics
 

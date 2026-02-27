@@ -3,6 +3,29 @@ title: VectorFixed Input
 description: Fixed-length array input for Substrate [T; N] types with specialized byte array handling
 ---
 
+<Tabs items={["Preview", "Code"]}>
+<Tab value="Preview">
+<ComponentPreview>
+  <VectorFixedDemo />
+</ComponentPreview>
+</Tab>
+<Tab value="Code">
+```tsx
+import { VectorFixed } from "@/components/params/inputs/vector-fixed";
+
+<VectorFixed
+  name="signature"
+  label="Signature"
+  description="Ed25519 signature bytes"
+  client={client}
+  typeId={8}
+  typeName="[u8; 64]"
+  onChange={(val) => console.log("Bytes:", val)}
+/>
+```
+</Tab>
+</Tabs>
+
 # VectorFixed Input
 
 The VectorFixed input handles Substrate fixed-length array types (`[T; N]`) with two rendering strategies: byte arrays (`[u8; N]`) get a specialized hex/base64 text input, while other element types render N individual sub-inputs. Fixed-length arrays appear in Substrate for cryptographic data (signatures, public keys), fixed-size identifiers, and any parameter with a compile-time known length.
