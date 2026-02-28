@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useRef, useEffect } from "react";
 import { PolkadotIcon } from "@/components/icons/polkadot-icon";
 import { TalismanIcon } from "@/components/icons/talisman-icon";
@@ -28,9 +27,7 @@ function AutoAnimateIcon({
   interval = 3000,
   ...props
 }: {
-  Icon: React.ForwardRefExoticComponent<
-    React.RefAttributes<IconHandle> & { size?: number; className?: string }
-  >;
+  Icon: React.ForwardRefExoticComponent<React.RefAttributes<IconHandle> & Record<string, unknown>>;
   delay: number;
   interval?: number;
   size?: number;
@@ -54,45 +51,6 @@ function AutoAnimateIcon({
 
   return <Icon ref={iconRef} {...props} />;
 }
-
-const steps = [
-  {
-    title: "Pick what you want to do",
-    description: "Choose from staking, NFTs, and more",
-  },
-  {
-    title: "Fill human-friendly forms",
-    description: "No more cryptic parameters",
-  },
-  {
-    title: "We handle the encoding",
-    description: "All the Polkadot magic, automated",
-  },
-];
-
-const WalletIcon = ({
-  children,
-  className,
-  angle,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  angle?: number;
-}) => (
-  <motion.div
-    className={cn(
-      "absolute flex h-12 w-12 items-center justify-center rounded-xl bg-card shadow-md",
-      className
-    )}
-    style={{
-      transform: `rotate(${angle}deg) translateY(-60px) rotate(-${angle}deg)`,
-    }}
-    whileHover={{ scale: 1.05 }}
-    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-  >
-    {children}
-  </motion.div>
-);
 
 const features = [
   {
@@ -120,7 +78,7 @@ const features = [
               }}
             >
               <motion.div className="relative flex h-full flex-col items-center justify-center gap-1 rounded-md bg-card">
-                <AutoAnimateIcon Icon={Icon as any} size={20} className="text-primary/70" delay={i * 500} interval={3000} />
+                <AutoAnimateIcon Icon={Icon} size={20} className="text-primary/70" delay={i * 500} interval={3000} />
                 <span className="text-[9px] font-medium text-muted-foreground/70">{label}</span>
                 <motion.div
                   className="absolute inset-0 rounded-md"
