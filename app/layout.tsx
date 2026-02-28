@@ -6,6 +6,9 @@ import { GeistSans } from "geist/font/sans";
 
 import { RootProvider } from "fumadocs-ui/provider/next";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 import { cn, constructMetadata } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/wallet/wallet-provider";
@@ -48,6 +51,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <Toaster richColors closeButton />
           <DevTools />
         </RootProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
