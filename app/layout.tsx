@@ -9,6 +9,7 @@ import { RootProvider } from "fumadocs-ui/provider/next";
 import { cn, constructMetadata } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
 import { WalletProvider } from "@/components/wallet/wallet-provider";
+import { DevTools } from "@/components/dev-tools";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
             {children}
           </WalletProvider>
           <Toaster richColors closeButton />
+          <DevTools />
         </RootProvider>
       </body>
     </html>

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import Balancer from "react-wrap-balancer";
 
 interface StepProps {
   number: number;
@@ -24,9 +25,9 @@ const Step = ({ number, title, description }: StepProps) => (
         {number}
         <div className="absolute -inset-1 animate-pulse rounded-full bg-primary/5" />
       </motion.div>
-      <h3 className="mt-4 text-lg font-semibold text-center">{title}</h3>
+      <h3 className="mt-4 text-lg font-semibold text-center"><Balancer>{title}</Balancer></h3>
       <p className="mt-2 text-center text-sm text-muted-foreground">
-        {description}
+        <Balancer>{description}</Balancer>
       </p>
     </div>
   </motion.div>

@@ -4,56 +4,53 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { PolkadotIcon } from "@/components/icons/polkadot-icon";
 import { TalismanIcon } from "@/components/icons/talisman-icon";
 import { NovaWalletIcon } from "@/components/icons/nova-wallet-icon";
 import { SubWalletIcon } from "@/components/icons/subwallet-icon";
 import { RelaycodeIcon } from "@/components/icons/relaycode-logo";
-import { LoadingSkeleton } from "./loading-skeleton";
 import { ConnectedSteps } from "./connected-steps";
 import type React from "react";
-import { BlockIcon } from "../icons/block-icon";
+import { HandCoinsIcon } from "@/components/ui/hand-coins";
+import { LayersIcon } from "@/components/ui/layers";
+import { WorkflowIcon } from "@/components/ui/workflow";
+import { BoxIcon } from "@/components/ui/box";
+import { UsersIcon } from "@/components/ui/users";
+import { ZapIcon } from "@/components/ui/zap";
 
-const steps = [
-  {
-    title: "Pick what you want to do",
-    description: "Choose from staking, NFTs, and more",
-  },
-  {
-    title: "Fill human-friendly forms",
-    description: "No more cryptic parameters",
-  },
-  {
-    title: "We handle the encoding",
-    description: "All the Polkadot magic, automated",
-  },
-];
+type IconHandle = { startAnimation: () => void; stopAnimation: () => void };
 
-const WalletIcon = ({
-  children,
-  className,
-  angle,
+function AutoAnimateIcon({
+  Icon,
+  delay,
+  interval = 3000,
+  ...props
 }: {
-  children: React.ReactNode;
+  Icon: React.ForwardRefExoticComponent<React.RefAttributes<IconHandle> & Record<string, unknown>>;
+  delay: number;
+  interval?: number;
+  size?: number;
   className?: string;
-  angle?: number;
-}) => (
-  <motion.div
-    className={cn(
-      "absolute flex h-12 w-12 items-center justify-center rounded-xl bg-card shadow-md",
-      className
-    )}
-    style={{
-      transform: `rotate(${angle}deg) translateY(-60px) rotate(-${angle}deg)`,
-    }}
-    whileHover={{ scale: 1.05 }}
-    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-  >
-    {children}
-  </motion.div>
-);
+}) {
+  const iconRef = useRef<IconHandle>(null);
+
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    const timeout = setTimeout(() => {
+      iconRef.current?.startAnimation();
+      intervalId = setInterval(() => {
+        iconRef.current?.startAnimation();
+      }, interval);
+    }, delay);
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(intervalId);
+    };
+  }, [delay, interval]);
+
+  return <Icon ref={iconRef} {...props} />;
+}
 
 const features = [
   {
@@ -62,9 +59,16 @@ const features = [
     illustration: (
       <div className="relative h-[200px] overflow-hidden rounded-lg bg-gradient-to-br from-background to-muted/50 p-6">
         <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {[
+            { Icon: HandCoinsIcon, label: "Staking" },
+            { Icon: LayersIcon, label: "Governance" },
+            { Icon: WorkflowIcon, label: "XCM" },
+            { Icon: BoxIcon, label: "Assets" },
+            { Icon: UsersIcon, label: "Crowdloans" },
+            { Icon: ZapIcon, label: "Utility" },
+          ].map(({ Icon, label }, i) => (
             <motion.div
-              key={i}
+              key={label}
               className="aspect-square rounded-lg bg-[#FF2670]/5 p-2"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{
@@ -73,8 +77,9 @@ const features = [
                 transition: { delay: i * 0.1 },
               }}
             >
-              <motion.div className="flex h-full items-center justify-center rounded-md bg-card">
-                <BlockIcon className="opacity-80" />
+              <motion.div className="relative flex h-full flex-col items-center justify-center gap-1 rounded-md bg-card">
+                <AutoAnimateIcon Icon={Icon} size={20} className="text-primary/70" delay={i * 500} interval={3000} />
+                <span className="text-[9px] font-medium text-muted-foreground/70">{label}</span>
                 <motion.div
                   className="absolute inset-0 rounded-md"
                   animate={{
@@ -405,7 +410,7 @@ const features = [
 
 const DemoPreview = () => {
   return (
-    <div className="rounded-xl border bg-gradient-to-br from-background to-muted shadow-2xl">
+    <div className="rounded-xl border bg-gradient-to-br from-background to-muted shadow-2xl overflow-hidden">
       <div className="flex items-center gap-2 border-b px-4 py-3">
         <div className="flex gap-1.5">
           <div className="h-3 w-3 rounded-full bg-red-500" />
@@ -418,7 +423,11 @@ const DemoPreview = () => {
           </div>
         </div>
       </div>
-      <LoadingSkeleton />
+      <img
+        src="/relaycode-demo-poster.png"
+        alt="Relaycode Extrinsic Builder"
+        className="w-full h-auto"
+      />
     </div>
   );
 };
@@ -474,7 +483,7 @@ export function ExtrinsicBuilderSection() {
           </motion.div>
         </div>
 
-        <div className="mx-auto mt-40 max-w-2xl text-center">
+        <div className="mx-auto mt-52 max-w-5xl text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

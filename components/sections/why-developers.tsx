@@ -245,30 +245,26 @@ export function WhyDevelopers() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.6 }}
-          className="mt-16 text-center"
+          className="mt-24 text-center"
         >
-          <p className="text-sm text-muted-foreground mb-6">Used by teams at</p>
-          <div className="flex justify-center gap-x-12 grayscale opacity-50">
-            <img
-              className="h-8"
-              src="https://cdn.brandfetch.io/id6O2oGzv-/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-              alt="Google"
-            />
-            <img
-              className="h-6"
-              src="https://cdn.brandfetch.io/idwDWo4ONQ/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-              alt="Coinbase"
-            />
-            <img
-              className="h-6"
-              src="https://cdn.brandfetch.io/id-pjrLx_q/theme/dark/idKzmFfrAl.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-              alt="Binance"
-            />
-            <img
-              className="h-6"
-              src="https://cdn.brandfetch.io/idchmboHEZ/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B"
-              alt="Microsoft"
-            />
+          <p className="text-sm text-muted-foreground mb-6">Built for the Polkadot ecosystem</p>
+          <div className="mx-auto max-w-2xl grid grid-cols-2 sm:grid-cols-4 place-items-center gap-6 sm:gap-x-12 opacity-60 px-4">
+            <div className="flex items-center gap-2">
+              <img className="h-7" src="/logos/w3f.svg" alt="Web3 Foundation" />
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Web3 Foundation</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <img className="h-7" src="/logos/polkadot.svg" alt="Polkadot" />
+              <span className="text-sm font-medium text-muted-foreground">Polkadot</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <img className="h-7" src="/logos/substrate.svg" alt="Substrate" />
+              <span className="text-sm font-medium text-muted-foreground">Substrate</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <img className="h-7 rounded" src="/logos/dedot.png" alt="Dedot" />
+              <span className="text-sm font-medium text-muted-foreground">Dedot</span>
+            </div>
           </div>
         </motion.div>
       </div>
