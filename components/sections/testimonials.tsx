@@ -22,26 +22,10 @@ const testimonials = [
 ];
 
 const logos = [
-  {
-    src: "https://cdn.brandfetch.io/id6O2oGzv-/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B",
-    alt: "Google",
-    className: "h-8",
-  },
-  {
-    src: "https://cdn.brandfetch.io/idwDWo4ONQ/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B",
-    alt: "Coinbase",
-    className: "h-6",
-  },
-  {
-    src: "https://cdn.brandfetch.io/id-pjrLx_q/theme/dark/idKzmFfrAl.svg?c=1dxbfHSJFAPEGdCLU4o5B",
-    alt: "Binance",
-    className: "h-6",
-  },
-  {
-    src: "https://cdn.brandfetch.io/idchmboHEZ/theme/dark/logo.svg?c=1dxbfHSJFAPEGdCLU4o5B",
-    alt: "Microsoft",
-    className: "h-6",
-  },
+  { src: "/logos/w3f.svg", alt: "Web3 Foundation", label: "Web3 Foundation" },
+  { src: "/logos/polkadot.svg", alt: "Polkadot", label: "Polkadot" },
+  { src: "/logos/substrate.svg", alt: "Substrate", label: "Substrate" },
+  { src: "/logos/dedot.png", alt: "Dedot", label: "Dedot", rounded: true },
 ];
 
 export function TestimonialsSection() {
@@ -140,16 +124,14 @@ export function TestimonialsSection() {
             className="mt-24"
           >
             <p className="text-sm text-muted-foreground mb-6">
-              Used by teams at
+              Built for the Polkadot ecosystem
             </p>
-            <div className="flex justify-center gap-x-12 grayscale opacity-50">
+            <div className="mx-auto max-w-2xl grid grid-cols-2 sm:grid-cols-4 place-items-center gap-6 sm:gap-x-12 opacity-60 px-4">
               {logos.map((logo) => (
-                <img
-                  key={logo.alt}
-                  src={logo.src || "/placeholder.svg"}
-                  alt={logo.alt}
-                  className={logo.className}
-                />
+                <div key={logo.alt} className="flex items-center gap-2">
+                  <img className={cn("h-7", logo.rounded && "rounded")} src={logo.src} alt={logo.alt} />
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">{logo.label}</span>
+                </div>
               ))}
             </div>
           </motion.div>

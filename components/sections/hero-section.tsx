@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Balancer from "react-wrap-balancer";
 
@@ -10,6 +11,8 @@ import { ArrowRight, PlayCircle } from "lucide-react";
 import { PolkadotIcon } from "@/components/icons/polkadot-icon";
 
 export function HeroSection() {
+  const [isPlaying, setIsPlaying] = useState(false);
+
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-start">
       <AuroraBackground className="w-full flex-1">
@@ -52,13 +55,13 @@ export function HeroSection() {
             {/* Demo Section */}
             <div className="mt-20 w-full">
               {/* Ecosystem logos */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 place-items-center gap-6 sm:gap-x-12 opacity-60 mb-12 px-4">
+              <div className="mx-auto max-w-2xl grid grid-cols-2 sm:grid-cols-4 place-items-center gap-6 sm:gap-x-12 opacity-60 mb-12 px-4">
                 <div className="flex items-center gap-2">
                   <img className="h-7" src="/logos/w3f.svg" alt="Web3 Foundation" />
-                  <span className="text-sm font-medium text-muted-foreground">Web3 Foundation</span>
+                  <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Web3 Foundation</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <img className="h-7" src="/logos/polkadot-circle.svg" alt="Polkadot" />
+                  <img className="h-7" src="/logos/polkadot.svg" alt="Polkadot" />
                   <span className="text-sm font-medium text-muted-foreground">Polkadot</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -71,14 +74,17 @@ export function HeroSection() {
                 </div>
               </div>
 
-              <div className="relative mx-auto max-w-5xl rounded-xl overflow-hidden shadow-xl">
-                <div className="relative pb-[56.25%]">
-                  <img
-                    src="/placeholder.svg?height=720&width=1280"
-                    alt="Relaycode Demo"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className="relative mx-auto max-w-5xl rounded-xl overflow-hidden shadow-xl border border-border/50 cursor-pointer"
+                onClick={() => setIsPlaying(true)}
+              >
+                <img
+                  src={isPlaying ? "/relaycode-demo.gif" : "/relaycode-demo-poster.png"}
+                  alt="Relaycode Demo — bi-directional extrinsic builder"
+                  className="w-full h-auto"
+                />
+                {!isPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/30">
                     <Button
                       size="lg"
                       variant="outline"
@@ -88,7 +94,7 @@ export function HeroSection() {
                       Watch Demo
                     </Button>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </motion.div>

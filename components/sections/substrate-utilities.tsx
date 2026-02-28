@@ -242,7 +242,8 @@ export function SubstrateUtilitiesSection() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
             <Link
-              href="https://github.com/itsyogesh/relaycode/issues"
+              href="https://github.com/itsyogesh/relaycode/issues/new?title=Tool+Suggestion:+&labels=enhancement"
+              target="_blank"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors border-b border-dotted border-muted-foreground/50 hover:border-foreground pb-0.5"
             >
               <Plus className="h-4 w-4" />
