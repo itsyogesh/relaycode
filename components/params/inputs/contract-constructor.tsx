@@ -96,19 +96,6 @@ export function ContractConstructor({
     }
   }, [abi, hasConstructor]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Initialize bool args to false so they start in a defined state
-  useEffect(() => {
-    if (!abi || !hasConstructor || !typesSupported) return;
-    const inputs = getConstructorInputs(abi);
-    const defaults: Record<string, any> = {};
-    for (const input of inputs) {
-      if (input.type === "bool") defaults[input.name] = false;
-    }
-    if (Object.keys(defaults).length > 0) {
-      setArgValues((prev) => ({ ...defaults, ...prev }));
-    }
-  }, [abi, hasConstructor, typesSupported]);
-
   // Reset compilation state on unmount
   useEffect(() => {
     return () => {
@@ -178,10 +165,9 @@ export function ContractConstructor({
         return;
       }
 
-      // Validate all args — only encode if every filled field passes validation
+      // Validate all args — only encode if every field passes validation
       const allValid = inputs.every((input) => {
         const v = values[input.name];
-        if (v === undefined || v === "" || v === null) return false;
         return validateArg(input.type, v);
       });
 
@@ -204,6 +190,23 @@ export function ContractConstructor({
     },
     [abi, hasConstructor, typesSupported, onChange, validateArg]
   );
+
+  // Initialize bool args to false so they start in a defined state, then encode
+  useEffect(() => {
+    if (!abi || !hasConstructor || !typesSupported) return;
+    const inputs = getConstructorInputs(abi);
+    const defaults: Record<string, any> = {};
+    for (const input of inputs) {
+      if (input.type === "bool") defaults[input.name] = false;
+    }
+    if (Object.keys(defaults).length > 0) {
+      setArgValues((prev) => {
+        const merged = { ...defaults, ...prev };
+        encodeAndEmit(merged);
+        return merged;
+      });
+    }
+  }, [abi, hasConstructor, typesSupported, encodeAndEmit]);
 
   const handleArgChange = (argName: string, value: any) => {
     const next = { ...argValues, [argName]: value };
