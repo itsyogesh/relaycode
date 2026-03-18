@@ -249,6 +249,8 @@ export function ContractCode({
         });
       } catch {
         setCompilationState({
+          abi: null,
+          contractName: null,
           errors: [
             {
               message: "Failed to parse ABI JSON file",
