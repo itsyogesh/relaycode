@@ -68,8 +68,8 @@ function encodeSingle(type: string, value: any): string {
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
     const length = uint256Hex(BigInt(bytes.length));
-    const paddedWords = Math.ceil(bytes.length / WORD) || 1;
-    const paddedData = padRight(hex, paddedWords * WORD);
+    const paddedWords = Math.ceil(bytes.length / WORD);
+    const paddedData = paddedWords > 0 ? padRight(hex, paddedWords * WORD) : "";
     return length + paddedData;
   }
 
@@ -78,8 +78,8 @@ function encodeSingle(type: string, value: any): string {
     const cleaned = String(value).replace("0x", "");
     const byteLen = cleaned.length / 2;
     const length = uint256Hex(BigInt(byteLen));
-    const paddedWords = Math.ceil(byteLen / WORD) || 1;
-    const paddedData = padRight(cleaned, paddedWords * WORD);
+    const paddedWords = Math.ceil(byteLen / WORD);
+    const paddedData = paddedWords > 0 ? padRight(cleaned, paddedWords * WORD) : "";
     return length + paddedData;
   }
 

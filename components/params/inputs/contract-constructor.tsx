@@ -96,6 +96,19 @@ export function ContractConstructor({
     }
   }, [abi, hasConstructor]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Initialize bool args to false so they start in a defined state
+  useEffect(() => {
+    if (!abi || !hasConstructor || !typesSupported) return;
+    const inputs = getConstructorInputs(abi);
+    const defaults: Record<string, any> = {};
+    for (const input of inputs) {
+      if (input.type === "bool") defaults[input.name] = false;
+    }
+    if (Object.keys(defaults).length > 0) {
+      setArgValues((prev) => ({ ...defaults, ...prev }));
+    }
+  }, [abi, hasConstructor, typesSupported]);
+
   // Reset compilation state on unmount
   useEffect(() => {
     return () => {
@@ -119,8 +132,12 @@ export function ContractConstructor({
 
   // Validate a single constructor arg value against its Solidity type
   const validateArg = useCallback((type: string, value: any): boolean => {
+    // bool: false is valid, undefined means untouched
+    if (type === "bool") return value !== undefined && value !== null;
+    // string: empty string is valid in Solidity
+    if (type === "string") return value !== undefined && value !== null;
     const v = String(value ?? "");
-    if (v === "") return false; // empty is not valid for encoding
+    if (v === "") return false; // empty is not valid for other types
     if (type === "address") {
       return /^0x[0-9a-fA-F]{40}$/.test(v);
     }
@@ -146,10 +163,15 @@ export function ContractConstructor({
 
       const inputs = getConstructorInputs(abi);
 
-      // Check that at least one value is non-empty before encoding
-      const hasAnyValue = Object.values(values).some(
-        (v) => v !== undefined && v !== "" && v !== null
-      );
+      // Check that at least one value has been touched before encoding
+      // Note: false and "" are valid values for bool and string types
+      const hasAnyValue = inputs.some((input) => {
+        const v = values[input.name];
+        if (v === undefined || v === null) return false;
+        if (input.type === "bool") return true; // false is a valid touched value
+        if (input.type === "string") return true; // "" is a valid touched value
+        return v !== "";
+      });
 
       if (!hasAnyValue) {
         onChange?.(undefined);
