@@ -1,0 +1,49 @@
+---
+title: Smart Contracts
+description: Write, compile, and deploy Solidity smart contracts on Polkadot Hub using pallet-revive
+---
+
+# Smart Contracts
+
+Relaycode integrates a full Solidity development workflow directly into the extrinsic builder, enabling you to write, compile, and deploy smart contracts on Polkadot Hub without leaving the app.
+
+## What is pallet-revive?
+
+Polkadot Hub runs **pallet-revive**, supporting two virtual machines:
+
+- **EVM (REVM)** — Full EVM compatibility. Standard Solidity bytecode compiled with `solc`.
+- **PVM (PolkaVM)** — Polkadot-native RISC-V VM. Solidity compiled to PolkaVM bytecode via `resolc`.
+
+Both VMs use the same extrinsic: `Revive.instantiateWithCode(value, weightLimit, storageDepositLimit, code, data, salt)`.
+
+## Supported Chains
+
+| Chain | Network | Status |
+|-------|---------|--------|
+| Westend Asset Hub | Testnet | Active |
+| Paseo Asset Hub | Testnet | Active |
+| Polkadot Asset Hub (Hub) | Mainnet | Active |
+
+## How Relaycode Helps
+
+When you select **Revive > instantiate_with_code** in the extrinsic builder, Relaycode replaces the generic hex inputs with:
+
+1. **Solidity Editor** — Monaco-powered code editor with syntax highlighting for the `code` parameter
+2. **Dual Compilation** — Compile to EVM or PVM bytecode with one click
+3. **Import Resolution** — OpenZeppelin and other npm packages resolved automatically from CDN
+4. **Constructor Args Form** — Typed inputs generated from the contract ABI for the `data` parameter
+5. **Upload Mode** — Upload pre-compiled bytecode and ABI from external tools (Remix, Hardhat, Foundry)
+
+All of this feeds into the standard extrinsic submission flow — connect your Polkadot wallet (Talisman, SubWallet, or Polkadot.js) and sign the transaction.
+
+## EVM vs PVM
+
+| Feature | EVM | PVM |
+|---------|-----|-----|
+| Compiler | `solc` (standard Solidity compiler) | `resolc` (Solidity to RISC-V) |
+| Bytecode format | EVM stack-based opcodes | RISC-V instructions |
+| OpenZeppelin support | Full | Full (via resolc) |
+| Tooling maturity | Excellent | Growing |
+| Standard Ethereum tools | MetaMask, Hardhat, Foundry all work via ETH RPC | Requires Substrate extrinsics or resolc toolchain |
+
+Relaycode is unique in supporting **both** targets through native Substrate extrinsics with Polkadot wallets — no MetaMask required.

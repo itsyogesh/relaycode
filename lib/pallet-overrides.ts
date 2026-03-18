@@ -11,9 +11,14 @@ import { VestingInfoDisplay } from "@/components/params/selectors/vesting-info-d
 import { CoreSelector } from "@/components/params/selectors/core-selector";
 import { DestinationChainSelector } from "@/components/params/selectors/destination-chain-selector";
 import { MultisigCallSelector } from "@/components/params/selectors/multisig-call-selector";
+import { ContractCode } from "@/components/params/inputs/contract-code";
+import { ContractConstructor } from "@/components/params/inputs/contract-constructor";
 import { findComponent } from "./input-map";
 import type { ParamComponentType } from "@/components/params/types";
 import type { DedotClient } from "dedot";
+
+// Pallets whose overrides work without pallet context (no async data to fetch)
+const CONTEXT_FREE_PALLETS = new Set(["Revive"]);
 
 // Override: pallet → method → fieldName → component
 const PALLET_OVERRIDES: Record<
@@ -172,6 +177,12 @@ const PALLET_OVERRIDES: Record<
       call_hash: MultisigCallSelector,
     },
   },
+  Revive: {
+    instantiate_with_code: {
+      code: ContractCode,
+      data: ContractConstructor,
+    },
+  },
 };
 
 export function findComponentWithContext(
@@ -184,7 +195,7 @@ export function findComponentWithContext(
   palletContext?: PalletContextData | null
 ): ParamComponentType & { typeId?: number; isOverride?: boolean } {
   // Check overrides first
-  if (palletName && methodName && palletContext) {
+  if (palletName && methodName && (palletContext || CONTEXT_FREE_PALLETS.has(palletName))) {
     const palletOverrides = PALLET_OVERRIDES[palletName];
     if (palletOverrides) {
       const methodOverrides = palletOverrides[methodName];

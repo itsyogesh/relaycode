@@ -4,6 +4,7 @@ import { createMDX } from "fumadocs-mdx/next";
 const nextConfig = {
   transpilePackages: ["@t3-oss/env-nextjs", "@t3-oss/env-core"],
   output: "standalone",
+  serverExternalPackages: ["@parity/resolc", "solc"],
   images: {
     remotePatterns: [
       {
@@ -13,6 +14,17 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        child_process: false,
+        path: false,
+      };
+    }
+    return config;
   },
 };
 
