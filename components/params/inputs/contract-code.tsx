@@ -121,6 +121,7 @@ export function ContractCode({
       const data = await res.json();
 
       if (!res.ok) {
+        resetCompilationState();
         setCompilationState({
           isCompiling: false,
           errors: [
@@ -130,15 +131,20 @@ export function ContractCode({
             },
           ],
         });
+        setHexValue("");
+        onChange?.(undefined);
         return;
       }
 
       if (!data.success) {
+        resetCompilationState();
         setCompilationState({
           isCompiling: false,
           errors: data.errors || [{ message: "Compilation failed", severity: "error" }],
           warnings: data.warnings || [],
         });
+        setHexValue("");
+        onChange?.(undefined);
         return;
       }
 
@@ -167,6 +173,7 @@ export function ContractCode({
         onChange?.(hex);
       }
     } catch (err) {
+      resetCompilationState();
       setCompilationState({
         isCompiling: false,
         errors: [
@@ -208,17 +215,20 @@ export function ContractCode({
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => {
-      const buffer = reader.result as ArrayBuffer;
-      const bytes = new Uint8Array(buffer);
-      const hex =
-        "0x" +
-        Array.from(bytes)
-          .map((b) => b.toString(16).padStart(2, "0"))
-          .join("");
+      // Bytecode files are text containing hex characters (e.g., "60806040...")
+      // Read as text, strip whitespace/newlines, normalize 0x prefix, validate hex
+      const raw = (reader.result as string).trim().replace(/\s+/g, "");
+      const hex = raw.startsWith("0x") ? raw.toLowerCase() : `0x${raw.toLowerCase()}`;
+      if (!/^0x[0-9a-f]*$/.test(hex) || hex.length % 2 !== 0) {
+        setCompilationState({
+          errors: [{ message: "Invalid bytecode file: not valid hex", severity: "error" }],
+        });
+        return;
+      }
       setHexValue(hex);
       onChange?.(hex);
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsText(file);
   };
 
   const handleAbiUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

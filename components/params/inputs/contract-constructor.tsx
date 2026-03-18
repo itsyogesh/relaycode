@@ -117,10 +117,34 @@ export function ContractConstructor({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Validate a single constructor arg value against its Solidity type
+  const validateArg = useCallback((type: string, value: any): boolean => {
+    const v = String(value ?? "");
+    if (v === "") return false; // empty is not valid for encoding
+    if (type === "address") {
+      return /^0x[0-9a-fA-F]{40}$/.test(v);
+    }
+    if (type === "bool") return true;
+    if (type.startsWith("uint") || type.startsWith("int")) {
+      try { BigInt(v); return true; } catch { return false; }
+    }
+    if (type === "string") return true;
+    if (type === "bytes") {
+      return /^0x([0-9a-fA-F]{2})*$/.test(v);
+    }
+    if (/^bytes\d+$/.test(type)) {
+      const n = parseInt(type.slice(5));
+      return /^0x([0-9a-fA-F]{2})*$/.test(v) && (v.length - 2) / 2 <= n;
+    }
+    return true;
+  }, []);
+
   // Encode constructor args whenever argValues change (ABI mode)
   const encodeAndEmit = useCallback(
     (values: Record<string, any>) => {
       if (!abi || !hasConstructor || !typesSupported) return;
+
+      const inputs = getConstructorInputs(abi);
 
       // Check that at least one value is non-empty before encoding
       const hasAnyValue = Object.values(values).some(
@@ -128,8 +152,19 @@ export function ContractConstructor({
       );
 
       if (!hasAnyValue) {
-        // All empty — emit undefined so validation can catch required fields
         onChange?.(undefined);
+        return;
+      }
+
+      // Validate all args — only encode if every filled field passes validation
+      const allValid = inputs.every((input) => {
+        const v = values[input.name];
+        if (v === undefined || v === "" || v === null) return false;
+        return validateArg(input.type, v);
+      });
+
+      if (!allValid) {
+        // Don't emit invalid encoded data — clear previous value
         return;
       }
 
@@ -144,7 +179,7 @@ export function ContractConstructor({
         isEncodingRef.current = false;
       }
     },
-    [abi, hasConstructor, typesSupported, onChange]
+    [abi, hasConstructor, typesSupported, onChange, validateArg]
   );
 
   const handleArgChange = (argName: string, value: any) => {
