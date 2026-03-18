@@ -184,6 +184,8 @@ export function ContractCode({
           },
         ],
       });
+      setHexValue("");
+      onChange?.(undefined);
     } finally {
       setIsCompiling(false);
     }
@@ -223,6 +225,8 @@ export function ContractCode({
         setCompilationState({
           errors: [{ message: "Invalid bytecode file: not valid hex", severity: "error" }],
         });
+        setHexValue("");
+        onChange?.(undefined);
         return;
       }
       setHexValue(hex);

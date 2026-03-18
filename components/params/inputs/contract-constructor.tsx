@@ -165,6 +165,7 @@ export function ContractConstructor({
 
       if (!allValid) {
         // Don't emit invalid encoded data — clear previous value
+        onChange?.(undefined);
         return;
       }
 
