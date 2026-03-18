@@ -1,5 +1,13 @@
 import { createConfig } from "@luno-kit/react";
-import { polkadot, kusama, westend, paseo } from "@luno-kit/react/chains";
+import {
+  polkadot,
+  kusama,
+  westend,
+  paseo,
+  westendAssetHub,
+  paseoAssetHub,
+  polkadotAssetHub,
+} from "@luno-kit/react/chains";
 import {
   polkadotjsConnector,
   talismanConnector,
@@ -8,7 +16,15 @@ import {
 
 export const walletConfig = createConfig({
   appName: "Relaycode",
-  chains: [polkadot, kusama, westend, paseo],
+  chains: [
+    polkadot,
+    kusama,
+    westend,
+    paseo,
+    westendAssetHub,
+    paseoAssetHub,
+    polkadotAssetHub,
+  ],
   connectors: [
     polkadotjsConnector(),
     talismanConnector(),

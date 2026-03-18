@@ -1,0 +1,83 @@
+---
+title: Compilation
+description: EVM and PVM compilation modes, import resolution, and supported Solidity versions
+---
+
+# Compilation
+
+Relaycode compiles Solidity contracts server-side using industry-standard compilers.
+
+## Compilation Targets
+
+### EVM Mode
+
+Uses `solc` (the standard Solidity compiler) to produce EVM bytecode.
+
+- **Solidity version**: 0.8.34
+- **Optimizer**: Enabled with 200 runs
+- **Output**: Standard EVM bytecode compatible with all Ethereum tooling
+- **Use case**: Standard Solidity contracts, maximum compatibility
+
+### PVM Mode
+
+Uses `resolc` (Parity's Revive compiler) to produce PolkaVM bytecode.
+
+- **Solidity version**: 0.8.x (determined by resolc's bundled solc)
+- **Optimizer**: Mode `z` (size-optimized) with 200 runs
+- **Output**: RISC-V bytecode for PolkaVM
+- **Use case**: Polkadot-native execution, access to PVM-specific features
+
+## Import Resolution
+
+Contracts with npm package imports are resolved automatically:
+
+```solidity
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+```
+
+The compiler resolves imports iteratively:
+1. Attempts compilation with the user's source
+2. Detects missing imports from compiler errors
+3. Fetches sources from the unpkg CDN
+4. Re-compiles with all resolved sources
+5. Repeats until all transitive imports are resolved
+
+### Supported Packages
+
+Any npm-published Solidity package works, including:
+- OpenZeppelin Contracts
+- Chainlink
+- Uniswap core/periphery
+- Solmate, Solady, etc.
+
+### Version Pinning
+
+Bare imports (without a version) resolve to the current npm-published version at compile time. For deterministic builds, use versioned imports:
+
+```solidity
+import "@openzeppelin/contracts@5.0.0/token/ERC20/ERC20.sol";
+```
+
+Or compile externally with locked dependencies and use Upload mode.
+
+### Limits
+
+| Limit | Value |
+|-------|-------|
+| Source size | 100 KB |
+| Max imported files | 50 |
+| Per-file fetch timeout | 10 seconds |
+| Total resolution budget | 30 seconds |
+| Max file size per import | 500 KB |
+| Compilation timeout | 30 seconds |
+
+## Unsupported Features
+
+- **Local file imports** (`./MyLib.sol`) — only npm packages and relative paths within packages are resolved
+- **Solidity versions below 0.8.0** — both compilers target 0.8.x
+- **Non-Solidity languages** — Vyper, Yul, etc. are not supported
+- **PVM-specific opcodes** — `selfdestruct`, `extcodecopy`, `pc` cause compile-time errors in PVM mode
+
+## Multi-Contract Files
+
+If your source file contains multiple contracts, a dropdown selector appears after compilation. Select which contract to deploy — its bytecode and ABI are used for the extrinsic parameters.

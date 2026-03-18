@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ParamLabel } from "@/components/params/shared/param-label";
 import { FormDescription } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import type { ParamInputProps } from "../types";
@@ -33,6 +33,7 @@ export function Bytes({
   isDisabled,
   isRequired,
   error,
+  typeName,
   onChange,
   value: externalValue,
 }: ParamInputProps) {
@@ -219,10 +220,7 @@ export function Bytes({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={name}>
-          {label}
-          {isRequired && <span className="text-red-500 ml-1">*</span>}
-        </Label>
+        <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
         <ModeToggle
           modes={[
             { id: "hex", label: "Hex" },

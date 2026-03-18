@@ -272,22 +272,15 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                   const Component = resolved.component;
                   return (
                     <FormItem className="ml-8">
-                      <div className="relative">
-                        {arg.typeName && (
-                          <span className="absolute right-0 top-0 text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded z-10">
-                            {arg.typeName}
-                          </span>
-                        )}
-                        <Component
-                          client={client}
-                          label={arg.name || ""}
-                          typeName={arg.typeName || ""}
-                          typeId={resolved.typeId}
-                          palletContext={palletContext}
-                          isContextLoading={isContextLoading}
-                          {...field}
-                        />
-                      </div>
+                      <Component
+                        client={client}
+                        label={arg.name || ""}
+                        typeName={arg.typeName || ""}
+                        typeId={resolved.typeId}
+                        palletContext={palletContext}
+                        isContextLoading={isContextLoading}
+                        {...field}
+                      />
                     </FormItem>
                   );
                 }}

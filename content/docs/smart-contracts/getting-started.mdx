@@ -1,0 +1,80 @@
+---
+title: Getting Started
+description: Deploy your first smart contract on Polkadot Hub using Relaycode
+---
+
+# Getting Started
+
+Deploy a Solidity smart contract to Polkadot Hub in under 5 minutes.
+
+## Prerequisites
+
+- A Polkadot wallet extension (Talisman, SubWallet, or Polkadot.js)
+- Testnet tokens from the [Polkadot Faucet](https://faucet.polkadot.io/)
+
+## Step 1: Connect and Switch Chain
+
+1. Open Relaycode and connect your wallet
+2. Switch to **Westend Asset Hub** (testnet) using the chain selector
+3. Ensure you have testnet WND tokens for gas fees
+
+## Step 2: Select the Revive Pallet
+
+1. In the extrinsic builder, select **Revive** as the section
+2. Select **instantiate_with_code** as the method
+3. The `code` and `data` fields will show the smart contract editor
+
+## Step 3: Write Your Contract
+
+The editor comes with a default template. You can modify it or write your own:
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Flipper {
+    bool public value;
+
+    constructor(bool _value) {
+        value = _value;
+    }
+
+    function flip() public {
+        value = !value;
+    }
+}
+```
+
+## Step 4: Compile
+
+1. Select your compilation target: **EVM** or **PVM**
+2. Click **Compile**
+3. The compiler resolves imports automatically and produces bytecode
+4. If compilation succeeds, the bytecode is automatically filled into the `code` parameter
+
+## Step 5: Set Constructor Arguments
+
+The `data` field renders typed inputs based on your contract's constructor:
+- For the Flipper example: a boolean toggle for `_value`
+- Arguments are automatically ABI-encoded
+
+## Step 6: Configure and Submit
+
+1. Set **value** to `0` (unless your constructor is payable)
+2. Set **weight_limit** — use `{ ref_time: 500000000000, proof_size: 500000 }` as a starting point
+3. Set **storage_deposit_limit** — `10000000000` (10 WND) is usually sufficient for small contracts
+4. Leave **salt** as `None` for default address derivation, or provide a 32-byte salt for deterministic addresses
+5. Click **Sign and Submit**
+
+## Step 7: Verify
+
+After the transaction is included in a block, your contract is deployed. You can verify it on the Westend Asset Hub explorer.
+
+## Using Upload Mode
+
+If you compiled your contract externally (Remix, Hardhat, Foundry):
+
+1. Switch the `code` field to **Upload** mode
+2. Upload your bytecode file (`.bin` or `.hex`)
+3. Optionally upload the ABI (`.json`) to enable the constructor args form
+4. The `data` field will show typed inputs if an ABI is provided

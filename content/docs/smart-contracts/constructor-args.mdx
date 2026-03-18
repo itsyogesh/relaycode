@@ -1,0 +1,52 @@
+---
+title: Constructor Arguments
+description: How constructor argument encoding works and supported Solidity types
+---
+
+# Constructor Arguments
+
+When deploying a contract via `Revive.instantiateWithCode`, the `data` parameter contains ABI-encoded constructor arguments. Relaycode generates a typed form from your contract's ABI.
+
+## How It Works
+
+1. After compilation (or ABI upload), Relaycode reads the contract's ABI
+2. If the constructor has parameters, typed inputs are rendered for each one
+3. As you fill in values, they are ABI-encoded in real-time
+4. The encoded hex is emitted as the `data` parameter value
+
+## Supported Types
+
+The typed form supports these Solidity types:
+
+| Solidity Type | Input | Encoding |
+|---------------|-------|----------|
+| `address` | Hex text (0x + 40 chars) | Left-padded to 32 bytes |
+| `bool` | Toggle switch | 0 or 1, padded to 32 bytes |
+| `uint8`–`uint256` | Numeric text | Left-padded to 32 bytes |
+| `int8`–`int256` | Numeric text (supports negative) | Two's complement, 32 bytes |
+| `string` | Free text | Dynamic: length + padded UTF-8 |
+| `bytes` | Hex text | Dynamic: length + padded data |
+| `bytes1`–`bytes32` | Hex text with length enforcement | Right-padded to 32 bytes |
+
+## Unsupported Types
+
+These types require hex mode (manual ABI encoding):
+
+- **Arrays** — `uint256[]`, `address[]`, `string[2]`, etc.
+- **Tuples** — `(uint256, address)`, struct parameters
+- **Nested types** — arrays of tuples, tuples containing arrays, etc.
+
+If any constructor parameter uses an unsupported type, the entire form falls back to hex mode with a message explaining the limitation. You can encode the arguments externally using tools like Remix or cast (Foundry) and paste the hex.
+
+## No Constructor
+
+If your contract has no constructor or a parameterless constructor, the `data` field is automatically set to `0x` (empty bytes). No input is needed.
+
+## Hex Mode
+
+Switch to hex mode to enter raw ABI-encoded data directly. This is useful when:
+- Your constructor uses complex types (arrays, tuples)
+- You have pre-encoded data from another tool
+- You want full control over the encoding
+
+The hex value must be a valid hex string with `0x` prefix and even length.
