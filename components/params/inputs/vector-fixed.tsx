@@ -2,6 +2,7 @@ import React from "react";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ParamLabel } from "@/components/params/shared/param-label";
 import { FormDescription } from "@/components/ui/form";
 import type { ParamInputProps } from "../types";
 import { findComponent } from "@/lib/input-map";
@@ -187,10 +188,7 @@ export function VectorFixed({
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Label htmlFor={name}>
-              {label}
-              {isRequired && <span className="text-red-500 ml-1">*</span>}
-            </Label>
+            <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
             <span className="text-xs text-muted-foreground">
               ({length} bytes)
             </span>
