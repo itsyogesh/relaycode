@@ -124,7 +124,7 @@ export function ContractCode({
         resetCompilationState();
         setCompilationState({
           isCompiling: false,
-          errors: [
+          errors: data.errors || [
             {
               message: data.error || "Compilation failed",
               severity: "error",
