@@ -1,6 +1,7 @@
 import React from "react";
 import { z } from "zod";
 import { Label } from "@/components/ui/label";
+import { ParamLabel } from "@/components/params/shared/param-label";
 import { FormDescription } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function Vector({
   minItems = 0,
   maxItems,
   unique = false,
+  typeName,
 }: VectorProps) {
   const [items, setItems] = React.useState<any[]>([undefined]);
   const [validationError, setValidationError] = React.useState<string | null>(null);
@@ -328,10 +330,7 @@ export function Vector({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Label htmlFor={name}>
-            {label}
-            {isRequired && <span className="text-red-500 ml-1">*</span>}
-          </Label>
+          <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
           {(minItems > 0 || maxItems) && (
             <span className="text-xs text-muted-foreground">
               ({minItems > 0 ? `min: ${minItems}` : ""}

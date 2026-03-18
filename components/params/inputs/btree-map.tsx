@@ -1,7 +1,7 @@
 import React from "react";
 import { z } from "zod";
-import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
+import { ParamLabel } from "@/components/params/shared/param-label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2 } from "lucide-react";
@@ -29,6 +29,7 @@ export function BTreeMap({
   onChange,
   client,
   typeId,
+  typeName,
 }: BTreeMapProps) {
   const [pairs, setPairs] = React.useState<[unknown, unknown][]>([[undefined, undefined]]);
   const [mode, setMode] = React.useState<MapMode>("form");
@@ -150,10 +151,7 @@ export function BTreeMap({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={name}>
-          {label}
-          {isRequired && <span className="text-red-500 ml-1">*</span>}
-        </Label>
+        <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
         <div className="flex items-center gap-2">
           <ModeToggle
             modes={[

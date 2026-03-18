@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormDescription } from "@/components/ui/form";
+import { ParamLabel } from "@/components/params/shared/param-label";
 import { InputWithAddon } from "@/components/ui/input-with-addon";
 import {
   Select,
@@ -349,10 +350,7 @@ export function Amount({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <Label htmlFor={name}>
-          {label}
-          {isRequired && <span className="text-red-500 ml-1">*</span>}
-        </Label>
+        <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
         {showHexToggle && (
           <ModeToggle
             modes={[
