@@ -25,5 +25,12 @@ export function isAssetHubGenesis(genesisHash: string): boolean {
 }
 
 export function hasReviveApi(client: GenericChainClient): client is DedotClient<AssetHubApi> {
-  return typeof (client as any).call?.reviveApi?.instantiate === "function";
+  // Dedot uses proxy chains for runtime API access — merely accessing
+  // `client.call.reviveApi.instantiate` triggers an API spec lookup that
+  // throws UnknownApiError on chains without ReviveApi. Use try/catch.
+  try {
+    return typeof (client as any).call?.reviveApi?.instantiate === "function";
+  } catch {
+    return false;
+  }
 }
