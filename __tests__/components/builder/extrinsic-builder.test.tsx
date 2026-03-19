@@ -77,7 +77,68 @@ jest.mock("dedot/utils", () => ({
     if (!s) return s;
     return s.charAt(0).toLowerCase() + s.slice(1);
   },
+  assert: jest.fn(),
 }));
+
+// Mock gas estimation hook
+const mockEstimate = jest.fn();
+const mockGasEstimation = {
+  estimating: false,
+  weightRequired: null as any,
+  storageDeposit: null as any,
+  gasConsumed: null,
+  deployedAddress: null,
+  error: null as string | null,
+  estimate: mockEstimate,
+};
+
+jest.mock("@/hooks/use-gas-estimation", () => ({
+  useGasEstimation: jest.fn().mockImplementation(() => mockGasEstimation),
+}));
+
+// Mock use-chain-token
+jest.mock("@/hooks/use-chain-token", () => ({
+  useChainToken: jest.fn().mockReturnValue({
+    symbol: "DOT",
+    decimals: 10,
+    denominations: [],
+    existentialDeposit: BigInt(0),
+    loading: false,
+  }),
+}));
+
+// Mock fee-display
+jest.mock("@/lib/fee-display", () => ({
+  formatFee: jest.fn().mockReturnValue("0.001 DOT"),
+  formatWeight: jest.fn().mockReturnValue("refTime: 1.1K, proofSize: 2.2K"),
+}));
+
+// Mock chain-types
+jest.mock("@/lib/chain-types", () => ({
+  hasReviveApi: jest.fn().mockReturnValue(false),
+  GenericChainClient: {} as any,
+}));
+
+// Mock next/link — needed for the Studio link
+jest.mock("next/link", () => {
+  const React = require("react");
+  return {
+    __esModule: true,
+    default: ({ children, href, ...props }: any) =>
+      React.createElement("a", { href, ...props }, children),
+  };
+});
+
+// Mock lucide-react icons — proxy to actual icons but add our test ones
+jest.mock("lucide-react", () => {
+  const actual = jest.requireActual("lucide-react");
+  return {
+    ...actual,
+    Loader2: (props: any) => <span data-testid="loader2" {...props} />,
+    Zap: (props: any) => <span data-testid="zap" {...props} />,
+    ArrowRight: (props: any) => <span data-testid="arrow-right" {...props} />,
+  };
+});
 
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
@@ -252,5 +313,146 @@ describe("ExtrinsicBuilder", () => {
     expect(() => {
       render(<TestWrapper />);
     }).not.toThrow();
+  });
+
+  describe("gas estimation for Revive", () => {
+    const reviveTx = {
+      meta: {
+        fields: [
+          { name: "value", typeId: 6, typeName: "BalanceOf" },
+          { name: "weight_limit", typeId: 10, typeName: "Weight" },
+          { name: "storage_deposit_limit", typeId: 6, typeName: "BalanceOf" },
+          { name: "code", typeId: 14, typeName: "Vec<u8>" },
+          { name: "data", typeId: 14, typeName: "Vec<u8>" },
+          { name: "salt", typeId: 15, typeName: "Option<[u8; 32]>" },
+        ],
+        docs: ["Instantiate a contract with code"],
+      },
+    };
+
+    beforeEach(() => {
+      // Override section/method options to include Revive
+      const { createSectionOptions, createMethodOptions } = require("@/lib/parser");
+      createSectionOptions.mockReturnValue([
+        { value: 60, text: "Revive", docs: ["Contracts"] },
+        { value: 0, text: "System", docs: ["System pallet"] },
+      ]);
+      createMethodOptions.mockReturnValue([
+        { value: 0, text: "instantiate_with_code" },
+      ]);
+    });
+
+    function ReviveTestWrapper({ tx = reviveTx }: { tx?: any }) {
+      const form = useForm({
+        defaultValues: {
+          section: "60:Revive",
+          method: "", // useEffect clears this on mount anyway
+          value: "0",
+          weight_limit: "",
+          storage_deposit_limit: "",
+          code: "0x1234",
+          data: "0x",
+          salt: "",
+        },
+      });
+
+      // Simulate method selection after mount
+      React.useEffect(() => {
+        form.setValue("method", "0:instantiate_with_code");
+      }, [form]);
+
+      const mockClient = {
+        metadata: {
+          latest: {
+            pallets: [
+              {
+                index: 60,
+                name: "Revive",
+                calls: { typeId: 100 },
+                docs: ["Contracts"],
+              },
+            ],
+          },
+        },
+        registry: {
+          findCodec: jest.fn(),
+          findType: jest.fn().mockReturnValue({
+            typeDef: {
+              type: "Struct",
+              value: {
+                fields: [
+                  { name: "refTime", typeId: 6 },
+                  { name: "proofSize", typeId: 6 },
+                ],
+              },
+            },
+          }),
+        },
+        tx: {
+          revive: {
+            instantiateWithCode: {
+              meta: reviveTx.meta,
+            },
+          },
+        },
+      } as any;
+
+      return (
+        <ExtrinsicBuilder
+          client={mockClient}
+          tx={tx}
+          onTxChange={jest.fn()}
+          builderForm={form}
+        />
+      );
+    }
+
+    it("shows Estimate Gas button when pallet=Revive, method=instantiate_with_code", () => {
+      render(<ReviveTestWrapper />);
+      expect(screen.getByText("Estimate Gas")).toBeInTheDocument();
+    });
+
+    it("shows Open in Contract Studio link when Revive selected", () => {
+      const { container } = render(<ReviveTestWrapper />);
+      // The link is rendered by next/link mock as an <a> tag
+      const link = container.querySelector('a[href="/studio"]');
+      expect(link).toBeInTheDocument();
+    });
+
+    it("does NOT show Estimate Gas for non-Revive pallet", () => {
+      const systemTx = {
+        meta: {
+          fields: [{ name: "remark", typeId: 14, typeName: "Vec<u8>" }],
+          docs: ["Make a remark"],
+        },
+      };
+
+      function SystemTestWrapper() {
+        const form = useForm({
+          defaultValues: {
+            section: "0:System",
+            method: "",
+          },
+        });
+
+        const mockClient = {
+          metadata: { latest: { pallets: [] } },
+          registry: { findCodec: jest.fn(), findType: jest.fn() },
+          tx: { system: { remark: systemTx } },
+        } as any;
+
+        return (
+          <ExtrinsicBuilder
+            client={mockClient}
+            tx={systemTx}
+            onTxChange={jest.fn()}
+            builderForm={form}
+          />
+        );
+      }
+
+      render(<SystemTestWrapper />);
+      expect(screen.queryByText("Estimate Gas")).not.toBeInTheDocument();
+    });
   });
 });
