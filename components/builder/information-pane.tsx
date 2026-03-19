@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { $, DedotClient } from "dedot";
+import { $ } from "dedot";
 import {
   HexString,
   stringCamelCase,
@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { GenericTxCall } from "dedot/types";
-import { PolkadotApi } from "@dedot/chaintypes";
+import type { GenericChainClient } from "@/lib/chain-types";
 import { UseFormReturn } from "react-hook-form";
 import { BuilderFormValues } from "@/app/builder/page";
 import {
@@ -33,7 +33,7 @@ import { Copy, Check, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface InformationPaneProps {
-  client: DedotClient<PolkadotApi>;
+  client: GenericChainClient;
   tx: GenericTxCall | null;
   builderForm: UseFormReturn<BuilderFormValues>;
   onTxChange: (tx: GenericTxCall) => void;
@@ -104,7 +104,10 @@ const InformationPane: React.FC<InformationPaneProps> = ({
   // the relevant arg field values into a stable string for dependency tracking.
   const formValues = builderForm.watch();
   const argFieldNames = tx?.meta?.fields?.map((f) => f.name || "") || [];
-  const argValuesKey = argFieldNames.map((n) => `${n}:${formValues[n] ?? ""}`).join("|");
+  const argValuesKey = argFieldNames.map((n) => {
+    const v = formValues[n];
+    return `${n}:${typeof v === "object" && v !== null ? JSON.stringify(v) : v ?? ""}`;
+  }).join("|");
 
   // Encode section hex
   const sectionValue = formValues.section;

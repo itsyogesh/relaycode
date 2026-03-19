@@ -24,6 +24,7 @@ import {
   selectContract,
   useContractCompilation,
 } from "@/lib/contract-store";
+import { compileSolidity } from "@/lib/compile-client";
 import type { ParamInputProps } from "../types";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
@@ -112,46 +113,22 @@ export function ContractCode({
     });
 
     try {
-      const res = await fetch("/api/compile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source, mode: compileTarget }),
-      });
+      const result = await compileSolidity(source, compileTarget);
 
-      const data = await res.json();
-
-      if (!res.ok) {
+      if (!result.success) {
         resetCompilationState();
         setCompilationState({
           isCompiling: false,
-          errors: data.errors || [
-            {
-              message: data.error || "Compilation failed",
-              severity: "error",
-            },
-          ],
+          errors: result.errors,
+          warnings: result.warnings,
         });
         setHexValue("");
         onChange?.(undefined);
         return;
       }
 
-      if (!data.success) {
-        resetCompilationState();
-        setCompilationState({
-          isCompiling: false,
-          errors: data.errors || [{ message: "Compilation failed", severity: "error" }],
-          warnings: data.warnings || [],
-        });
-        setHexValue("");
-        onChange?.(undefined);
-        return;
-      }
-
-      // API returns { contracts: Record<name, {abi, bytecode}>, contractNames: string[] }
-      // Map to contract-store's expected shape
-      const allContracts = data.contracts || {};
-      const contractNames = data.contractNames || [];
+      const allContracts = result.contracts || {};
+      const contractNames = result.contractNames;
       const firstContract = contractNames[0] || null;
       const firstData = firstContract ? allContracts[firstContract] : null;
 
@@ -161,8 +138,8 @@ export function ContractCode({
         abi: firstData?.abi || null,
         bytecode: firstData?.bytecode || null,
         contractNames,
-        errors: data.errors || [],
-        warnings: data.warnings || [],
+        errors: result.errors,
+        warnings: result.warnings,
         isCompiling: false,
         mode: compileTarget,
       });
