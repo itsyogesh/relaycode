@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import type { DedotClient } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
+import type { GenericChainClient } from "@/lib/chain-types";
 import { useChain } from "@luno-kit/react";
 import type { PalletContextData, ContextGroup } from "@/types/pallet-context";
 import { networkFromGenesisHash } from "@/types/pallet-context";
@@ -19,7 +18,7 @@ interface PalletContextResult {
 const contextCache = new Map<string, PalletContextData>();
 
 export function usePalletContext(
-  client: DedotClient<PolkadotApi> | null,
+  client: GenericChainClient | null,
   palletName: string | undefined
 ): PalletContextResult {
   const [context, setContext] = useState<PalletContextData | null>(null);
