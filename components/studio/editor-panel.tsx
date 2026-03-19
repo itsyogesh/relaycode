@@ -31,7 +31,7 @@ export function EditorPanel({ source, onSourceChange }: EditorPanelProps) {
 
   return (
     <ResizablePanelGroup direction="vertical" className="h-full">
-      <ResizablePanel defaultSize={75} minSize={40}>
+      <ResizablePanel defaultSize="75%" minSize="30%">
         <div className="h-full">
           <MonacoEditor
             height="100%"
@@ -52,7 +52,7 @@ export function EditorPanel({ source, onSourceChange }: EditorPanelProps) {
         </div>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={25} minSize={10}>
+      <ResizablePanel defaultSize="25%" minSize="10%">
         <div className="h-full overflow-y-auto bg-muted/30 p-3">
           {!hasOutput && (
             <p className="text-xs text-muted-foreground text-center py-4">

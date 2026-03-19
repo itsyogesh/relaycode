@@ -40,25 +40,25 @@ export function ContractStudio() {
   }
 
   return (
-    <div className="flex-1 min-h-0">
-      <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-8rem)]">
+    <div className="flex-1 min-h-0 h-full">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
         {/* Left: Compile panel */}
-        <ResizablePanel defaultSize={15} minSize={10} maxSize={25}>
-          <div className="h-full border-r">
+        <ResizablePanel defaultSize="15%" minSize="10%" maxSize="25%">
+          <div className="h-full border-r overflow-hidden">
             <CompilePanel source={source} onSourceChange={setSource} />
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
 
         {/* Center: Editor + Output */}
-        <ResizablePanel defaultSize={55} minSize={30}>
+        <ResizablePanel defaultSize="55%" minSize="30%">
           <EditorPanel source={source} onSourceChange={setSource} />
         </ResizablePanel>
         <ResizableHandle withHandle />
 
         {/* Right: Deploy panel */}
-        <ResizablePanel defaultSize={30} minSize={15} maxSize={40}>
-          <div className="h-full border-l">
+        <ResizablePanel defaultSize="30%" minSize="20%" maxSize="40%">
+          <div className="h-full border-l overflow-hidden">
             <DeployPanel />
           </div>
         </ResizablePanel>

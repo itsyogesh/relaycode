@@ -1,5 +1,4 @@
 import { NavBar } from "@/components/layout/site-header";
-import { SiteFooter } from "@/components/layout/site-footer";
 
 interface StudioLayoutProps {
   children: React.ReactNode;
@@ -7,10 +6,9 @@ interface StudioLayoutProps {
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col overflow-hidden">
       <NavBar />
-      <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <main className="flex-1 min-h-0">{children}</main>
     </div>
   );
 }

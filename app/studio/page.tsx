@@ -7,7 +7,7 @@ import { ContractStudio } from "@/components/studio/contract-studio";
 
 export default function StudioPage() {
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+    <div className="flex flex-1 min-h-0 flex-col">
       <ClientProvider>
         <ContractProvider>
           <ContractStudio />
