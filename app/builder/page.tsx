@@ -11,7 +11,7 @@ import { ClientProvider, useClient } from "@/context/client";
 export interface BuilderFormValues {
   section: string;
   method: string;
-  [key: string]: string;
+  [key: string]: any;
 }
 
 function BuilderContent() {

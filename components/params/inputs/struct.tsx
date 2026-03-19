@@ -30,8 +30,19 @@ export function Struct({
   error: externalError,
   onChange,
   fields,
+  value: externalValue,
 }: StructProps) {
   const [values, setValues] = React.useState<Record<string, any>>({});
+
+  // Sync local values from external value prop (e.g. gas estimation auto-fill)
+  React.useEffect(() => {
+    if (externalValue && typeof externalValue === "object" && !Array.isArray(externalValue)) {
+      setValues((prev) => {
+        if (JSON.stringify(prev) !== JSON.stringify(externalValue)) return externalValue;
+        return prev;
+      });
+    }
+  }, [externalValue]);
   const [validationError, setValidationError] = React.useState<string | null>(null);
 
   // Get list of required field names
@@ -84,6 +95,7 @@ export function Struct({
                 description: field.description,
                 isDisabled: isDisabled,
                 isRequired: field.required,
+                value: values[field.name],
                 onChange: (value: any) => handleFieldChange(field.name, value),
               })}
             </div>
