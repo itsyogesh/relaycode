@@ -57,3 +57,72 @@ export async function compileSolidity(
     warnings: data.warnings || [],
   };
 }
+
+const MAX_CLIENT_BODY_SIZE = 450_000; // 450KB — headroom for JSON overhead
+
+/**
+ * Compile multiple Solidity source files via the /api/compile endpoint.
+ * Used by the Studio's multi-file workspace.
+ */
+export async function compileSoliditySources(
+  sources: Record<string, { content: string }>,
+  mode: "evm" | "pvm"
+): Promise<CompileResult> {
+  // Client-side size preflight
+  const body = JSON.stringify({ sources, mode });
+  if (body.length > MAX_CLIENT_BODY_SIZE) {
+    return {
+      success: false,
+      contracts: null,
+      contractNames: [],
+      errors: [
+        {
+          message: `Source files too large (${(body.length / 1024).toFixed(0)}KB, max ~440KB). Reduce file sizes or compile externally.`,
+          severity: "error",
+        },
+      ],
+      warnings: [],
+    };
+  }
+
+  const res = await fetch("/api/compile", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    return {
+      success: false,
+      contracts: null,
+      contractNames: [],
+      errors: data.errors || [
+        {
+          message: data.error || "Compilation failed",
+          severity: "error",
+        },
+      ],
+      warnings: [],
+    };
+  }
+
+  if (!data.success) {
+    return {
+      success: false,
+      contracts: null,
+      contractNames: [],
+      errors: data.errors || [{ message: "Compilation failed", severity: "error" }],
+      warnings: data.warnings || [],
+    };
+  }
+
+  return {
+    success: true,
+    contracts: data.contracts || {},
+    contractNames: data.contractNames || [],
+    errors: data.errors || [],
+    warnings: data.warnings || [],
+  };
+}
