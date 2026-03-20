@@ -206,9 +206,18 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 
       const receipt = await sendTransactionAsync({ extrinsic });
 
-      toast.success("Transaction included in block", {
-        description: `Block: ${receipt.blockHash}`,
-      });
+      if (receipt.status === "failed") {
+        const errorMsg = receipt.errorMessage || receipt.dispatchError
+          ? `Dispatch error: ${receipt.errorMessage || JSON.stringify(receipt.dispatchError)}`
+          : "Transaction failed on-chain";
+        toast.error("Transaction failed", {
+          description: errorMsg,
+        });
+      } else {
+        toast.success("Transaction included in block", {
+          description: `Block: ${receipt.blockHash}`,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       // Distinguish user rejection from other errors

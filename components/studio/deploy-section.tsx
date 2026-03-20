@@ -191,16 +191,33 @@ export function DeploySection() {
         salt
       );
 
+      addLog("info", "Signing... approve in your wallet extension.");
+
       const receipt = await sendTransactionAsync({ extrinsic });
 
-      addLog("success", `Deployed in block: ${receipt.blockHash}`);
-      if (gasEstimation.deployedAddress) {
-        addLog("success", `Address: ${gasEstimation.deployedAddress}`);
+      if (receipt.status === "failed") {
+        const errorMsg = receipt.errorMessage || (receipt.dispatchError
+          ? JSON.stringify(receipt.dispatchError)
+          : "Transaction failed on-chain");
+        addLog("error", `Deploy failed: ${errorMsg}`);
+      } else {
+        addLog("success", `Deployed in block: ${receipt.blockHash}`);
+        if (gasEstimation.deployedAddress) {
+          addLog("success", `Address: ${gasEstimation.deployedAddress}`);
+        }
       }
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Deploy failed";
-      addLog("error", message);
+      const isUserRejection =
+        message.includes("Cancelled") ||
+        message.includes("Rejected") ||
+        message.includes("User denied") ||
+        message.includes("rejected");
+      addLog(
+        isUserRejection ? "info" : "error",
+        isUserRejection ? "Transaction cancelled by user" : message
+      );
     }
   };
 
