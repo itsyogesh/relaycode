@@ -17,7 +17,8 @@ export interface ContractCompilationState {
   errors: CompilationError[];
   warnings: CompilationError[];
   isCompiling: boolean;
-  mode: "evm" | "pvm";
+  mode: "evm" | "pvm" | null;
+  bytecodeSource: "compile" | "upload" | null;
 }
 
 const INITIAL_STATE: ContractCompilationState = {
@@ -29,7 +30,8 @@ const INITIAL_STATE: ContractCompilationState = {
   errors: [],
   warnings: [],
   isCompiling: false,
-  mode: "pvm",
+  mode: null,
+  bytecodeSource: null,
 };
 
 let state: ContractCompilationState = { ...INITIAL_STATE };

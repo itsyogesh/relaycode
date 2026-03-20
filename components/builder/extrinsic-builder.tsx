@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { DedotClient } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
+import Link from "next/link";
+import type { GenericChainClient } from "@/lib/chain-types";
+import { hasReviveApi } from "@/lib/chain-types";
 import {
   createMethodOptions,
   createSectionOptions,
@@ -17,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
+import { assert } from "dedot/utils";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +36,13 @@ import { BuilderFormValues } from "@/app/builder/page";
 import { useAccount, useSendTransaction } from "@luno-kit/react";
 import { toast } from "sonner";
 import { usePalletContext } from "@/hooks/use-pallet-context";
+import { useGasEstimation } from "@/hooks/use-gas-estimation";
+import { useChainToken } from "@/hooks/use-chain-token";
+import { formatFee, formatWeight } from "@/lib/fee-display";
+import { Loader2, Zap, ArrowRight } from "lucide-react";
 
 interface ExtrinsicBuilderProps {
-  client: DedotClient<PolkadotApi>;
+  client: GenericChainClient;
   tx: GenericTxCall | null;
   onTxChange: (tx: GenericTxCall) => void;
   builderForm: UseFormReturn<BuilderFormValues>;
@@ -50,7 +56,8 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
   const { account } = useAccount();
-  const { sendTransactionAsync, isPending } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
@@ -65,6 +72,77 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   // Eagerly fetch contextual data when pallet changes
   const { context: palletContext, isLoading: isContextLoading } =
     usePalletContext(client, palletName);
+
+  const { symbol, decimals } = useChainToken(client);
+
+  // Detect Revive instantiate_with_code for gas estimation
+  const isReviveInstantiate =
+    palletName === "Revive" && methodName === "instantiate_with_code";
+
+  // Watch form values for gas estimation inputs
+  const codeValue = builderForm.watch("code") || "";
+  const dataValue = builderForm.watch("data") || "";
+  const valueValue = builderForm.watch("value") || "0";
+  const saltValue = builderForm.watch("salt") || "";
+
+  const valueBigInt = (() => {
+    try {
+      return BigInt(valueValue || "0");
+    } catch {
+      return BigInt(0);
+    }
+  })();
+
+  const gasEstimation = useGasEstimation(
+    isReviveInstantiate ? client : null,
+    account?.address || "",
+    valueBigInt,
+    codeValue,
+    dataValue,
+    saltValue || undefined
+  );
+
+  // Auto-fill weight and storage deposit from gas estimation
+  const handleEstimateGas = async () => {
+    await gasEstimation.estimate();
+  };
+
+  useEffect(() => {
+    if (!isReviveInstantiate || !gasEstimation.weightRequired || !tx) return;
+
+    // Resolve weight field names from metadata
+    const weightField = tx.meta?.fields?.find((f) => f.name === "weight_limit");
+    if (weightField) {
+      try {
+        const weightType = client.registry.findType(weightField.typeId);
+        const { typeDef } = weightType;
+        if (typeDef.type === "Struct" && typeDef.value.fields.length >= 2) {
+          const [field0, field1] = typeDef.value.fields;
+          const name0 = String(field0.name);
+          const name1 = String(field1.name);
+          builderForm.setValue("weight_limit", {
+            [name0]: String(gasEstimation.weightRequired.refTime),
+            [name1]: String(gasEstimation.weightRequired.proofSize),
+          });
+        }
+      } catch {
+        // Fallback: use camelCase names
+        builderForm.setValue("weight_limit", {
+          refTime: String(gasEstimation.weightRequired.refTime),
+          proofSize: String(gasEstimation.weightRequired.proofSize),
+        });
+      }
+    }
+
+    // Auto-fill storage deposit only for Charge
+    if (gasEstimation.storageDeposit?.type === "Charge") {
+      builderForm.setValue(
+        "storage_deposit_limit",
+        String(gasEstimation.storageDeposit.value)
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gasEstimation.weightRequired, gasEstimation.storageDeposit]);
 
   useEffect(() => {
     const section = builderForm.watch("section");
@@ -114,6 +192,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // Build the args array from form data matching tx field order
       const args = fields.map((field) => data[field.name || ""]);
@@ -121,17 +200,40 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       // Create the submittable extrinsic by calling the tx function with args
       const extrinsic = (tx as any)(...args);
 
-      toast.info("Signing and submitting transaction...");
+      toast.info("Signing transaction...", {
+        description: "Please approve in your wallet extension.",
+      });
 
       const receipt = await sendTransactionAsync({ extrinsic });
 
-      toast.success("Transaction included in block", {
-        description: `Block: ${receipt.blockHash}`,
-      });
+      if (receipt.status === "failed") {
+        const errorMsg = receipt.errorMessage || receipt.dispatchError
+          ? `Dispatch error: ${receipt.errorMessage || JSON.stringify(receipt.dispatchError)}`
+          : "Transaction failed on-chain";
+        toast.error("Transaction failed", {
+          description: errorMsg,
+        });
+      } else {
+        toast.success("Transaction included in block", {
+          description: `Block: ${receipt.blockHash}`,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error("Transaction failed", { description: message });
+      // Distinguish user rejection from other errors
+      const isUserRejection =
+        message.includes("Cancelled") ||
+        message.includes("Rejected") ||
+        message.includes("User denied") ||
+        message.includes("rejected");
+      if (isUserRejection) {
+        toast.info("Transaction cancelled by user.");
+      } else {
+        toast.error("Transaction failed", { description: message });
+      }
       console.error("Error signing and sending extrinsic:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -286,16 +388,81 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 }}
               />
             ))}
+            {/* Gas estimation for Revive instantiate_with_code */}
+            {isReviveInstantiate && (
+              <div className="ml-8 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={
+                      !codeValue ||
+                      !account ||
+                      gasEstimation.estimating
+                    }
+                    onClick={handleEstimateGas}
+                  >
+                    {gasEstimation.estimating ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Zap className="h-3.5 w-3.5" />
+                    )}
+                    {gasEstimation.estimating
+                      ? "Estimating..."
+                      : "Estimate Gas"}
+                  </Button>
+                  <Link
+                    href="/studio"
+                    className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    Open in Contract Studio
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </div>
+
+                {gasEstimation.weightRequired && (
+                  <div className="text-xs text-muted-foreground space-y-0.5 rounded-md border border-border bg-muted/50 p-2.5">
+                    <p>
+                      Weight: {formatWeight(gasEstimation.weightRequired)}
+                    </p>
+                    {gasEstimation.storageDeposit && (
+                      <p>
+                        Storage ({gasEstimation.storageDeposit.type}):{" "}
+                        {formatFee(
+                          gasEstimation.storageDeposit.value,
+                          symbol,
+                          decimals
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {gasEstimation.error && (
+                  <p className="text-xs text-red-500">
+                    {gasEstimation.error}
+                  </p>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={!account || !tx || isPending}
+                disabled={!account || !tx || isSubmitting}
               >
-                {isPending
-                  ? "Submitting..."
-                  : !account
-                    ? "Connect Wallet to Submit"
-                    : "Sign and Submit"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Submitting...
+                  </>
+                ) : !account ? (
+                  "Connect Wallet to Submit"
+                ) : (
+                  "Sign and Submit"
+                )}
               </Button>
             </div>
           </form>

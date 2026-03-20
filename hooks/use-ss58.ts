@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { DedotClient } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
+import type { GenericChainClient } from "@/lib/chain-types";
 import { encodeAddress, decodeAddress } from "dedot/utils";
 
 interface UseSS58Result {
@@ -13,7 +12,7 @@ interface UseSS58Result {
 }
 
 export function useSS58(
-  client: DedotClient<PolkadotApi> | null
+  client: GenericChainClient | null
 ): UseSS58Result {
   const ss58Prefix = useMemo(() => {
     if (!client) return 42; // Generic Substrate default

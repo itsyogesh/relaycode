@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Worker } from "worker_threads";
 import { COMPILE_WORKER_CODE } from "@/lib/compile-worker-code";
-import { resolveAllImports } from "@/lib/import-resolver";
+import { resolveAllImports, resolveAllImportsSources } from "@/lib/import-resolver";
 import { checkRateLimit, getRateLimitReset } from "@/lib/rate-limiter";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAX_BODY_SIZE = 102400; // 100KB
+const MAX_BODY_SIZE = 512000; // 500KB
 const WORKER_TIMEOUT_MS = 30_000;
 
 interface CompileRequest {
-  source: string;
+  source?: string;
+  sources?: Record<string, { content: string }>;
   mode: "evm" | "pvm";
 }
 
@@ -63,25 +64,46 @@ function compileInWorker(
 /**
  * Parse standard Solidity JSON output into our response format.
  * Works for both solc and resolc (same output structure).
+ *
+ * @param userSourceKeys — keys of the user's source files (for sorting: user files first)
  */
 function parseCompilerOutput(
-  output: any
+  output: any,
+  userSourceKeys?: Set<string>
 ): Omit<CompileResponse, "resolvedVersions"> {
   const errors: CompileResponse["errors"] = [];
   const warnings: CompileResponse["warnings"] = [];
 
   if (output.errors) {
     for (const err of output.errors) {
+      const msg = err.formattedMessage || err.message || "";
+
       if (err.severity === "warning") {
         warnings.push({
           message: err.message,
           formattedMessage: err.formattedMessage,
         });
       } else {
+        // Flat-namespace hint: when a "Source not found" error has a relative import path,
+        // check if the basename matches any user source key
+        let hint = "";
+        if (userSourceKeys) {
+          const sourceMatch = msg.match(/Source "(.+?)" not found/);
+          if (sourceMatch) {
+            const importPath = sourceMatch[1];
+            if (importPath.startsWith("./") || importPath.startsWith("../")) {
+              const basename = importPath.split("/").pop() || "";
+              if (userSourceKeys.has(basename)) {
+                hint = ` Studio uses flat file names. Change your import to \`import "${basename}"\`.`;
+              }
+            }
+          }
+        }
+
         errors.push({
-          message: err.message,
+          message: err.message + hint,
           severity: err.severity || "error",
-          formattedMessage: err.formattedMessage,
+          formattedMessage: err.formattedMessage ? err.formattedMessage + hint : undefined,
         });
       }
     }
@@ -110,10 +132,17 @@ function parseCompilerOutput(
     }
   }
 
-  // Sort: user's contracts (Contract.sol) first, imported dependencies last
+  // Sort: user's files first, then dependencies
+  const isUserFile = userSourceKeys
+    ? (name: string) => {
+        const fileName = name.split(":")[0];
+        return userSourceKeys.has(fileName);
+      }
+    : (name: string) => name.startsWith("Contract.sol:");
+
   contractNames.sort((a, b) => {
-    const aIsUser = a.startsWith("Contract.sol:");
-    const bIsUser = b.startsWith("Contract.sol:");
+    const aIsUser = isUserFile(a);
+    const bIsUser = isUserFile(b);
     if (aIsUser && !bIsUser) return -1;
     if (!aIsUser && bIsUser) return 1;
     return 0;
@@ -167,13 +196,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (!req.source || typeof req.source !== "string") {
-    return NextResponse.json(
-      { success: false, errors: [{ message: "Missing 'source' field", severity: "error" }] },
-      { status: 400 }
-    );
-  }
-
   if (req.mode !== "evm" && req.mode !== "pvm") {
     return NextResponse.json(
       { success: false, errors: [{ message: "Invalid 'mode': must be 'evm' or 'pvm'", severity: "error" }] },
@@ -181,9 +203,58 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Exactly one of source or sources must be provided
+  const hasSource = req.source && typeof req.source === "string";
+  const hasSources = req.sources && typeof req.sources === "object" && !Array.isArray(req.sources);
+  if (!hasSource && !hasSources) {
+    return NextResponse.json(
+      { success: false, errors: [{ message: "Missing 'source' or 'sources' field", severity: "error" }] },
+      { status: 400 }
+    );
+  }
+  if (hasSource && hasSources) {
+    return NextResponse.json(
+      { success: false, errors: [{ message: "Provide 'source' or 'sources', not both", severity: "error" }] },
+      { status: 400 }
+    );
+  }
+
+  // Validate multi-file sources (flat namespace)
+  let userSourceKeys: Set<string> | undefined;
+  if (hasSources) {
+    userSourceKeys = new Set<string>();
+    for (const [key, val] of Object.entries(req.sources!)) {
+      if (key.includes("/") || key.includes("..")) {
+        return NextResponse.json(
+          { success: false, errors: [{ message: `Invalid source key "${key}": must be a flat filename (no paths)`, severity: "error" }] },
+          { status: 400 }
+        );
+      }
+      if (!key || typeof (val as any)?.content !== "string") {
+        return NextResponse.json(
+          { success: false, errors: [{ message: `Invalid source entry "${key}": must have string content`, severity: "error" }] },
+          { status: 400 }
+        );
+      }
+      userSourceKeys.add(key);
+    }
+  }
+
   try {
     // Step 1: Resolve imports from CDN
-    const { sources, resolvedVersions } = await resolveAllImports(req.source);
+    let sources: Record<string, { content: string }>;
+    let resolvedVersions: Record<string, string>;
+
+    if (hasSources) {
+      const resolved = await resolveAllImportsSources(req.sources!);
+      sources = resolved.sources;
+      resolvedVersions = resolved.resolvedVersions;
+    } else {
+      const resolved = await resolveAllImports(req.source!);
+      sources = resolved.sources;
+      resolvedVersions = resolved.resolvedVersions;
+      userSourceKeys = new Set(["Contract.sol"]);
+    }
 
     // Step 2: Build compiler input
     let input: string;
@@ -211,7 +282,7 @@ export async function POST(request: NextRequest) {
     const output = await compileInWorker(input, req.mode);
 
     // Step 4: Parse output
-    const result = parseCompilerOutput(output);
+    const result = parseCompilerOutput(output, userSourceKeys);
 
     return NextResponse.json({ ...result, resolvedVersions } as CompileResponse);
   } catch (error) {

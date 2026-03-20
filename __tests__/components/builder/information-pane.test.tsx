@@ -317,4 +317,54 @@ describe("InformationPane", () => {
     expect(screen.getByTestId("field-hex-dest")).toBeInTheDocument();
     expect(screen.getByTestId("field-hex-value")).toBeInTheDocument();
   });
+
+  it("re-encodes when object-valued arg changes (argValuesKey serialization)", () => {
+    const { encodeAllArgs } = require("@/lib/codec");
+
+    const mockTx = {
+      meta: {
+        index: 1,
+        fields: [
+          { name: "weight_limit", typeId: 10, typeName: "Weight" },
+        ],
+        docs: [],
+      },
+    } as any;
+
+    // First render with object value
+    const form1 = createMockForm({
+      section: "60:Revive",
+      weight_limit: { refTime: "1000", proofSize: "2000" },
+    });
+
+    const { rerender } = render(
+      <InformationPane
+        client={mockClient}
+        tx={mockTx}
+        builderForm={form1}
+        onTxChange={mockOnTxChange}
+      />
+    );
+
+    const firstCallCount = encodeAllArgs.mock.calls.length;
+
+    // Rerender with different object value
+    const form2 = createMockForm({
+      section: "60:Revive",
+      weight_limit: { refTime: "3000", proofSize: "4000" },
+    });
+
+    rerender(
+      <InformationPane
+        client={mockClient}
+        tx={mockTx}
+        builderForm={form2}
+        onTxChange={mockOnTxChange}
+      />
+    );
+
+    // encodeAllArgs should have been called again because the argValuesKey
+    // now uses JSON.stringify for object values instead of "[object Object]"
+    expect(encodeAllArgs.mock.calls.length).toBeGreaterThan(firstCallCount);
+  });
 });

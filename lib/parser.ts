@@ -1,5 +1,4 @@
-import { PolkadotApi } from "@dedot/chaintypes";
-import { DedotClient } from "dedot";
+import type { GenericChainClient } from "@/lib/chain-types";
 import { Metadata, TypeDef } from "dedot/codecs";
 import { assert, stringCamelCase } from "dedot/utils";
 
@@ -35,7 +34,7 @@ export type ClientMethod = {
 };
 
 export function createMethodOptions(
-  client: DedotClient<PolkadotApi>,
+  client: GenericChainClient,
   sectionIndex: number
 ): { text: string; value: number }[] | null {
   const pallet = client.metadata.latest.pallets.find(
@@ -68,7 +67,7 @@ export function createMethodOptions(
  * }
  *
  */
-export function getArgType(client: DedotClient<PolkadotApi>, typeId: number) {
+export function getArgType(client: GenericChainClient, typeId: number) {
   const type = client.registry.findType(typeId);
   return getTypeDetails(type.typeDef);
 }

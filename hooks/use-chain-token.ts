@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { DedotClient } from "dedot";
-import type { PolkadotApi } from "@dedot/chaintypes";
+import type { GenericChainClient } from "@/lib/chain-types";
 import { getDenominations, type Denomination } from "@/lib/denominations";
 
 export interface ChainTokenInfo {
@@ -14,7 +13,7 @@ export interface ChainTokenInfo {
 }
 
 export function useChainToken(
-  client: DedotClient<PolkadotApi> | null
+  client: GenericChainClient | null
 ): ChainTokenInfo {
   const [info, setInfo] = useState<Omit<ChainTokenInfo, "loading">>({
     symbol: "DOT",

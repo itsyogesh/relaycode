@@ -217,6 +217,84 @@ function extractMissingImports(
 }
 
 /**
+ * Resolve all imports for multiple user source files.
+ * User sources are authoritative — they are never overwritten by CDN fetches.
+ * The compiler handles relative imports between user files natively.
+ */
+export async function resolveAllImportsSources(
+  userSources: Record<string, { content: string }>
+): Promise<ResolvedSources> {
+  const abortController = new AbortController();
+  const session = new ResolutionSession(abortController);
+  const budgetTimer = setTimeout(() => abortController.abort(), TOTAL_BUDGET_MS);
+  const userKeys = new Set(Object.keys(userSources));
+
+  try {
+    const sources: Record<string, { content: string }> = { ...userSources };
+
+    // Quick check: if no source has imports, skip resolution
+    const hasAnyImport = Object.values(userSources).some((s) =>
+      s.content.includes("import")
+    );
+    if (!hasAnyImport) {
+      return { sources, resolvedVersions: {} };
+    }
+
+    // eslint-disable-next-line
+    const solc = require("solc");
+
+    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+      const input = JSON.stringify({
+        language: "Solidity",
+        sources,
+        settings: { outputSelection: {} },
+      });
+
+      const output = JSON.parse(solc.compile(input));
+      const errors = output.errors || [];
+      const missingPaths = extractMissingImports(errors);
+
+      if (missingPaths.length === 0) break;
+
+      for (const importPath of missingPaths) {
+        if (sources[importPath]) continue;
+
+        // CDN shadowing prevention: only skip if the exact import path
+        // matches a user source key. Don't match on basename alone — that
+        // would block legitimate dependencies like @openzeppelin/.../Context.sol
+        // when the user has a local Context.sol.
+        if (userKeys.has(importPath)) continue;
+
+        let resolvedPath: string | null = null;
+        for (const existingPath of Object.keys(sources)) {
+          const candidate = session.resolveRelativePath(existingPath, importPath);
+          if (candidate && !sources[candidate]) {
+            resolvedPath = candidate;
+            break;
+          }
+        }
+
+        const pathToFetch = resolvedPath || importPath;
+        const content = await session.fetchFile(pathToFetch);
+        sources[pathToFetch] = { content };
+
+        if (resolvedPath && resolvedPath !== importPath) {
+          sources[importPath] = { content };
+        }
+      }
+    }
+
+    return {
+      sources,
+      resolvedVersions: session.getResolvedVersions(),
+    };
+  } finally {
+    clearTimeout(budgetTimer);
+    abortController.abort();
+  }
+}
+
+/**
  * Resolve all imports for a Solidity source file using compiler-driven iteration.
  *
  * 1. Try to compile with just the user's source

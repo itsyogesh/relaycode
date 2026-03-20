@@ -113,4 +113,75 @@ describe("Struct", () => {
     render(<Struct {...baseProps} fields={[]} error="Missing fields" />);
     expect(screen.getByText("Missing fields")).toBeInTheDocument();
   });
+
+  it("hydrates child inputs from external value prop", () => {
+    const onChange = jest.fn();
+    const fields = [
+      createField("refTime", "Ref Time"),
+      createField("proofSize", "Proof Size"),
+    ];
+
+    const { rerender } = render(
+      <Struct {...baseProps} fields={fields} onChange={onChange} />
+    );
+
+    // Now set external value — simulating gas estimation auto-fill
+    rerender(
+      <Struct
+        {...baseProps}
+        fields={fields}
+        onChange={onChange}
+        value={{ refTime: "1000", proofSize: "2000" }}
+      />
+    );
+
+    // The child inputs should receive the values via cloneElement
+    const refTimeInput = screen.getByTestId("field-testStruct-refTime");
+    const proofSizeInput = screen.getByTestId("field-testStruct-proofSize");
+
+    // The TestFieldInput component doesn't render value, but onChange should
+    // have been called with the synced values. Since useEffect triggers
+    // setValues but not onChange (only handleFieldChange calls onChange),
+    // we verify the internal state was updated by checking that a subsequent
+    // field change includes the externally-set values
+    fireEvent.change(refTimeInput, { target: { value: "3000" } });
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ refTime: "3000", proofSize: "2000" })
+    );
+  });
+
+  it("does not loop when external value matches internal state", () => {
+    const onChange = jest.fn();
+    const fields = [createField("a", "A"), createField("b", "B")];
+    const value = { a: "1", b: "2" };
+
+    const { rerender } = render(
+      <Struct {...baseProps} fields={fields} onChange={onChange} value={value} />
+    );
+
+    // Rerender with same value — should not cause extra renders
+    rerender(
+      <Struct {...baseProps} fields={fields} onChange={onChange} value={value} />
+    );
+
+    // Verify the component didn't explode — no infinite loop
+    expect(screen.getByText("Transfer Info")).toBeInTheDocument();
+  });
+
+  it("emits object-valued onChange (not string)", () => {
+    const onChange = jest.fn();
+    const fields = [
+      createField("x", "X"),
+      createField("y", "Y"),
+    ];
+    render(<Struct {...baseProps} fields={fields} onChange={onChange} />);
+
+    const xInput = screen.getByTestId("field-testStruct-x");
+    fireEvent.change(xInput, { target: { value: "hello" } });
+
+    // onChange should receive an object, not a string
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ x: "hello" }));
+    const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
+    expect(typeof lastCall).toBe("object");
+  });
 });
