@@ -85,11 +85,14 @@ export function ContractCode({
 
   const bytecodeInputRef = useRef<HTMLInputElement>(null);
   const abiInputRef = useRef<HTMLInputElement>(null);
+  const compileIdRef = useRef(0);
 
   // Reset compilation state on mount and unmount
   useEffect(() => {
+    const ref = compileIdRef;
     resetCompilationState();
     return () => {
+      ++ref.current;
       resetCompilationState();
     };
   }, []);
@@ -105,6 +108,8 @@ export function ContractCode({
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCompile = async () => {
+    const id = ++compileIdRef.current;
+
     setIsCompiling(true);
     setCompilationState({
       isCompiling: true,
@@ -115,15 +120,16 @@ export function ContractCode({
     try {
       const result = await compileSolidity(source, compileTarget);
 
+      // Discard if a newer compile was started or artifacts were replaced (upload)
+      if (compileIdRef.current !== id) return;
+
       if (!result.success) {
-        resetCompilationState();
+        // Compile failure: keep previous artifacts, only update errors
         setCompilationState({
           isCompiling: false,
           errors: result.errors,
           warnings: result.warnings,
         });
-        setHexValue("");
-        onChange?.(undefined);
         return;
       }
 
@@ -142,6 +148,7 @@ export function ContractCode({
         warnings: result.warnings,
         isCompiling: false,
         mode: compileTarget,
+        bytecodeSource: "compile",
       });
 
       if (firstData?.bytecode) {
@@ -150,7 +157,8 @@ export function ContractCode({
         onChange?.(hex);
       }
     } catch (err) {
-      resetCompilationState();
+      if (compileIdRef.current !== id) return;
+      // Network error: keep previous artifacts, only update errors
       setCompilationState({
         isCompiling: false,
         errors: [
@@ -161,10 +169,10 @@ export function ContractCode({
           },
         ],
       });
-      setHexValue("");
-      onChange?.(undefined);
     } finally {
-      setIsCompiling(false);
+      if (compileIdRef.current === id) {
+        setIsCompiling(false);
+      }
     }
   };
 
@@ -199,6 +207,9 @@ export function ContractCode({
       const raw = (reader.result as string).trim().replace(/\s+/g, "");
       const hex = raw.startsWith("0x") ? raw.toLowerCase() : `0x${raw.toLowerCase()}`;
       if (!/^0x[0-9a-f]*$/.test(hex) || hex.length % 2 !== 0) {
+        ++compileIdRef.current;
+        setIsCompiling(false);
+        resetCompilationState();
         setCompilationState({
           errors: [{ message: "Invalid bytecode file: not valid hex", severity: "error" }],
         });
@@ -206,10 +217,26 @@ export function ContractCode({
         onChange?.(undefined);
         return;
       }
+      // Bump compile token to discard any in-flight compile + clear local spinner
+      ++compileIdRef.current;
+      setIsCompiling(false);
+      setCompilationState({
+        bytecode: hex.startsWith("0x") ? hex.slice(2) : hex,
+        bytecodeSource: "upload",
+        mode: null,
+        abi: null,
+        allContracts: null,
+        contractNames: [],
+        contractName: null,
+        errors: [],
+        warnings: [],
+        isCompiling: false,
+      });
       setHexValue(hex);
       onChange?.(hex);
     };
     reader.readAsText(file);
+    e.target.value = "";
   };
 
   const handleAbiUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,6 +265,7 @@ export function ContractCode({
       }
     };
     reader.readAsText(file);
+    e.target.value = "";
   };
 
   const handleModeChange = (newMode: string) => {
@@ -319,6 +347,7 @@ export function ContractCode({
             {/* Success indicator */}
             {compilation.bytecode &&
               compilation.errors.length === 0 &&
+              compilation.bytecodeSource === "compile" &&
               !isCompiling && (
                 <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                   <Check className="h-3.5 w-3.5" />
