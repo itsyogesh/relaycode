@@ -124,12 +124,15 @@ export function ContractCode({
       if (compileIdRef.current !== id) return;
 
       if (!result.success) {
-        // Compile failure: keep previous artifacts, only update errors
+        // Compile failure: keep previous artifacts in the store for display,
+        // but clear the hex output so the builder form doesn't submit stale bytecode
         setCompilationState({
           isCompiling: false,
           errors: result.errors,
           warnings: result.warnings,
         });
+        setHexValue("");
+        onChange?.(undefined);
         return;
       }
 
@@ -158,7 +161,8 @@ export function ContractCode({
       }
     } catch (err) {
       if (compileIdRef.current !== id) return;
-      // Network error: keep previous artifacts, only update errors
+      // Network error: keep previous artifacts in the store for display,
+      // but clear the hex output so the builder form doesn't submit stale bytecode
       setCompilationState({
         isCompiling: false,
         errors: [
@@ -169,6 +173,8 @@ export function ContractCode({
           },
         ],
       });
+      setHexValue("");
+      onChange?.(undefined);
     } finally {
       if (compileIdRef.current === id) {
         setIsCompiling(false);

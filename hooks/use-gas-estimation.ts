@@ -42,24 +42,25 @@ export function useGasEstimation(
   const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Invalidate gas estimates when deploy inputs change
-  const prevInputsRef = useRef({ value, code, data, salt });
+  // Invalidate gas estimates when any deploy input changes (including account)
+  const prevInputsRef = useRef({ origin, value, code, data, salt });
   useEffect(() => {
     const prev = prevInputsRef.current;
     if (
+      prev.origin !== origin ||
       prev.value !== value ||
       prev.code !== code ||
       prev.data !== data ||
       prev.salt !== salt
     ) {
-      prevInputsRef.current = { value, code, data, salt };
+      prevInputsRef.current = { origin, value, code, data, salt };
       setWeightRequired(null);
       setStorageDeposit(null);
       setGasConsumed(null);
       setDeployedAddress(null);
       setError(null);
     }
-  }, [value, code, data, salt]);
+  }, [origin, value, code, data, salt]);
 
   const estimate = useCallback(async () => {
     if (!client) {
