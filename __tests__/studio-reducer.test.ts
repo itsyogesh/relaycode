@@ -51,6 +51,12 @@ describe("StudioReducer", () => {
       });
       expect(next).toBe(state); // No change
     });
+
+    it("rejects names with path separators", () => {
+      expect(studioReducer(state, { type: "CREATE_FILE", name: "foo/bar.sol" })).toBe(state);
+      expect(studioReducer(state, { type: "CREATE_FILE", name: "../Token.sol" })).toBe(state);
+      expect(studioReducer(state, { type: "CREATE_FILE", name: "path\\file.sol" })).toBe(state);
+    });
   });
 
   describe("RENAME_FILE", () => {
@@ -62,6 +68,12 @@ describe("StudioReducer", () => {
         newName: "MyContract.sol",
       });
       expect(next.files[id].name).toBe("MyContract.sol");
+    });
+
+    it("rejects rename to path-like names", () => {
+      const id = firstFileId(state);
+      expect(studioReducer(state, { type: "RENAME_FILE", fileId: id, newName: "foo/bar.sol" })).toBe(state);
+      expect(studioReducer(state, { type: "RENAME_FILE", fileId: id, newName: "../x.sol" })).toBe(state);
     });
 
     it("rejects duplicate target name", () => {

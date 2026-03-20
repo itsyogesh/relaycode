@@ -259,9 +259,11 @@ export async function resolveAllImportsSources(
       for (const importPath of missingPaths) {
         if (sources[importPath]) continue;
 
-        // CDN shadowing prevention: don't fetch if name matches a user source
-        const basename = importPath.split("/").pop() || "";
-        if (userKeys.has(importPath) || userKeys.has(basename)) continue;
+        // CDN shadowing prevention: only skip if the exact import path
+        // matches a user source key. Don't match on basename alone — that
+        // would block legitimate dependencies like @openzeppelin/.../Context.sol
+        // when the user has a local Context.sol.
+        if (userKeys.has(importPath)) continue;
 
         let resolvedPath: string | null = null;
         for (const existingPath of Object.keys(sources)) {

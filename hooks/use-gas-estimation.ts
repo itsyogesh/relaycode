@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { DedotClient } from "dedot";
 import type { AssetHubApi, GenericChainClient } from "@/lib/chain-types";
 import { hasReviveApi } from "@/lib/chain-types";
@@ -41,6 +41,25 @@ export function useGasEstimation(
   const [gasConsumed, setGasConsumed] = useState<bigint | null>(null);
   const [deployedAddress, setDeployedAddress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Invalidate gas estimates when deploy inputs change
+  const prevInputsRef = useRef({ value, code, data, salt });
+  useEffect(() => {
+    const prev = prevInputsRef.current;
+    if (
+      prev.value !== value ||
+      prev.code !== code ||
+      prev.data !== data ||
+      prev.salt !== salt
+    ) {
+      prevInputsRef.current = { value, code, data, salt };
+      setWeightRequired(null);
+      setStorageDeposit(null);
+      setGasConsumed(null);
+      setDeployedAddress(null);
+      setError(null);
+    }
+  }, [value, code, data, salt]);
 
   const estimate = useCallback(async () => {
     if (!client) {

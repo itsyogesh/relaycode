@@ -24,12 +24,19 @@ const SESSION_KEY = "studio-workspace";
 const PERSIST_DEBOUNCE_MS = 1000;
 const SIZE_WARN_BYTES = 50_000;
 
+// --- Filename validation (matches /api/compile flat namespace rules) ---
+
+function isValidFileName(name: string): boolean {
+  return !!name && !name.includes("/") && !name.includes("..") && !name.includes("\\");
+}
+
 // --- Reducer (exported for testing) ---
 
 export function studioReducer(state: StudioState, action: StudioAction): StudioState {
   switch (action.type) {
     case "CREATE_FILE": {
-      // Reject if name already exists
+      // Reject if name is invalid (contains path separators) or already exists
+      if (!isValidFileName(action.name)) return state;
       const nameExists = Object.values(state.files).some(
         (f) => f.name === action.name
       );
@@ -52,7 +59,8 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
     case "RENAME_FILE": {
       const file = state.files[action.fileId];
       if (!file) return state;
-      // Reject if target name exists (on a different file)
+      // Reject if name is invalid or target name exists (on a different file)
+      if (!isValidFileName(action.newName)) return state;
       const nameExists = Object.values(state.files).some(
         (f) => f.id !== action.fileId && f.name === action.newName
       );
