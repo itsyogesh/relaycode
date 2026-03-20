@@ -3,7 +3,6 @@
 import React from "react";
 import { useContractContext } from "@/context/contract-provider";
 import { Check, AlertCircle, AlertTriangle, ChevronDown, ChevronRight, Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface OutputPanelProps {
   visible: boolean;
@@ -23,7 +22,7 @@ export function OutputPanel({ visible, onToggle }: OutputPanelProps) {
   const warningCount = compilation.warnings.length;
 
   return (
-    <div className={cn("flex flex-col border-t", visible ? "flex-1 min-h-0" : "")}>
+    <div className="flex flex-col h-full">
       {/* Toggle header */}
       <button
         className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/30 transition-colors"
