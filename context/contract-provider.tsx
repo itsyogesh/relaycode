@@ -18,7 +18,8 @@ const INITIAL_STATE: ContractCompilationState = {
   errors: [],
   warnings: [],
   isCompiling: false,
-  mode: "pvm",
+  mode: null,
+  bytecodeSource: null,
 };
 
 const ContractContext = createContext<ContractContextValue>({
