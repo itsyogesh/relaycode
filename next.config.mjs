@@ -5,6 +5,12 @@ const nextConfig = {
   transpilePackages: ["@t3-oss/env-nextjs", "@t3-oss/env-core"],
   output: "standalone",
   serverExternalPackages: ["@parity/resolc", "solc"],
+  outputFileTracingIncludes: {
+    "/api/compile": [
+      "./node_modules/@parity/resolc/**/*",
+      "./node_modules/solc/**/*",
+    ],
+  },
   images: {
     remotePatterns: [
       {
