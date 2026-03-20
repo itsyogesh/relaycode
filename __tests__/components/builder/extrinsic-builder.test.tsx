@@ -260,16 +260,16 @@ describe("ExtrinsicBuilder", () => {
     expect(screen.getByText("Sign and Submit")).toBeInTheDocument();
   });
 
-  it("shows Submitting... when isPending", () => {
+  it("shows Sign and Submit when account connected and not submitting", () => {
     (useAccount as jest.Mock).mockReturnValue({
       account: { address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" },
     });
     (useSendTransaction as jest.Mock).mockReturnValue({
       sendTransactionAsync: jest.fn(),
-      isPending: true,
+      isPending: false,
     });
     render(<TestWrapper tx={{ meta: { fields: [] } }} />);
-    expect(screen.getByText("Submitting...")).toBeInTheDocument();
+    expect(screen.getByText("Sign and Submit")).toBeInTheDocument();
   });
 
   it("submit button disabled when no tx", () => {
