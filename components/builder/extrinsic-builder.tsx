@@ -56,7 +56,8 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
   const { account } = useAccount();
-  const { sendTransactionAsync, isPending } = useSendTransaction();
+  const { sendTransactionAsync } = useSendTransaction();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [methods, setMethods] = useState<
     { text: string; value: number }[] | null
@@ -191,6 +192,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // Build the args array from form data matching tx field order
       const args = fields.map((field) => data[field.name || ""]);
@@ -198,7 +200,9 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       // Create the submittable extrinsic by calling the tx function with args
       const extrinsic = (tx as any)(...args);
 
-      toast.info("Signing and submitting transaction...");
+      toast.info("Signing transaction...", {
+        description: "Please approve in your wallet extension.",
+      });
 
       const receipt = await sendTransactionAsync({ extrinsic });
 
@@ -207,8 +211,20 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
-      toast.error("Transaction failed", { description: message });
+      // Distinguish user rejection from other errors
+      const isUserRejection =
+        message.includes("Cancelled") ||
+        message.includes("Rejected") ||
+        message.includes("User denied") ||
+        message.includes("rejected");
+      if (isUserRejection) {
+        toast.info("Transaction cancelled by user.");
+      } else {
+        toast.error("Transaction failed", { description: message });
+      }
       console.error("Error signing and sending extrinsic:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -426,13 +442,18 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
             <div className="flex justify-end">
               <Button
                 type="submit"
-                disabled={!account || !tx || isPending}
+                disabled={!account || !tx || isSubmitting}
               >
-                {isPending
-                  ? "Submitting..."
-                  : !account
-                    ? "Connect Wallet to Submit"
-                    : "Sign and Submit"}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Submitting...
+                  </>
+                ) : !account ? (
+                  "Connect Wallet to Submit"
+                ) : (
+                  "Sign and Submit"
+                )}
               </Button>
             </div>
           </form>
