@@ -5,11 +5,10 @@ import { resolveAllImports, resolveAllImportsSources } from "@/lib/import-resolv
 import { checkRateLimit, getRateLimitReset } from "@/lib/rate-limiter";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 const MAX_BODY_SIZE = 512000; // 500KB
-const WORKER_TIMEOUT_EVM_MS = 30_000;
-const WORKER_TIMEOUT_PVM_MS = 90_000; // resolc is significantly slower than solc
+const WORKER_TIMEOUT_MS = 30_000;
 
 interface CompileRequest {
   source?: string;
@@ -29,9 +28,8 @@ interface CompileResponse {
 function compileInWorker(
   input: string,
   mode: string,
-  timeoutMs?: number
+  timeoutMs = WORKER_TIMEOUT_MS
 ): Promise<any> {
-  const timeout = timeoutMs ?? (mode === "pvm" ? WORKER_TIMEOUT_PVM_MS : WORKER_TIMEOUT_EVM_MS);
   return new Promise((resolve, reject) => {
     const worker = new Worker(COMPILE_WORKER_CODE, {
       eval: true,
@@ -39,8 +37,8 @@ function compileInWorker(
     });
     const timer = setTimeout(() => {
       worker.terminate();
-      reject(new Error(`Compilation timed out after ${Math.round(timeout / 1000)}s`));
-    }, timeout);
+      reject(new Error("Compilation timed out after 30s"));
+    }, timeoutMs);
 
     worker.on("message", (msg) => {
       clearTimeout(timer);
