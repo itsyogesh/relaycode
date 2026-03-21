@@ -9,7 +9,7 @@ export const maxDuration = 120;
 
 const MAX_BODY_SIZE = 512000; // 500KB
 const WORKER_TIMEOUT_EVM_MS = 30_000;
-const WORKER_TIMEOUT_PVM_MS = 90_000; // resolc is significantly slower than solc
+const WORKER_TIMEOUT_PVM_MS = 80_000; // resolc is slower; 20s resolver + 80s compile = 100s < 120s maxDuration
 
 interface CompileRequest {
   source?: string;

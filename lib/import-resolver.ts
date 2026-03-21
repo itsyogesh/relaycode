@@ -15,7 +15,7 @@ const PER_FETCH_TIMEOUT_MS = 10_000;
 const MAX_FILE_SIZE = 500_000; // 500KB per file
 const MAX_FILES = 50;
 const MAX_ITERATIONS = 10;
-const TOTAL_BUDGET_MS = 30_000;
+const TOTAL_BUDGET_MS = 20_000; // 20s — leaves headroom within the 120s function limit
 
 interface ResolvedSources {
   sources: Record<string, { content: string }>;
