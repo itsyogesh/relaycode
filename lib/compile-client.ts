@@ -22,7 +22,24 @@ export async function compileSolidity(
     body: JSON.stringify({ source, mode }),
   });
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    // Server returned non-JSON (e.g., HTML 502/504 gateway timeout)
+    return {
+      success: false,
+      contracts: null,
+      contractNames: [],
+      errors: [
+        {
+          message: `Server error (HTTP ${res.status}). PVM compilation may need more time — try again or use a simpler contract.`,
+          severity: "error",
+        },
+      ],
+      warnings: [],
+    };
+  }
 
   if (!res.ok) {
     return {
@@ -91,7 +108,23 @@ export async function compileSoliditySources(
     body,
   });
 
-  const data = await res.json();
+  let data: any;
+  try {
+    data = await res.json();
+  } catch {
+    return {
+      success: false,
+      contracts: null,
+      contractNames: [],
+      errors: [
+        {
+          message: `Server error (HTTP ${res.status}). PVM compilation may need more time — try again or use a simpler contract.`,
+          severity: "error",
+        },
+      ],
+      warnings: [],
+    };
+  }
 
   if (!res.ok) {
     return {
