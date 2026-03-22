@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 
+import type { Viewport } from "next";
 import { Nunito } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
@@ -23,12 +24,53 @@ const nunito = Nunito({
   variable: "--font-nunito",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
+
 export const metadata = constructMetadata();
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head />
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              name: "Relaycode",
+              url: "https://relaycode.org",
+              applicationCategory: "DeveloperApplication",
+              operatingSystem: "Web",
+              description:
+                "Build extrinsics, write smart contracts, and interact with Substrate chains. Browser-based tools for the Polkadot ecosystem.",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              author: {
+                "@type": "Person",
+                name: "itsyogesh",
+                url: "https://github.com/itsyogesh",
+              },
+              funder: {
+                "@type": "Organization",
+                name: "Web3 Foundation",
+                url: "https://web3.foundation",
+              },
+            }),
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",

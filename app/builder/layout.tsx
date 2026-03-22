@@ -4,15 +4,18 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { Blocks } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Relaycode Builder — Polkadot Extrinsic Builder",
+  title: "Extrinsic Builder — Build and Submit Substrate Extrinsics",
   description:
-    "Build, encode, decode, and submit any Substrate extrinsic visually. Supports all pallets across the Polkadot ecosystem.",
+    "Visual extrinsic builder for Polkadot. Build, encode, decode, and submit any pallet call across all Substrate chains.",
   openGraph: {
     images: [{ url: "/api/og/builder", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     images: ["/api/og/builder"],
+  },
+  alternates: {
+    canonical: "/builder",
   },
 };
 

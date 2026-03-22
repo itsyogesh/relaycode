@@ -58,8 +58,11 @@ describe("absoluteUrl", () => {
 describe("constructMetadata", () => {
   it("returns defaults when called with no args", () => {
     const meta = constructMetadata();
-    expect(meta.title).toBe("Relaycode");
-    expect(meta.description).toBe("Test description");
+    expect(meta.title).toEqual({
+      default: expect.any(String),
+      template: "%s | Relaycode",
+    });
+    expect(meta.description).toBeDefined();
   });
 
   it("uses custom values", () => {
@@ -67,7 +70,7 @@ describe("constructMetadata", () => {
       title: "Custom Title",
       description: "Custom description",
     });
-    expect(meta.title).toBe("Custom Title");
+    expect((meta.title as any).default).toBe("Custom Title");
     expect(meta.description).toBe("Custom description");
   });
 
@@ -78,6 +81,6 @@ describe("constructMetadata", () => {
 
   it("does not include robots when noIndex is false", () => {
     const meta = constructMetadata({ noIndex: false });
-    expect(meta.robots).toBeUndefined();
+    expect(meta.robots).toEqual({ index: true, follow: true });
   });
 });

@@ -4,9 +4,9 @@ import { env } from "@/env.mjs";
 const site_url = env.NEXT_PUBLIC_APP_URL;
 
 export const siteConfig: SiteConfig = {
-  name: "Relaycode",
+  name: "Relaycode — The Developer Toolkit for Polkadot",
   description:
-    "Relaycode: Intuitive extrinsics builder for Polkadot ecosystem. Simplify complex pallet interactions with real-time encoding, wallet integration, and shareable snippets.",
+    "Build extrinsics, write smart contracts, and interact with Substrate chains. Browser-based tools for the Polkadot ecosystem.",
   url: site_url,
   ogImage: `${site_url}/api/og/home`,
   links: {

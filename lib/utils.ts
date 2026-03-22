@@ -23,7 +23,10 @@ export function constructMetadata({
   noIndex?: boolean;
 } = {}): Metadata {
   return {
-    title,
+    title: {
+      default: title,
+      template: `%s | Relaycode`,
+    },
     description,
     keywords: [
       "Relaycode",
@@ -31,7 +34,12 @@ export function constructMetadata({
       "Substrate",
       "Extrinsics",
       "Builder",
-      "Pallets",
+      "Smart Contracts",
+      "Solidity",
+      "PolkaVM",
+      "PVM",
+      "Dedot",
+      "Polkadot Hub",
     ],
     authors: [
       {
@@ -45,8 +53,8 @@ export function constructMetadata({
       url: siteConfig.url,
       title,
       description,
-      siteName: title,
-      images: [{ url: image, width: 1200, height: 630 }],
+      siteName: "Relaycode",
+      images: [{ url: image, width: 1200, height: 630, alt: title }],
     },
     twitter: {
       card: "summary_large_image",
@@ -57,12 +65,12 @@ export function constructMetadata({
     },
     icons,
     metadataBase: new URL(siteConfig.url),
-    ...(noIndex && {
-      robots: {
-        index: false,
-        follow: false,
-      },
-    }),
+    alternates: {
+      canonical: "/",
+    },
+    robots: noIndex
+      ? { index: false, follow: false }
+      : { index: true, follow: true },
   };
 }
 
