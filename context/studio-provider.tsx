@@ -186,7 +186,7 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
       return { ...state, compileTarget: action.target };
 
     case "SET_COMPILED_HASH":
-      return { ...state, compiledContentHash: action.hash };
+      return { ...state, compiledContentHash: action.hash, compiledSources: action.sources };
 
     case "TOGGLE_SIDEBAR":
       return { ...state, sidebarCollapsed: !state.sidebarCollapsed };
@@ -211,6 +211,7 @@ interface StudioContextValue {
   allSources: Record<string, { content: string }>;
   isDirtySinceCompile: boolean;
   currentContentHash: string;
+  isFileDirty: (fileId: string) => boolean;
 }
 
 const StudioContext = createContext<StudioContextValue | null>(null);
@@ -284,6 +285,19 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     state.compiledContentHash === null ||
     state.compiledContentHash !== currentContentHash;
 
+  // Check if a specific file changed since last compile
+  const isFileDirty = useCallback(
+    (fileId: string): boolean => {
+      if (!state.compiledSources) return true; // never compiled
+      const file = state.files[fileId];
+      if (!file) return false;
+      const compiled = state.compiledSources[file.name];
+      if (compiled === undefined) return true; // file didn't exist at compile time
+      return compiled !== file.content;
+    },
+    [state.files, state.compiledSources]
+  );
+
   const value: StudioContextValue = {
     state,
     dispatch,
@@ -291,6 +305,7 @@ export function StudioProvider({ children }: { children: ReactNode }) {
     allSources,
     isDirtySinceCompile,
     currentContentHash,
+    isFileDirty,
   };
 
   return (

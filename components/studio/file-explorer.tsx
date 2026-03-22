@@ -88,11 +88,20 @@ export function FileExplorer() {
         <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wider">
           Files
         </span>
-        <div
-          className="cursor-help"
-          title="Files are flat (no folders). Use import &quot;FileName.sol&quot; for local imports. Renaming a file does not update imports in other files."
-        >
-          <Info className="h-3 w-3 text-muted-foreground" />
+        <div className="flex items-center gap-1">
+          <button
+            className="p-0.5 rounded hover:bg-accent/50 transition-colors"
+            onClick={handleCreateFile}
+            title="New file"
+          >
+            <Plus className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+          <div
+            className="cursor-help"
+            title="Files are flat (no folders). Use import &quot;FileName.sol&quot; for local imports. Renaming a file does not update imports in other files."
+          >
+            <Info className="h-3 w-3 text-muted-foreground" />
+          </div>
         </div>
       </div>
 

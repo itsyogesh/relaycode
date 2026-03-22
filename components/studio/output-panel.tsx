@@ -22,10 +22,10 @@ export function OutputPanel({ visible, onToggle }: OutputPanelProps) {
   const warningCount = compilation.warnings.length;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-muted/50">
       {/* Toggle header */}
       <button
-        className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/30 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent/30 transition-colors border-t"
         onClick={onToggle}
       >
         {visible ? (

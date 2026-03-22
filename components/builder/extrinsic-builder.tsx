@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormDescription,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { GenericTxCall } from "dedot/types";
 import { stringCamelCase } from "dedot/utils";
 import { assert } from "dedot/utils";
@@ -239,15 +239,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <div>
-          <h2 className="text-2xl font-bold">Extrinsic Builder</h2>
-          <p className="text-sm text-gray-500">
-            Build and analyze extrinsics for Polkadot
-          </p>
-        </div>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <Form {...builderForm}>
           <form
             onSubmit={builderForm.handleSubmit(onSubmit)}

@@ -80,13 +80,7 @@ function BuilderContent() {
 
 const BuilderPage: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 py-8 min-h-[calc(100vh-4rem)]">
-      <header className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-2">Extrinsic Builder</h1>
-        <p className="text-xl text-gray-600">
-          Extrinsics builder for the Polkadot ecosystem
-        </p>
-      </header>
+    <div className="container mx-auto px-4 py-6 min-h-[calc(100vh-4rem)]">
       <ClientProvider>
         <BuilderContent />
       </ClientProvider>

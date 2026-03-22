@@ -96,7 +96,12 @@ export function CompilerSection() {
         mode: submittedTarget,
         bytecodeSource: "compile",
       });
-      dispatch({ type: "SET_COMPILED_HASH", hash: submittedHash });
+      // Snapshot sources for per-file dirty tracking
+      const sourcesSnapshot: Record<string, string> = {};
+      for (const [name, { content }] of Object.entries(sources)) {
+        sourcesSnapshot[name] = content;
+      }
+      dispatch({ type: "SET_COMPILED_HASH", hash: submittedHash, sources: sourcesSnapshot });
     } catch (err) {
       if (compileIdRef.current !== id) return;
       setCompilation({

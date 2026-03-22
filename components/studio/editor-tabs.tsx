@@ -6,7 +6,7 @@ import { X, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function EditorTabs() {
-  const { state, dispatch, isDirtySinceCompile } = useStudio();
+  const { state, dispatch, isFileDirty } = useStudio();
 
   const handleCreateFile = () => {
     let name = "Untitled.sol";
@@ -37,7 +37,7 @@ export function EditorTabs() {
             onClick={() => dispatch({ type: "SET_ACTIVE_TAB", fileId: tab.fileId })}
           >
             <span className="truncate max-w-[120px]">{file.name}</span>
-            {isDirtySinceCompile && (
+            {isFileDirty(tab.fileId) && (
               <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
             )}
             <button

@@ -16,6 +16,7 @@ export interface StudioState {
   outputVisible: boolean;
   compileTarget: "evm" | "pvm"; // user's INTENT (what they'll compile next)
   compiledContentHash: string | null; // hash of all sources at last successful compile
+  compiledSources: Record<string, string> | null; // snapshot of file name → content at last compile
 }
 
 export type StudioAction =
@@ -28,7 +29,7 @@ export type StudioAction =
   | { type: "CLOSE_TAB"; fileId: string }
   | { type: "SET_ACTIVE_TAB"; fileId: string }
   | { type: "SET_COMPILE_TARGET"; target: "evm" | "pvm" }
-  | { type: "SET_COMPILED_HASH"; hash: string }
+  | { type: "SET_COMPILED_HASH"; hash: string; sources: Record<string, string> }
   | { type: "TOGGLE_SIDEBAR" }
   | { type: "TOGGLE_OUTPUT" }
   | { type: "HYDRATE"; state: StudioState };
@@ -80,6 +81,7 @@ export function createDefaultState(): StudioState {
     outputVisible: true,
     compileTarget: "pvm",
     compiledContentHash: null,
+    compiledSources: null,
   };
 }
 

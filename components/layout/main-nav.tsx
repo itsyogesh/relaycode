@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSelectedLayoutSegment } from "next/navigation";
+import { useSelectedLayoutSegment, usePathname } from "next/navigation";
 import * as React from "react";
 import { Menu } from "lucide-react";
 
@@ -24,22 +24,27 @@ interface MainNavProps {
 
 export function MainNav({ items, children }: MainNavProps) {
   const segment = useSelectedLayoutSegment();
+  const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
+  const isStudio = pathname?.startsWith("/studio");
+  const isBuilder = pathname?.startsWith("/builder");
+  const subLabel = isStudio ? "Studio" : isBuilder ? "Builder" : null;
+
   return (
-    <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="hidden items-center space-x-2 md:flex">
+    <div className="flex items-center gap-6 md:gap-10">
+      <Link href="/" className="hidden items-center gap-2 md:flex">
         <RelaycodeIcon className="h-8 w-8" />
         <span className="tracking-sm hidden font-heading text-xl font-bold sm:inline-block">
-          {siteConfig.name}
+          {siteConfig.name}{subLabel && <span className="font-normal text-muted-foreground">{" "}{subLabel}</span>}
         </span>
       </Link>
-      <nav className="hidden gap-6 md:flex">
+      <nav className="hidden gap-6 md:flex items-center">
         <Link
           href="/builder"
           className={cn(
-            "mt-1.5 flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
-            segment === "builder" ? "text-foreground" : "text-foreground/60"
+            "flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
+            isBuilder ? "text-foreground" : "text-foreground/60"
           )}
         >
           Builder
@@ -47,8 +52,8 @@ export function MainNav({ items, children }: MainNavProps) {
         <Link
           href="/studio"
           className={cn(
-            "mt-1.5 flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
-            segment === "studio" ? "text-foreground" : "text-foreground/60"
+            "flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
+            isStudio ? "text-foreground" : "text-foreground/60"
           )}
         >
           Studio
@@ -58,8 +63,8 @@ export function MainNav({ items, children }: MainNavProps) {
             key={index}
             href={item.disabled ? "#" : item.href}
             className={cn(
-              "mt-1.5 flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
-              item.href.startsWith(`/${segment}`)
+              "flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
+              pathname?.startsWith(item.href)
                 ? "text-foreground"
                 : "text-foreground/60",
               item.disabled && "cursor-not-allowed opacity-80"
