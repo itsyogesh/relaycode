@@ -19,6 +19,11 @@ export default function StudioLayout({ children }: StudioLayoutProps) {
           <div className="flex h-screen flex-col overflow-hidden">
             <title>Relaycode Studio — Polkadot Smart Contract IDE</title>
             <meta name="description" content="Browser-based smart contract IDE for Polkadot Hub. Write Solidity, compile to EVM or PVM, and deploy with native Polkadot wallets." />
+            <meta property="og:image" content="/api/og/studio" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:image" content="/api/og/studio" />
             <NavBar centerElement={<StudioNavCenter />} />
             <main className="flex flex-col flex-1 min-h-0">{children}</main>
           </div>
