@@ -24,10 +24,17 @@ export function HeroSection() {
             className="flex flex-col items-center"
           >
             {/* Pre-header badge */}
-            <div className="mb-6 flex items-center gap-2 rounded-full border bg-background/50 px-4 py-2 text-sm backdrop-blur-sm">
-              <PolkadotIcon className="h-5 w-5 text-[#FF2670]" />
-              <span>Funded by Web3 Foundation Grants</span>
-            </div>
+            <Link
+              href="/studio"
+              className="mb-6 flex items-center gap-2 rounded-full border bg-background/50 px-4 py-2 text-sm backdrop-blur-sm hover:bg-background/70 transition-colors group"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              </span>
+              <span>New: Contract Studio is live</span>
+              <ArrowRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
 
             {/* Main content */}
             <h1 className="text-4xl font-semibold tracking-tight font-heading sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-[#FF2670] to-[#7916F3] pb-4">
@@ -35,19 +42,28 @@ export function HeroSection() {
             </h1>
             <p className="mt-4 text-md sm:text-lg leading-8 text-muted-foreground max-w-2xl">
               <Balancer>
-                Relaycode provides developer-focused tools and utilities to
-                simplify, build and use Polkadot extrinsics with real-time
-                insights
+                Build and submit any substrate extrinsic visually, write
+                Solidity smart contracts, and deploy to Polkadot Hub - all
+                from your browser.
               </Balancer>
             </p>
-            <div className="mt-10">
-              <Link href="/builder">
+            <div className="mt-10 flex items-center gap-4">
+              <Link href="/studio">
                 <Button
                   size="lg"
                   className="text-lg rounded-full group px-8 py-3 h-auto"
                 >
-                  Try Extrinsic Builder (Beta)
+                  Open Studio
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <Link href="/builder">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="text-lg rounded-full px-8 py-3 h-auto"
+                >
+                  Extrinsic Builder
                 </Button>
               </Link>
             </div>
