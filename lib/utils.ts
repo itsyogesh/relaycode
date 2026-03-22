@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function constructMetadata({
-  title = siteConfig.name,
+  title = "Relaycode - The Developer Toolkit for Polkadot",
   description = siteConfig.description,
   image = siteConfig.ogImage,
   icons = "/favicon.ico",

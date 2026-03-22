@@ -38,7 +38,7 @@ export function HeroSection() {
 
             {/* Main content */}
             <h1 className="text-4xl font-semibold tracking-tight font-heading sm:text-6xl bg-clip-text text-transparent bg-gradient-to-r from-[#FF2670] to-[#7916F3] pb-4">
-              <Balancer>Polkadot Extrinsics, Simplified</Balancer>
+              <Balancer>The Developer Toolkit for Polkadot</Balancer>
             </h1>
             <p className="mt-4 text-md sm:text-lg leading-8 text-muted-foreground max-w-2xl">
               <Balancer>

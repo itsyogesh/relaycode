@@ -58,6 +58,24 @@ export function MainNav({ items, children }: MainNavProps) {
         >
           Studio
         </Link>
+        <Link
+          href="/tools"
+          className={cn(
+            "flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
+            pathname?.startsWith("/tools") ? "text-foreground" : "text-foreground/60"
+          )}
+        >
+          Utilities
+        </Link>
+        <Link
+          href="/docs"
+          className={cn(
+            "flex items-center font-heading text-xl font-semibold transition-colors hover:text-foreground/80 sm:text-sm",
+            pathname?.startsWith("/docs") ? "text-foreground" : "text-foreground/60"
+          )}
+        >
+          Documentation
+        </Link>
         {items?.map((item, index) => (
           <Link
             key={index}
@@ -108,6 +126,20 @@ export function MainNav({ items, children }: MainNavProps) {
                 className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
               >
                 Studio
+              </Link>
+              <Link
+                href="/tools"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Utilities
+              </Link>
+              <Link
+                href="/docs"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              >
+                Documentation
               </Link>
               {(items ?? []).map((item, index) => (
                 <Link
