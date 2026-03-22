@@ -221,7 +221,7 @@ export async function GET() {
                 }}
               >
                 <div style={{ color: "#9ca3af", display: "flex" }}>
-                  // SPDX-License-Identifier: MIT
+                  {"// SPDX-License-Identifier: MIT"}
                 </div>
                 <div style={{ color: "#7916F3", display: "flex" }}>
                   pragma solidity ^0.8.20;
