@@ -8,7 +8,7 @@ export const siteConfig: SiteConfig = {
   description:
     "Relaycode: Intuitive extrinsics builder for Polkadot ecosystem. Simplify complex pallet interactions with real-time encoding, wallet integration, and shareable snippets.",
   url: site_url,
-  ogImage: `${site_url}/_static/og.jpg`,
+  ogImage: `${site_url}/api/og/home`,
   links: {
     twitter: "https://twitter.com/itsyogesh18",
     github: "https://github.com/itsyogesh",

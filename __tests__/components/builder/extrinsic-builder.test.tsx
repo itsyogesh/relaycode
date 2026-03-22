@@ -222,12 +222,10 @@ describe("ExtrinsicBuilder", () => {
     });
   });
 
-  it("renders the Extrinsic Builder heading", () => {
+  it("renders the Section and Method selectors", () => {
     render(<TestWrapper />);
-    expect(screen.getByText("Extrinsic Builder")).toBeInTheDocument();
-    expect(
-      screen.getByText("Build and analyze extrinsics for Polkadot")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Section")).toBeInTheDocument();
+    expect(screen.getByText("Method")).toBeInTheDocument();
   });
 
   it("renders Section combobox", () => {

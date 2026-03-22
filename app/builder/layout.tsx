@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   title: "Relaycode Builder — Polkadot Extrinsic Builder",
   description:
     "Build, encode, decode, and submit any Substrate extrinsic visually. Supports all pallets across the Polkadot ecosystem.",
+  openGraph: {
+    images: [{ url: "/api/og/builder", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/api/og/builder"],
+  },
 };
 
 interface BuilderLayoutProps {
