@@ -1,5 +1,13 @@
 import { DedotClient } from "dedot";
-import { u8aToHex, hexToU8a, hexStripPrefix, hexAddPrefix, decodeAddress } from "dedot/utils";
+import { u8aToHex, hexToU8a, hexStripPrefix, hexAddPrefix, decodeAddress, stringCamelCase } from "dedot/utils";
+
+/**
+ * Normalize a metadata field name to camelCase, matching Dedot's internal convention.
+ * Metadata uses snake_case (ref_time, proof_size), but Dedot codecs expect camelCase.
+ */
+export function normalizeFieldName(name: string): string {
+  return stringCamelCase(name.replace("#", "_"));
+}
 
 /**
  * Result type for encoding operations
@@ -541,7 +549,7 @@ export function decomposeArgHex(
       if (fields.length > 0 && typeof value === "object" && value !== null && !Array.isArray(value)) {
         const obj = value as Record<string, unknown>;
         const children: HexChildItem[] = fields.map((field) => {
-          const fieldName = field.name || "";
+          const fieldName = normalizeFieldName(field.name || "");
           const fieldValue = obj[fieldName];
           const result = encodeArg(client, field.typeId, fieldValue);
           return {
@@ -577,7 +585,7 @@ export function decomposeArgHex(
           if (typeof enumObj.value === "object" && enumObj.value !== null) {
             const obj = enumObj.value as Record<string, unknown>;
             const children: HexChildItem[] = variant.fields.map((field) => {
-              const fieldName = field.name || "";
+              const fieldName = normalizeFieldName(field.name || "");
               const fieldValue = obj[fieldName];
               const result = encodeArg(client, field.typeId, fieldValue);
               return {

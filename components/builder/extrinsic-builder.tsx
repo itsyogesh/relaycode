@@ -110,29 +110,11 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   useEffect(() => {
     if (!isReviveInstantiate || !gasEstimation.weightRequired || !tx) return;
 
-    // Resolve weight field names from metadata
-    const weightField = tx.meta?.fields?.find((f) => f.name === "weight_limit");
-    if (weightField) {
-      try {
-        const weightType = client.registry.findType(weightField.typeId);
-        const { typeDef } = weightType;
-        if (typeDef.type === "Struct" && typeDef.value.fields.length >= 2) {
-          const [field0, field1] = typeDef.value.fields;
-          const name0 = String(field0.name);
-          const name1 = String(field1.name);
-          builderForm.setValue("weight_limit", {
-            [name0]: String(gasEstimation.weightRequired.refTime),
-            [name1]: String(gasEstimation.weightRequired.proofSize),
-          });
-        }
-      } catch {
-        // Fallback: use camelCase names
-        builderForm.setValue("weight_limit", {
-          refTime: String(gasEstimation.weightRequired.refTime),
-          proofSize: String(gasEstimation.weightRequired.proofSize),
-        });
-      }
-    }
+    // Auto-fill weight_limit with camelCase keys (Dedot codec convention)
+    builderForm.setValue("weight_limit", {
+      refTime: String(gasEstimation.weightRequired.refTime),
+      proofSize: String(gasEstimation.weightRequired.proofSize),
+    });
 
     // Auto-fill storage deposit only for Charge
     if (gasEstimation.storageDeposit?.type === "Charge") {
