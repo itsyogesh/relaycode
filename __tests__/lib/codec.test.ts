@@ -11,8 +11,34 @@ import {
   decodeArgLegacy,
   decodeAllArgs,
   decomposeArgHex,
+  normalizeFieldName,
 } from "../../lib/codec";
 import { createMockDedotClient } from "../helpers/mock-client";
+
+// ---------------------------------------------------------------------------
+// normalizeFieldName
+// ---------------------------------------------------------------------------
+describe("normalizeFieldName", () => {
+  it("converts snake_case to camelCase", () => {
+    expect(normalizeFieldName("ref_time")).toBe("refTime");
+    expect(normalizeFieldName("proof_size")).toBe("proofSize");
+    expect(normalizeFieldName("storage_deposit_limit")).toBe("storageDepositLimit");
+  });
+
+  it("preserves already camelCase names", () => {
+    expect(normalizeFieldName("refTime")).toBe("refTime");
+    expect(normalizeFieldName("proofSize")).toBe("proofSize");
+  });
+
+  it("handles hash prefix replacement", () => {
+    expect(normalizeFieldName("#field_name")).toBe("fieldName");
+  });
+
+  it("handles single word names", () => {
+    expect(normalizeFieldName("value")).toBe("value");
+    expect(normalizeFieldName("dest")).toBe("dest");
+  });
+});
 
 // ---------------------------------------------------------------------------
 // encodeArg
@@ -824,6 +850,82 @@ describe("decomposeArgHex", () => {
       expect(result.children).toHaveLength(2);
       expect(result.children[0].label).toBe("dest");
       expect(result.children[1].label).toBe("value");
+    }
+  });
+
+  it("normalizes snake_case metadata field names to camelCase for value lookup", () => {
+    // This is the exact scenario from gas estimation auto-fill:
+    // Metadata has snake_case fields (ref_time, proof_size) but the auto-filled
+    // value object uses camelCase (refTime, proofSize) matching Dedot's convention.
+    const tryEncode = jest.fn().mockReturnValue(new Uint8Array([0x01]));
+    const client = createMockDedotClient({
+      registry: {
+        findCodec: jest.fn().mockReturnValue({
+          tryEncode,
+          tryDecode: jest.fn(),
+        }),
+        findType: jest.fn().mockReturnValue({
+          typeDef: {
+            type: "Struct",
+            value: {
+              fields: [
+                { name: "ref_time", typeId: 10 },
+                { name: "proof_size", typeId: 20 },
+              ],
+            },
+          },
+        }),
+      },
+    });
+    // Value uses camelCase keys (as produced by gas estimation auto-fill)
+    const result = decomposeArgHex(client, 1, {
+      refTime: "117234441",
+      proofSize: "135850",
+    });
+    expect(result.kind).toBe("compound");
+    if (result.kind === "compound") {
+      expect(result.compoundType).toBe("Struct");
+      expect(result.children).toHaveLength(2);
+      // Labels should be normalized to camelCase
+      expect(result.children[0].label).toBe("refTime");
+      expect(result.children[1].label).toBe("proofSize");
+      // Encoder should have been called with coerced values (BigInt), not undefined
+      expect(tryEncode).toHaveBeenCalledWith(BigInt("117234441"));
+      expect(tryEncode).toHaveBeenCalledWith(BigInt("135850"));
+    }
+  });
+
+  it("handles already-camelCase metadata field names without double-normalizing", () => {
+    const tryEncode = jest.fn().mockReturnValue(new Uint8Array([0x01]));
+    const client = createMockDedotClient({
+      registry: {
+        findCodec: jest.fn().mockReturnValue({
+          tryEncode,
+          tryDecode: jest.fn(),
+        }),
+        findType: jest.fn().mockReturnValue({
+          typeDef: {
+            type: "Struct",
+            value: {
+              fields: [
+                { name: "refTime", typeId: 10 },
+                { name: "proofSize", typeId: 20 },
+              ],
+            },
+          },
+        }),
+      },
+    });
+    const result = decomposeArgHex(client, 1, {
+      refTime: "100",
+      proofSize: "200",
+    });
+    expect(result.kind).toBe("compound");
+    if (result.kind === "compound") {
+      expect(result.children[0].label).toBe("refTime");
+      expect(result.children[1].label).toBe("proofSize");
+      expect(tryEncode).toHaveBeenCalledWith(BigInt("100"));
+      expect(tryEncode).toHaveBeenCalledWith(BigInt("200"));
     }
   });
 
