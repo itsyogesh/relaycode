@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" viewBox="0 0 480 480">
+  <rect width="480" height="480" rx="48" fill="#0F0F0F"/>
+
+  <!-- Relaycode icon centered, scaled up -->
+  <g transform="translate(165, 80) scale(2.8)" fill="white">
+    <path d="m51 12.804-21-12a5.999 5.999 0 0 0-6 0l-21 12a6 6 0 0 0-3 5.21v24a5.998 5.998 0 0 0 3 5.21l21 12a5.999 5.999 0 0 0 6 0l21-12a5.998 5.998 0 0 0 3-5.21v-24a6 6 0 0 0-3-5.21Zm-24-6.79 9.88 5.65a30.8 30.8 0 0 1-5.25 14.78 37 37 0 0 0-20-11.63L27 6.014ZM6 20.084a31.003 31.003 0 0 1 21.73 11A30.896 30.896 0 0 1 6 40.014v-19.93Zm21 33.93-14.9-8.51a36.893 36.893 0 0 0 19.06-9.4A30.786 30.786 0 0 1 35 49.464l-8 4.55Zm21-12-7.32 4.18a36.752 36.752 0 0 0-5.29-14.74 36.822 36.822 0 0 0 7.14-16.57l5.47 3.13v24Z"/>
+  </g>
+
+  <!-- "Relaycode" wordmark -->
+  <text x="240" y="340" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="700" fill="white" letter-spacing="-1">
+    Relaycode
+  </text>
+
+  <!-- "Studio" text below -->
+  <text x="240" y="395" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="400" fill="#A0A0A0" letter-spacing="8">
+    STUDIO
+  </text>
+</svg>

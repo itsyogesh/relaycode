@@ -1,37 +1,48 @@
-"use client";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
 
-import React from "react";
-import { NavBar } from "@/components/layout/site-header";
-import { ClientProvider } from "@/context/client";
-import { ContractProvider } from "@/context/contract-provider";
-import { StudioProvider } from "@/context/studio-provider";
-import { StudioNavCenter } from "@/components/studio/studio-nav-center";
+import { siteConfig } from "@/config/site";
+import { StudioClientLayout } from "@/components/studio/studio-client-layout";
+
+const title = "Contract Studio — Smart Contract IDE for Polkadot Hub";
+const description =
+  "Write Solidity, compile to EVM or PVM, and deploy smart contracts on Polkadot Hub. No CLI or MetaMask required.";
+const canonicalUrl = `${siteConfig.url}/studio`;
+const imageUrl = `${siteConfig.url}/api/og/studio`;
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: {
+    canonical: canonicalUrl,
+  },
+  openGraph: {
+    type: "website",
+    url: canonicalUrl,
+    title,
+    description,
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: title,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [imageUrl],
+  },
+};
 
 interface StudioLayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function StudioLayout({ children }: StudioLayoutProps) {
-  return (
-    <ClientProvider>
-      <ContractProvider>
-        <StudioProvider>
-          <div className="flex h-screen flex-col overflow-hidden">
-            <title>Contract Studio — Smart Contract IDE for Polkadot Hub | Relaycode</title>
-            <meta name="description" content="Write Solidity, compile to EVM or PVM, and deploy smart contracts on Polkadot Hub. No CLI or MetaMask required." />
-            <meta property="og:title" content="Contract Studio — Smart Contract IDE for Polkadot Hub" />
-            <meta property="og:description" content="Write Solidity, compile to EVM or PVM, and deploy smart contracts on Polkadot Hub. No CLI or MetaMask required." />
-            <meta property="og:image" content="/api/og/studio" />
-            <meta property="og:image:width" content="1200" />
-            <meta property="og:image:height" content="630" />
-            <meta name="twitter:card" content="summary_large_image" />
-            <meta name="twitter:image" content="/api/og/studio" />
-            <link rel="canonical" href="https://relaycode.org/studio" />
-            <NavBar centerElement={<StudioNavCenter />} />
-            <main className="flex flex-col flex-1 min-h-0">{children}</main>
-          </div>
-        </StudioProvider>
-      </ContractProvider>
-    </ClientProvider>
-  );
+  return <StudioClientLayout>{children}</StudioClientLayout>;
 }
