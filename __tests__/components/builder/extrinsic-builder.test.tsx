@@ -214,6 +214,75 @@ function TestWrapper({
   );
 }
 
+function UnstableTxGetterWrapper({
+  onTxChange,
+}: {
+  onTxChange: jest.Mock;
+}) {
+  const [, forceRender] = React.useReducer((value) => value + 1, 0);
+  const form = useForm<BuilderFormValues>({
+    defaultValues: {
+      section: "5:Balances",
+      method: "",
+    },
+  });
+
+  const client = React.useMemo(
+    () => ({
+      metadata: {
+        latest: {
+          pallets: [
+            {
+              index: 5,
+              name: "Balances",
+              calls: { typeId: 10 },
+              docs: ["Transfer and manage balances"],
+            },
+          ],
+        },
+      },
+      registry: {
+        findCodec: jest.fn(),
+        findType: jest.fn(),
+      },
+      get tx() {
+        return {
+          balances: {
+            transferKeepAlive: Object.assign(jest.fn(), {
+              meta: {
+                index: 0,
+                fields: [],
+                docs: [],
+              },
+            }),
+          },
+        };
+      },
+    }),
+    [],
+  ) as any;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => form.setValue("method", "0:transferKeepAlive")}
+      >
+        Select method
+      </button>
+      <button type="button" onClick={forceRender}>
+        Unrelated rerender
+      </button>
+      <ExtrinsicBuilder
+        client={client}
+        tx={null}
+        onTxChange={onTxChange}
+        builderForm={form}
+      />
+    </>
+  );
+}
+
 describe("ExtrinsicBuilder", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -311,6 +380,17 @@ describe("ExtrinsicBuilder", () => {
     expect(() => {
       render(<TestWrapper />);
     }).not.toThrow();
+  });
+
+  it("does not reselect a transaction when Dedot returns a new tx Proxy", async () => {
+    const onTxChange = jest.fn();
+    render(<UnstableTxGetterWrapper onTxChange={onTxChange} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Select method" }));
+    await waitFor(() => expect(onTxChange).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByRole("button", { name: "Unrelated rerender" }));
+    expect(onTxChange).toHaveBeenCalledTimes(1);
   });
 
   describe("gas estimation for Revive", () => {

@@ -9,7 +9,7 @@ jest.mock("lucide-react", () => ({
 
 // Mock dedot
 jest.mock("dedot", () => ({
-  $: { u8: { tryEncode: jest.fn().mockReturnValue(new Uint8Array([0x05])) } },
+  $: { u8: { tryEncode: jest.fn((value: number) => new Uint8Array([value])) } },
   DedotClient: jest.fn(),
 }));
 
@@ -263,6 +263,41 @@ describe("InformationPane", () => {
     expect(input).toBeTruthy();
     // Should have a hex value set since section is not empty
     expect(input!.value).not.toBe("");
+  });
+
+  it("populates the complete call information for a zero-argument call", async () => {
+    const { encodeAllArgs } = require("@/lib/codec");
+    encodeAllArgs.mockReturnValueOnce({
+      argHexes: [],
+      argResults: [],
+      hasErrors: false,
+      errors: new Map(),
+    });
+
+    const vestTx = {
+      meta: {
+        index: 0,
+        fields: [],
+        docs: [],
+      },
+    } as any;
+
+    const { container } = render(
+      <InformationPane
+        client={mockClient}
+        tx={vestTx}
+        builderForm={createMockForm({ section: "14:Vesting" })}
+        onTxChange={mockOnTxChange}
+      />
+    );
+
+    await waitFor(() => {
+      const inputs = container.querySelectorAll("input");
+      expect(inputs[0]).toHaveValue("0x0e");
+      expect(inputs[1]).toHaveValue("0x00");
+      expect(container).toHaveTextContent("0x0e00");
+      expect(inputs[2]).toHaveValue("0xabcdef1234567890");
+    });
   });
 
   it("copy button calls clipboard.writeText", () => {

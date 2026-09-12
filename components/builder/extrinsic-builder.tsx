@@ -137,7 +137,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
         ];
       onTxChange(newTx);
     }
-  }, [client.tx, methodValue, onTxChange, sectionValue]);
+  }, [client, methodValue, onTxChange, sectionValue]);
 
   const onSubmit = async (data: Record<string, any>) => {
     if (!tx || !account) return;
