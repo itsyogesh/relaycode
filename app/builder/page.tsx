@@ -48,7 +48,7 @@ function BuilderContent() {
   });
 
   const handleTxChange = useCallback((nextTx: GenericTxCall) => {
-    setTx(nextTx);
+    setTx(() => nextTx);
   }, []);
 
   return (
