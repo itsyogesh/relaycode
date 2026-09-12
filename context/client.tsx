@@ -10,9 +10,14 @@ import {
 } from "react";
 import { DedotClient, WsProvider } from "dedot";
 import type { PolkadotApi } from "@dedot/chaintypes";
-import type { PolkadotAssetHubApi, WestendAssetHubApi, PaseoAssetHubApi } from "@dedot/chaintypes";
+import type {
+  PolkadotAssetHubApi,
+  WestendAssetHubApi,
+  PaseoAssetHubApi,
+} from "@dedot/chaintypes";
 import { useChain } from "@luno-kit/react";
 import { isAssetHubGenesis, type GenericChainClient } from "@/lib/chain-types";
+import { relaycodeSignedExtensions } from "@/lib/signed-extensions";
 
 const DEFAULT_RPC = "wss://rpc.polkadot.io";
 
@@ -37,7 +42,10 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   const clientRef = useRef<GenericChainClient | null>(null);
 
   const { chain } = useChain();
-  const rpcUrl = chain?.rpcUrls?.webSocket?.[0] ?? DEFAULT_RPC;
+  const genesisHash = chain?.genesisHash?.toLowerCase() ?? "";
+  const rpcUrlsKey = (
+    chain?.rpcUrls?.webSocket?.length ? chain.rpcUrls.webSocket : [DEFAULT_RPC]
+  ).join("\n");
 
   useEffect(() => {
     let cancelled = false;
@@ -63,18 +71,32 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
       if (cancelled) return;
 
       try {
-        const genesisHash = chain?.genesisHash?.toLowerCase() ?? "";
+        const rpcUrls = rpcUrlsKey.split("\n");
         const isHub = isAssetHubGenesis(genesisHash);
 
+        const clientOptions = {
+          provider: new WsProvider(rpcUrls),
+          signedExtensions: relaycodeSignedExtensions,
+        };
+
         let newClient: GenericChainClient;
-        if (genesisHash === "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f") {
-          newClient = await DedotClient.new<PolkadotAssetHubApi>(new WsProvider(rpcUrl));
-        } else if (genesisHash === "0x67f9723393ef76214df0118c34bbbd3dbebc8ed46a10973a8c969d48fe7598c9") {
-          newClient = await DedotClient.new<WestendAssetHubApi>(new WsProvider(rpcUrl));
-        } else if (genesisHash === "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2") {
-          newClient = await DedotClient.new<PaseoAssetHubApi>(new WsProvider(rpcUrl));
+        if (
+          genesisHash ===
+          "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f"
+        ) {
+          newClient = await DedotClient.new<PolkadotAssetHubApi>(clientOptions);
+        } else if (
+          genesisHash ===
+          "0x67f9723393ef76214df0118c34bbbd3dbebc8ed46a10973a8c969d48fe7598c9"
+        ) {
+          newClient = await DedotClient.new<WestendAssetHubApi>(clientOptions);
+        } else if (
+          genesisHash ===
+          "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2"
+        ) {
+          newClient = await DedotClient.new<PaseoAssetHubApi>(clientOptions);
         } else {
-          newClient = await DedotClient.new<PolkadotApi>(new WsProvider(rpcUrl));
+          newClient = await DedotClient.new<PolkadotApi>(clientOptions);
         }
 
         if (cancelled) {
@@ -96,7 +118,7 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [rpcUrl]);
+  }, [genesisHash, rpcUrlsKey]);
 
   return (
     <ClientContext.Provider value={{ client, loading, isAssetHub }}>

@@ -145,6 +145,8 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { useForm, FormProvider } from "react-hook-form";
 import ExtrinsicBuilder from "../../../components/builder/extrinsic-builder";
 import { useAccount, useSendTransaction } from "@luno-kit/react";
+import type { BuilderFormValues } from "@/app/builder/page";
+import type { GenericTxCall } from "dedot/types";
 
 // Create a wrapper that provides a real react-hook-form instance
 function TestWrapper({
@@ -278,9 +280,7 @@ describe("ExtrinsicBuilder", () => {
 
   it("submit button disabled when no account", () => {
     (useAccount as jest.Mock).mockReturnValue({ account: null });
-    render(
-      <TestWrapper tx={{ meta: { fields: [], docs: [] } }} />
-    );
+    render(<TestWrapper tx={{ meta: { fields: [], docs: [] } }} />);
     const submitBtn = screen.getByRole("button", {
       name: "Connect Wallet to Submit",
     });
@@ -314,7 +314,7 @@ describe("ExtrinsicBuilder", () => {
   });
 
   describe("gas estimation for Revive", () => {
-    const reviveTx = {
+    const reviveTx = Object.assign(jest.fn(), {
       meta: {
         fields: [
           { name: "value", typeId: 6, typeName: "BalanceOf" },
@@ -326,11 +326,14 @@ describe("ExtrinsicBuilder", () => {
         ],
         docs: ["Instantiate a contract with code"],
       },
-    };
+    }) as unknown as GenericTxCall;
 
     beforeEach(() => {
       // Override section/method options to include Revive
-      const { createSectionOptions, createMethodOptions } = require("@/lib/parser");
+      const {
+        createSectionOptions,
+        createMethodOptions,
+      } = require("@/lib/parser");
       createSectionOptions.mockReturnValue([
         { value: 60, text: "Revive", docs: ["Contracts"] },
         { value: 0, text: "System", docs: ["System pallet"] },
@@ -340,8 +343,8 @@ describe("ExtrinsicBuilder", () => {
       ]);
     });
 
-    function ReviveTestWrapper({ tx = reviveTx }: { tx?: any }) {
-      const form = useForm({
+    function ReviveTestWrapper({ tx = reviveTx }: { tx?: GenericTxCall }) {
+      const form = useForm<BuilderFormValues>({
         defaultValues: {
           section: "60:Revive",
           method: "", // useEffect clears this on mount anyway
@@ -418,15 +421,15 @@ describe("ExtrinsicBuilder", () => {
     });
 
     it("does NOT show Estimate Gas for non-Revive pallet", () => {
-      const systemTx = {
+      const systemTx = Object.assign(jest.fn(), {
         meta: {
           fields: [{ name: "remark", typeId: 14, typeName: "Vec<u8>" }],
           docs: ["Make a remark"],
         },
-      };
+      }) as unknown as GenericTxCall;
 
       function SystemTestWrapper() {
-        const form = useForm({
+        const form = useForm<BuilderFormValues>({
           defaultValues: {
             section: "0:System",
             method: "",

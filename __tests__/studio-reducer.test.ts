@@ -16,7 +16,17 @@ function firstFileId(state: StudioState): string {
 function isDirtySinceCompile(state: StudioState): boolean {
   const sources = getAllSources(state.files);
   const hash = contentHash(sources);
-  return state.compiledContentHash === null || state.compiledContentHash !== hash;
+  return (
+    state.compiledContentHash === null || state.compiledContentHash !== hash
+  );
+}
+
+function sourceContents(
+  sources: ReturnType<typeof getAllSources>,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(sources).map(([name, source]) => [name, source.content]),
+  );
 }
 
 describe("StudioReducer", () => {
@@ -53,9 +63,15 @@ describe("StudioReducer", () => {
     });
 
     it("rejects names with path separators", () => {
-      expect(studioReducer(state, { type: "CREATE_FILE", name: "foo/bar.sol" })).toBe(state);
-      expect(studioReducer(state, { type: "CREATE_FILE", name: "../Token.sol" })).toBe(state);
-      expect(studioReducer(state, { type: "CREATE_FILE", name: "path\\file.sol" })).toBe(state);
+      expect(
+        studioReducer(state, { type: "CREATE_FILE", name: "foo/bar.sol" }),
+      ).toBe(state);
+      expect(
+        studioReducer(state, { type: "CREATE_FILE", name: "../Token.sol" }),
+      ).toBe(state);
+      expect(
+        studioReducer(state, { type: "CREATE_FILE", name: "path\\file.sol" }),
+      ).toBe(state);
     });
   });
 
@@ -72,8 +88,20 @@ describe("StudioReducer", () => {
 
     it("rejects rename to path-like names", () => {
       const id = firstFileId(state);
-      expect(studioReducer(state, { type: "RENAME_FILE", fileId: id, newName: "foo/bar.sol" })).toBe(state);
-      expect(studioReducer(state, { type: "RENAME_FILE", fileId: id, newName: "../x.sol" })).toBe(state);
+      expect(
+        studioReducer(state, {
+          type: "RENAME_FILE",
+          fileId: id,
+          newName: "foo/bar.sol",
+        }),
+      ).toBe(state);
+      expect(
+        studioReducer(state, {
+          type: "RENAME_FILE",
+          fileId: id,
+          newName: "../x.sol",
+        }),
+      ).toBe(state);
     });
 
     it("rejects duplicate target name", () => {
@@ -100,7 +128,7 @@ describe("StudioReducer", () => {
         name: "Token.sol",
       });
       const tokenId = Object.values(s1.files).find(
-        (f) => f.name === "Token.sol"
+        (f) => f.name === "Token.sol",
       )!.id;
       const next = studioReducer(s1, {
         type: "DELETE_FILE",
@@ -163,6 +191,7 @@ describe("StudioReducer", () => {
       const next = studioReducer(state, {
         type: "SET_COMPILED_HASH",
         hash,
+        sources: sourceContents(sources),
       });
       expect(isDirtySinceCompile(next)).toBe(false);
     });
@@ -170,7 +199,11 @@ describe("StudioReducer", () => {
     it("becomes dirty after editing", () => {
       const sources = getAllSources(state.files);
       const hash = contentHash(sources);
-      let s = studioReducer(state, { type: "SET_COMPILED_HASH", hash });
+      let s = studioReducer(state, {
+        type: "SET_COMPILED_HASH",
+        hash,
+        sources: sourceContents(sources),
+      });
       expect(isDirtySinceCompile(s)).toBe(false);
 
       const id = firstFileId(s);
@@ -185,7 +218,11 @@ describe("StudioReducer", () => {
     it("becomes dirty after rename (name is part of hash)", () => {
       const sources = getAllSources(state.files);
       const hash = contentHash(sources);
-      let s = studioReducer(state, { type: "SET_COMPILED_HASH", hash });
+      let s = studioReducer(state, {
+        type: "SET_COMPILED_HASH",
+        hash,
+        sources: sourceContents(sources),
+      });
 
       const id = firstFileId(s);
       s = studioReducer(s, {
@@ -199,7 +236,11 @@ describe("StudioReducer", () => {
     it("becomes dirty after creating a file", () => {
       const sources = getAllSources(state.files);
       const hash = contentHash(sources);
-      let s = studioReducer(state, { type: "SET_COMPILED_HASH", hash });
+      let s = studioReducer(state, {
+        type: "SET_COMPILED_HASH",
+        hash,
+        sources: sourceContents(sources),
+      });
 
       s = studioReducer(s, { type: "CREATE_FILE", name: "New.sol" });
       expect(isDirtySinceCompile(s)).toBe(true);
@@ -213,10 +254,14 @@ describe("StudioReducer", () => {
       });
       const sources = getAllSources(s.files);
       const hash = contentHash(sources);
-      s = studioReducer(s, { type: "SET_COMPILED_HASH", hash });
+      s = studioReducer(s, {
+        type: "SET_COMPILED_HASH",
+        hash,
+        sources: sourceContents(sources),
+      });
 
       const extraId = Object.values(s.files).find(
-        (f) => f.name === "Extra.sol"
+        (f) => f.name === "Extra.sol",
       )!.id;
       s = studioReducer(s, { type: "DELETE_FILE", fileId: extraId });
       expect(isDirtySinceCompile(s)).toBe(true);
@@ -259,7 +304,9 @@ describe("StudioReducer", () => {
         type: "CLOSE_TAB",
         fileId: s.activeTabId!,
       });
-      expect(next.openTabs.find((t) => t.fileId === s.activeTabId)).toBeUndefined();
+      expect(
+        next.openTabs.find((t) => t.fileId === s.activeTabId),
+      ).toBeUndefined();
       expect(next.activeTabId).toBe(aId);
     });
 
@@ -287,7 +334,10 @@ describe("StudioReducer", () => {
 
   describe("contentHash", () => {
     it("produces deterministic hashes", () => {
-      const sources = { "A.sol": { content: "abc" }, "B.sol": { content: "def" } };
+      const sources = {
+        "A.sol": { content: "abc" },
+        "B.sol": { content: "def" },
+      };
       expect(contentHash(sources)).toBe(contentHash(sources));
     });
 

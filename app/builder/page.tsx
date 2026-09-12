@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import ExtrinsicBuilder from "@/components/builder/extrinsic-builder";
 import InformationPane from "@/components/builder/information-pane";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,23 +14,8 @@ export interface BuilderFormValues {
   [key: string]: any;
 }
 
-function BuilderContent() {
-  const { client, loading } = useClient();
-  const [tx, setTx] = useState<GenericTxCall | null>(null);
-
-  const form = useForm<BuilderFormValues>({
-    defaultValues: {
-      section: "",
-      method: "",
-    },
-  });
-
-  const handleTxChange = (tx: GenericTxCall) => {
-    console.log("metadata", tx?.meta);
-    setTx(() => tx);
-  };
-
-  const SkeletonUI = () => (
+function SkeletonUI() {
+  return (
     <>
       <div className="w-full lg:w-1/2">
         <Skeleton className="h-12 w-full mb-4" />
@@ -49,6 +34,22 @@ function BuilderContent() {
       </div>
     </>
   );
+}
+
+function BuilderContent() {
+  const { client, loading } = useClient();
+  const [tx, setTx] = useState<GenericTxCall | null>(null);
+
+  const form = useForm<BuilderFormValues>({
+    defaultValues: {
+      section: "",
+      method: "",
+    },
+  });
+
+  const handleTxChange = useCallback((nextTx: GenericTxCall) => {
+    setTx(nextTx);
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">

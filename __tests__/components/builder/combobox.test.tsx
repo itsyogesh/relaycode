@@ -14,7 +14,7 @@ Element.prototype.scrollIntoView = jest.fn();
 Element.prototype.hasPointerCapture = jest.fn().mockReturnValue(false);
 
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { Combobox, ComboboxItem } from "../../../components/builder/combobox";
 
 // Helper to create items
@@ -39,55 +39,40 @@ describe("Combobox", () => {
   });
 
   it("shows selected label when value is set", () => {
-    render(
-      <Combobox
-        {...defaultProps}
-        value="1:System"
-      />
-    );
+    render(<Combobox {...defaultProps} value="1:System" />);
     expect(screen.getByRole("combobox")).toHaveTextContent("System");
   });
 
-  it("popover opens on trigger click", async () => {
+  it("popover opens on trigger click", () => {
     render(<Combobox {...defaultProps} />);
     const trigger = screen.getByRole("combobox");
     fireEvent.click(trigger);
-    await waitFor(() => {
-      expect(trigger).toHaveAttribute("aria-expanded", "true");
-    });
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("search input filters items", async () => {
+  it("search input filters items", () => {
     render(<Combobox {...defaultProps} />);
     fireEvent.click(screen.getByRole("combobox"));
 
-    await waitFor(() => {
-      expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
-    });
+    expect(screen.getByPlaceholderText("Search...")).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText("Search...");
     fireEvent.change(searchInput, { target: { value: "Bal" } });
 
-    await waitFor(() => {
-      expect(screen.getByText("Balances")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Balances")).toBeInTheDocument();
   });
 
-  it('selecting calls onValueChange with "value:label" format', async () => {
+  it('selecting calls onValueChange with "value:label" format', () => {
     const onValueChange = jest.fn();
     render(<Combobox {...defaultProps} onValueChange={onValueChange} />);
 
     fireEvent.click(screen.getByRole("combobox"));
 
-    await waitFor(() => {
-      expect(screen.getByText("Balances")).toBeInTheDocument();
-    });
+    expect(screen.getByText("Balances")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Balances"));
 
-    await waitFor(() => {
-      expect(onValueChange).toHaveBeenCalledWith("0:Balances");
-    });
+    expect(onValueChange).toHaveBeenCalledWith("0:Balances");
   });
 
   it("empty items array renders without crash", () => {
@@ -98,15 +83,9 @@ describe("Combobox", () => {
   });
 
   it('label containing ":" character handled correctly', () => {
-    const items: ComboboxItem[] = [
-      { value: 5, label: "Foo:Bar" },
-    ];
+    const items: ComboboxItem[] = [{ value: 5, label: "Foo:Bar" }];
     render(
-      <Combobox
-        items={items}
-        value="5:Foo:Bar"
-        onValueChange={jest.fn()}
-      />
+      <Combobox items={items} value="5:Foo:Bar" onValueChange={jest.fn()} />,
     );
     expect(screen.getByRole("combobox")).toHaveTextContent("Foo:Bar");
   });

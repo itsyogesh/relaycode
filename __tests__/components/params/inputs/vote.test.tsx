@@ -11,6 +11,75 @@ jest.mock("../../../../components/ui/form", () => ({
   ),
 }));
 
+jest.mock("../../../../components/ui/select", () => {
+  const React = require("react") as typeof import("react");
+  const SelectContext = React.createContext<{
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    value?: string;
+    onValueChange?: (value: string) => void;
+  }>({ open: false, setOpen: () => {} });
+
+  return {
+    Select: ({
+      children,
+      value,
+      onValueChange,
+    }: {
+      children: React.ReactNode;
+      value?: string;
+      onValueChange?: (value: string) => void;
+    }) => {
+      const [open, setOpen] = React.useState(false);
+      return (
+        <SelectContext.Provider value={{ open, setOpen, value, onValueChange }}>
+          {children}
+        </SelectContext.Provider>
+      );
+    },
+    SelectTrigger: ({ children }: { children: React.ReactNode }) => {
+      const { open, setOpen } = React.useContext(SelectContext);
+      return <button onClick={() => setOpen(!open)}>{children}</button>;
+    },
+    SelectValue: () => {
+      const { value } = React.useContext(SelectContext);
+      const labels: Record<string, string> = {
+        "0": "None (0.1x voting power)",
+        "1": "Locked 1x",
+        "2": "Locked 2x",
+        "3": "Locked 3x",
+        "4": "Locked 4x",
+        "5": "Locked 5x",
+        "6": "Locked 6x",
+      };
+      return <span>{value ? (labels[value] ?? value) : null}</span>;
+    },
+    SelectContent: ({ children }: { children: React.ReactNode }) => {
+      const { open } = React.useContext(SelectContext);
+      return open ? <div>{children}</div> : null;
+    },
+    SelectItem: ({
+      children,
+      value,
+    }: {
+      children: React.ReactNode;
+      value: string;
+    }) => {
+      const { setOpen, onValueChange } = React.useContext(SelectContext);
+      return (
+        <button
+          onClick={() => {
+            onValueChange?.(value);
+            setOpen(false);
+          }}
+        >
+          {children}
+        </button>
+      );
+    },
+  };
+});
+
 jest.mock("../../../../hooks/use-chain-token", () => ({
   useChainToken: jest.fn().mockReturnValue({
     symbol: "DOT",
@@ -75,9 +144,7 @@ describe("Vote", () => {
   it("shows conviction selector in Standard mode", () => {
     render(<Vote {...baseProps} />);
     expect(screen.getByText("Conviction")).toBeInTheDocument();
-    expect(
-      screen.getByText("None (0.1x voting power)")
-    ).toBeInTheDocument();
+    expect(screen.getByText("None (0.1x voting power)")).toBeInTheDocument();
   });
 
   it("shows Balance input in Standard mode", () => {
@@ -96,7 +163,7 @@ describe("Vote", () => {
         value: expect.objectContaining({
           vote: 0x80, // aye with conviction 0 = 0x80 | 0
         }),
-      })
+      }),
     );
   });
 
@@ -115,7 +182,7 @@ describe("Vote", () => {
     render(<Vote {...baseProps} onChange={onChange} />);
     // Default is aye with conviction 0 -> 0x80
     const initialCall = onChange.mock.calls.find(
-      (call: any[]) => call[0]?.type === "Standard"
+      (call: any[]) => call[0]?.type === "Standard",
     );
     expect(initialCall).toBeTruthy();
     expect(initialCall![0].value.vote).toBe(0x80);

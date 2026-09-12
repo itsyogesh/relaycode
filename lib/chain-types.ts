@@ -1,7 +1,13 @@
-import type { PolkadotApi, PolkadotAssetHubApi, WestendAssetHubApi, PaseoAssetHubApi } from "@dedot/chaintypes";
+import type {
+  PolkadotApi,
+  PolkadotAssetHubApi,
+  WestendAssetHubApi,
+  PaseoAssetHubApi,
+} from "@dedot/chaintypes";
 import type { DedotClient } from "dedot";
 
-export type AssetHubApi = PolkadotAssetHubApi | WestendAssetHubApi | PaseoAssetHubApi;
+export type AssetHubApi =
+  PolkadotAssetHubApi | WestendAssetHubApi | PaseoAssetHubApi;
 export type AnyChainApi = PolkadotApi | AssetHubApi;
 
 /**
@@ -12,7 +18,7 @@ export type AnyChainApi = PolkadotApi | AssetHubApi;
  * (metadata, registry, tx, consts, chainSpec) work identically regardless of the
  * chain API type parameter.
  */
-export type GenericChainClient = DedotClient<any>; // eslint-disable-line
+export type GenericChainClient = DedotClient<any>;
 
 const ASSET_HUB_GENESIS = new Set([
   "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f", // Polkadot Asset Hub
@@ -24,7 +30,9 @@ export function isAssetHubGenesis(genesisHash: string): boolean {
   return ASSET_HUB_GENESIS.has(genesisHash.toLowerCase());
 }
 
-export function hasReviveApi(client: GenericChainClient): client is DedotClient<AssetHubApi> {
+export function hasReviveApi(
+  client: GenericChainClient,
+): client is DedotClient<AssetHubApi> {
   // Dedot uses proxy chains for runtime API access — merely accessing
   // `client.call.reviveApi.instantiate` triggers an API spec lookup that
   // throws UnknownApiError on chains without ReviveApi. Use try/catch.

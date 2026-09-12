@@ -1,3 +1,11 @@
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
+<!-- END:nextjs-agent-rules -->
+
 # AGENTS.md - Relaycode
 
 ## Project Overview
@@ -6,7 +14,7 @@ Relaycode is a modern extrinsic builder for the Polkadot ecosystem, funded by a 
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router, SSR)
+- **Framework**: Next.js 16 (App Router, SSR)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Polkadot Client**: [Dedot](https://github.com/dedotdev/dedot) (NOT @polkadot/api, which is deprecated)
@@ -74,7 +82,7 @@ yarn test:watch   # Run tests in watch mode
 1. **Dedot, not polkadot-js** — This project uses Dedot as the Polkadot client. Do not import from `@polkadot/api`.
 2. **LunoKit for wallet** — M2 will use LunoKit for wallet connection. Do not build custom wallet/keyring providers.
 3. **shadcn/ui components** — Generated into `components/ui/`. Add new ones via `npx shadcn-ui add <component>`.
-4. **Next.js 14** — Uses App Router (not Pages Router). Layouts in `layout.tsx`, pages in `page.tsx`.
+4. **Next.js 16** — Uses App Router (not Pages Router). Layouts in `layout.tsx`, pages in `page.tsx`. Consult the bundled version-matched docs in `node_modules/next/dist/docs/`.
 5. **No `lib/polkadot/`** — Legacy directory removed. Dedot is the only Polkadot integration.
 
 ## M2 Implementation Reference

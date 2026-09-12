@@ -35,7 +35,7 @@ const useDropDrawerContext = () => {
   const context = React.useContext(DropDrawerContext);
   if (!context) {
     throw new Error(
-      "DropDrawer components cannot be rendered outside the DropDrawer Context"
+      "DropDrawer components cannot be rendered outside the DropDrawer Context",
     );
   }
   return context;
@@ -120,7 +120,7 @@ function DropDrawerContent({
   >("forward");
 
   const submenuContentRef = React.useRef<Map<string, React.ReactNode[]>>(
-    new Map()
+    new Map(),
   );
 
   const navigateToSubmenu = React.useCallback((id: string, title: string) => {
@@ -150,7 +150,7 @@ function DropDrawerContent({
     (id: string, content: React.ReactNode[]) => {
       submenuContentRef.current.set(id, content);
     },
-    []
+    [],
   );
 
   const extractSubmenuContent = React.useCallback(
@@ -182,7 +182,7 @@ function DropDrawerContent({
                       subContentProps.children,
                       (contentChild) => {
                         result.push(contentChild);
-                      }
+                      },
                     );
                   }
                 }
@@ -194,7 +194,7 @@ function DropDrawerContent({
         if (props.children) {
           if (Array.isArray(props.children)) {
             props.children.forEach((child: React.ReactNode) =>
-              findSubmenuContent(child)
+              findSubmenuContent(child),
             );
           } else {
             findSubmenuContent(props.children);
@@ -208,7 +208,7 @@ function DropDrawerContent({
       }
       return result;
     },
-    []
+    [],
   );
 
   const getSubmenuContent = React.useCallback(
@@ -220,7 +220,7 @@ function DropDrawerContent({
       if (id) submenuContentRef.current.set(id, submenuContent);
       return submenuContent;
     },
-    [children, extractSubmenuContent]
+    [children, extractSubmenuContent],
   );
 
   const variants = {
@@ -235,7 +235,10 @@ function DropDrawerContent({
     }),
   };
 
-  const transition = { duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] };
+  const transition = {
+    duration: 0.3,
+    ease: [0.25, 0.1, 0.25, 1.0] as const,
+  };
 
   if (isMobile) {
     return (
@@ -344,7 +347,7 @@ function DropDrawerContent({
         sideOffset={4}
         className={cn(
           "max-h-[var(--radix-dropdown-menu-content-available-height)] min-w-[220px] overflow-y-auto",
-          className
+          className,
         )}
         {...props}
       >
@@ -390,7 +393,7 @@ function DropDrawerItem({
             variant === "destructive" &&
               "text-destructive dark:text-destructive",
             disabled && "pointer-events-none opacity-50",
-            className
+            className,
           )}
           onClick={handleClick}
           aria-disabled={disabled}
@@ -408,10 +411,7 @@ function DropDrawerItem({
       data-slot="drop-drawer-item"
       data-variant={variant}
       data-inset={inset}
-      className={cn(
-        variant === "destructive" && "text-destructive",
-        className
-      )}
+      className={cn(variant === "destructive" && "text-destructive", className)}
       onSelect={onSelect}
       onClick={onClick as React.MouseEventHandler<HTMLDivElement>}
       inset={inset}
@@ -457,7 +457,7 @@ function DropDrawerLabel({
           data-slot="drop-drawer-label"
           className={cn(
             "text-muted-foreground px-4 py-2 text-sm font-medium",
-            className
+            className,
           )}
           {...props}
         >
@@ -520,7 +520,7 @@ function DropDrawerGroup({
     const childArray = React.Children.toArray(children);
     const filteredChildren = childArray.filter(
       (child) =>
-        React.isValidElement(child) && child.type !== DropDrawerSeparator
+        React.isValidElement(child) && child.type !== DropDrawerSeparator,
     );
     return filteredChildren.flatMap((child, index) => {
       if (index === filteredChildren.length - 1) return [child];
@@ -543,7 +543,7 @@ function DropDrawerGroup({
         role="group"
         className={cn(
           "bg-accent dark:bg-accent mx-2 my-3 overflow-hidden rounded-xl",
-          className
+          className,
         )}
         {...props}
       >
@@ -584,16 +584,21 @@ function DropDrawerSub({
           (child.props as { children?: React.ReactNode }).children,
           (contentChild) => {
             contentItems.push(contentChild);
-          }
+          },
         );
       }
     });
-    if (contentItems.length > 0) registerSubmenuContent(submenuId, contentItems);
+    if (contentItems.length > 0)
+      registerSubmenuContent(submenuId, contentItems);
   }, [children, registerSubmenuContent, submenuId]);
 
   if (isMobile) {
     return (
-      <div data-slot="drop-drawer-sub" data-submenu-id={submenuId} id={submenuId}>
+      <div
+        data-slot="drop-drawer-sub"
+        data-submenu-id={submenuId}
+        id={submenuId}
+      >
         {children}
       </div>
     );
@@ -634,7 +639,7 @@ function DropDrawerSubTrigger({
         className={cn(
           "flex cursor-pointer items-center justify-between bg-accent dark:bg-accent mx-2 my-1.5 rounded-md px-4 py-4",
           inset && "pl-8",
-          className
+          className,
         )}
         onClick={handleClick}
         {...props}
@@ -672,7 +677,7 @@ function DropDrawerSubContent({
       sideOffset={sideOffset}
       className={cn(
         "z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg",
-        className
+        className,
       )}
       {...props}
     >

@@ -8,7 +8,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useGasEstimation } from "../../hooks/use-gas-estimation";
 import { hasReviveApi } from "../../lib/chain-types";
 
-const mockHasReviveApi = hasReviveApi as jest.Mock;
+const mockHasReviveApi = hasReviveApi as unknown as jest.Mock;
 
 function createMockClient(instantiateResult?: any) {
   return {
@@ -26,7 +26,7 @@ function createMockClient(instantiateResult?: any) {
                 addr: "0x1234567890abcdef1234567890abcdef12345678",
               },
             },
-          }
+          },
         ),
       },
     },
@@ -40,7 +40,7 @@ describe("useGasEstimation", () => {
 
   it("returns error when client is null", async () => {
     const { result } = renderHook(() =>
-      useGasEstimation(null, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(null, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -56,7 +56,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(false);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -71,7 +71,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -86,7 +86,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "", "0x"),
     );
 
     await act(async () => {
@@ -101,7 +101,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -118,7 +118,7 @@ describe("useGasEstimation", () => {
     expect(result.current.storageDeposit?.value).toBe(BigInt(5500));
     expect(result.current.gasConsumed).toBe(BigInt(800));
     expect(result.current.deployedAddress).toBe(
-      "0x1234567890abcdef1234567890abcdef12345678"
+      "0x1234567890abcdef1234567890abcdef12345678",
     );
   });
 
@@ -138,7 +138,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -163,7 +163,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {
@@ -190,7 +190,7 @@ describe("useGasEstimation", () => {
     mockHasReviveApi.mockReturnValue(true);
 
     const { result } = renderHook(() =>
-      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x")
+      useGasEstimation(client, "0xorigin", BigInt(0), "0x1234", "0x"),
     );
 
     await act(async () => {

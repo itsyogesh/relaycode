@@ -3,7 +3,7 @@ import { Metadata, TypeDef } from "dedot/codecs";
 import { assert, stringCamelCase } from "dedot/utils";
 
 export function createSectionOptions(
-  metadata: Metadata["latest"] | null
+  metadata: Metadata["latest"] | null,
 ): { text: string; value: number; docs: string[] }[] | null {
   if (!metadata) return null;
   return metadata?.pallets
@@ -35,15 +35,16 @@ export type ClientMethod = {
 
 export function createMethodOptions(
   client: GenericChainClient,
-  sectionIndex: number
+  sectionIndex: number,
 ): { text: string; value: number }[] | null {
   const pallet = client.metadata.latest.pallets.find(
-    (pallet) => pallet.index === sectionIndex
+    (pallet) => pallet.index === sectionIndex,
   );
 
   if (!pallet?.calls) return null;
 
-  const callsTypeId = typeof pallet.calls === "number" ? pallet.calls : pallet.calls.typeId;
+  const callsTypeId =
+    typeof pallet.calls === "number" ? pallet.calls : pallet.calls.typeId;
   const palletCalls = client.registry.findType(callsTypeId);
   assert(palletCalls.typeDef.type === "Enum");
 
@@ -72,7 +73,25 @@ export function getArgType(client: GenericChainClient, typeId: number) {
   return getTypeDetails(type.typeDef);
 }
 
-function getTypeDetails(typeDef: TypeDef) {
+type ArgType =
+  | Exclude<TypeDef, { type: "Enum" }>
+  | {
+      type: "Enum";
+      value: {
+        members: Array<{
+          name: string;
+          fields: Array<{
+            typeId: number;
+            typeName?: string;
+            docs: string[];
+          }>;
+          index: number;
+          docs: string[];
+        }>;
+      };
+    };
+
+function getTypeDetails(typeDef: TypeDef): ArgType {
   if (typeDef.type === "Enum") {
     return {
       type: typeDef.type,

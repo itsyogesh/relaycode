@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -13,13 +13,19 @@ export function constructMetadata({
   title = "Relaycode - The Developer Toolkit for Polkadot",
   description = siteConfig.description,
   image = siteConfig.ogImage,
-  icons = "/favicon.ico",
+  icons = {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", type: "image/x-icon" },
+    ],
+    shortcut: "/favicon.ico",
+  },
   noIndex = false,
 }: {
   title?: string;
   description?: string;
   image?: string;
-  icons?: string;
+  icons?: Metadata["icons"];
   noIndex?: boolean;
 } = {}): Metadata {
   return {

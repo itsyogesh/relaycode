@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Github, Twitter } from "lucide-react";
+import { FaGithub, FaXTwitter } from "react-icons/fa6";
 
 const footerLinks = {
   build: [
@@ -17,8 +17,12 @@ const footerLinks = {
     { name: "Security Audit", href: "/security" },
   ],
   community: [
-    { name: "GitHub", href: "https://github.com/relaycode", icon: Github },
-    { name: "Twitter", href: "https://twitter.com/relaycode", icon: Twitter },
+    { name: "GitHub", href: "https://github.com/relaycode", icon: FaGithub },
+    {
+      name: "Twitter",
+      href: "https://twitter.com/relaycode",
+      icon: FaXTwitter,
+    },
     { name: "Blog", href: "/blog" },
     { name: "Discord", href: "/discord" },
   ],

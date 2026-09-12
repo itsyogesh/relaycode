@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import type { GenericChainClient } from "@/lib/chain-types";
 import { hasReviveApi } from "@/lib/chain-types";
-import {
-  createMethodOptions,
-  createSectionOptions,
-} from "@/lib/parser";
+import { createMethodOptions, createSectionOptions } from "@/lib/parser";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,10 +56,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   const { sendTransactionAsync } = useSendTransaction();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [methods, setMethods] = useState<
-    { text: string; value: number }[] | null
-  >([]);
-
   // Extract pallet and method names from current selection
   const sectionValue = builderForm.watch("section");
   const methodValue = builderForm.watch("method");
@@ -72,6 +65,10 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
   // Eagerly fetch contextual data when pallet changes
   const { context: palletContext, isLoading: isContextLoading } =
     usePalletContext(client, palletName);
+
+  const methods = sectionValue
+    ? (createMethodOptions(client, parseInt(sectionValue.split(":")[0])) ?? [])
+    : [];
 
   const { symbol, decimals } = useChainToken(client);
 
@@ -99,7 +96,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     valueBigInt,
     codeValue,
     dataValue,
-    saltValue || undefined
+    saltValue || undefined,
   );
 
   // Auto-fill weight and storage deposit from gas estimation
@@ -120,35 +117,27 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     if (gasEstimation.storageDeposit?.type === "Charge") {
       builderForm.setValue(
         "storage_deposit_limit",
-        String(gasEstimation.storageDeposit.value)
+        String(gasEstimation.storageDeposit.value),
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gasEstimation.weightRequired, gasEstimation.storageDeposit]);
 
   useEffect(() => {
-    const section = builderForm.watch("section");
-    if (section) {
-      const newMethods = createMethodOptions(
-        client,
-        parseInt(section.split(":")[0])
-      );
-      setMethods(newMethods);
+    if (sectionValue) {
       builderForm.setValue("method", "");
     }
-  }, [builderForm.watch("section")]);
+  }, [builderForm, sectionValue]);
 
   useEffect(() => {
-    const method = builderForm.watch("method");
-    const section = builderForm.watch("section");
-    if (section && method) {
+    if (sectionValue && methodValue) {
       const newTx =
-        client.tx[stringCamelCase(section.split(":")[1])][
-          stringCamelCase(method.split(":")[1])
+        client.tx[stringCamelCase(sectionValue.split(":")[1])][
+          stringCamelCase(methodValue.split(":")[1])
         ];
       onTxChange(newTx);
     }
-  }, [builderForm.watch("method")]);
+  }, [client.tx, methodValue, onTxChange, sectionValue]);
 
   const onSubmit = async (data: Record<string, any>) => {
     if (!tx || !account) return;
@@ -189,9 +178,10 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
       const receipt = await sendTransactionAsync({ extrinsic });
 
       if (receipt.status === "failed") {
-        const errorMsg = receipt.errorMessage || receipt.dispatchError
-          ? `Dispatch error: ${receipt.errorMessage || JSON.stringify(receipt.dispatchError)}`
-          : "Transaction failed on-chain";
+        const errorMsg =
+          receipt.errorMessage || receipt.dispatchError
+            ? `Dispatch error: ${receipt.errorMessage || JSON.stringify(receipt.dispatchError)}`
+            : "Transaction failed on-chain";
         toast.error("Transaction failed", {
           description: errorMsg,
         });
@@ -250,7 +240,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                       ?.find(
                         (s) =>
                           s.value ===
-                          parseInt(field.value?.split(":")[0] || "0")
+                          parseInt(field.value?.split(":")[0] || "0"),
                       )
                       ?.docs.join(", ")}
                   </FormDescription>
@@ -301,14 +291,14 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                                     parseInt(
                                       builderForm
                                         .watch("section")
-                                        ?.split(":")[0] || "0"
-                                    )
+                                        ?.split(":")[0] || "0",
+                                    ),
                                 )?.text || ""}{" "}
                                 /{" "}
                                 {methods?.find(
                                   (m) =>
                                     `${m.value}:${m.text}` ===
-                                    builderForm.watch("method")
+                                    builderForm.watch("method"),
                                 )?.text || ""}
                               </span>
                             </DialogTitle>
@@ -343,7 +333,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                     arg.typeName || "",
                     arg.typeId,
                     client,
-                    palletContext
+                    palletContext,
                   );
                   const Component = resolved.component;
                   return (
@@ -372,9 +362,7 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                     size="sm"
                     className="gap-1.5"
                     disabled={
-                      !codeValue ||
-                      !account ||
-                      gasEstimation.estimating
+                      !codeValue || !account || gasEstimation.estimating
                     }
                     onClick={handleEstimateGas}
                   >
@@ -398,16 +386,14 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 
                 {gasEstimation.weightRequired && (
                   <div className="text-xs text-muted-foreground space-y-0.5 rounded-md border border-border bg-muted/50 p-2.5">
-                    <p>
-                      Weight: {formatWeight(gasEstimation.weightRequired)}
-                    </p>
+                    <p>Weight: {formatWeight(gasEstimation.weightRequired)}</p>
                     {gasEstimation.storageDeposit && (
                       <p>
                         Storage ({gasEstimation.storageDeposit.type}):{" "}
                         {formatFee(
                           gasEstimation.storageDeposit.value,
                           symbol,
-                          decimals
+                          decimals,
                         )}
                       </p>
                     )}
@@ -415,18 +401,13 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                 )}
 
                 {gasEstimation.error && (
-                  <p className="text-xs text-red-500">
-                    {gasEstimation.error}
-                  </p>
+                  <p className="text-xs text-red-500">{gasEstimation.error}</p>
                 )}
               </div>
             )}
 
             <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={!account || !tx || isSubmitting}
-              >
+              <Button type="submit" disabled={!account || !tx || isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />

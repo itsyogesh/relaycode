@@ -41,11 +41,15 @@ export function Vector({
   typeName,
 }: VectorProps) {
   const [items, setItems] = React.useState<any[]>([undefined]);
-  const [validationError, setValidationError] = React.useState<string | null>(null);
+  const [validationError, setValidationError] = React.useState<string | null>(
+    null,
+  );
   const [mode, setMode] = React.useState<VectorMode>("form");
   const [bulkText, setBulkText] = React.useState("");
   const [bulkError, setBulkError] = React.useState<string | null>(null);
-  const [duplicateMessage, setDuplicateMessage] = React.useState<string | null>(null);
+  const [duplicateMessage, setDuplicateMessage] = React.useState<string | null>(
+    null,
+  );
   const lastEmittedRef = React.useRef<string>("");
 
   // Resolve the inner element type from metadata
@@ -74,13 +78,17 @@ export function Vector({
   // Sync from external value (e.g., after hex decode)
   // Skip if the external value matches what we last emitted (avoids overriding local state)
   React.useEffect(() => {
-    if (externalValue !== undefined && externalValue !== null && Array.isArray(externalValue)) {
+    if (
+      externalValue !== undefined &&
+      externalValue !== null &&
+      Array.isArray(externalValue)
+    ) {
       const externalStr = JSON.stringify(externalValue);
       if (externalStr !== lastEmittedRef.current && externalValue.length > 0) {
         setItems(externalValue);
       }
     }
-  }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [externalValue]);
 
   // Check for duplicates whenever items change
   React.useEffect(() => {
@@ -96,11 +104,15 @@ export function Vector({
       if (existing) existing.push(i);
       else seen.set(s, [i]);
     });
-    const dupes = Array.from(seen.values()).filter((positions) => positions.length > 1);
+    const dupes = Array.from(seen.values()).filter(
+      (positions) => positions.length > 1,
+    );
     if (dupes.length > 0) {
       const positions = dupes.flat().join(", ");
       if (unique) {
-        setDuplicateMessage(`Set contains duplicate values at positions ${positions}`);
+        setDuplicateMessage(
+          `Set contains duplicate values at positions ${positions}`,
+        );
       } else {
         setDuplicateMessage(`Duplicate values at positions ${positions}`);
       }
@@ -115,7 +127,7 @@ export function Vector({
       newItems.filter((item) => item !== undefined),
       minItems,
       maxItems,
-      label
+      label,
     );
 
     if (!validation.valid) {
@@ -154,7 +166,10 @@ export function Vector({
   const handleMoveUp = (index: number) => {
     if (index === 0) return;
     const newItems = [...items];
-    [newItems[index - 1], newItems[index]] = [newItems[index], newItems[index - 1]];
+    [newItems[index - 1], newItems[index]] = [
+      newItems[index],
+      newItems[index - 1],
+    ];
     setItems(newItems);
     validateAndEmit(newItems);
   };
@@ -162,7 +177,10 @@ export function Vector({
   const handleMoveDown = (index: number) => {
     if (index >= items.length - 1) return;
     const newItems = [...items];
-    [newItems[index], newItems[index + 1]] = [newItems[index + 1], newItems[index]];
+    [newItems[index], newItems[index + 1]] = [
+      newItems[index + 1],
+      newItems[index],
+    ];
     setItems(newItems);
     validateAndEmit(newItems);
   };
@@ -253,7 +271,11 @@ export function Vector({
         });
       } else if (innerType) {
         // Self-resolving: derive inner component from metadata
-        const resolved = findComponent(innerType.typeName, innerType.typeId, client);
+        const resolved = findComponent(
+          innerType.typeName,
+          innerType.typeId,
+          client,
+        );
         const InnerComponent = resolved.component;
         itemComponent = (
           <InnerComponent
@@ -330,7 +352,12 @@ export function Vector({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <ParamLabel htmlFor={name} label={label} typeName={typeName} isRequired={isRequired} />
+          <ParamLabel
+            htmlFor={name}
+            label={label}
+            typeName={typeName}
+            isRequired={isRequired}
+          />
           {(minItems > 0 || maxItems) && (
             <span className="text-xs text-muted-foreground">
               ({minItems > 0 ? `min: ${minItems}` : ""}
@@ -364,9 +391,7 @@ export function Vector({
       </div>
 
       {mode === "form" ? (
-        <div className="flex flex-col gap-2">
-          {renderItems()}
-        </div>
+        <div className="flex flex-col gap-2">{renderItems()}</div>
       ) : (
         <Textarea
           disabled={isDisabled}

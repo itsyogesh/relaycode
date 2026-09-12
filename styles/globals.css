@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@luno-kit/ui/styles.css";
+@import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
 /* Map fumadocs variables to our shadcn theme so dark mode stays consistent.
@@ -151,10 +152,14 @@
 
 @keyframes aurora {
   from {
-    background-position: 50% 50%, 50% 50%;
+    background-position:
+      50% 50%,
+      50% 50%;
   }
   to {
-    background-position: 350% 50%, 350% 50%;
+    background-position:
+      350% 50%,
+      350% 50%;
   }
 }
 
@@ -174,7 +179,6 @@
   a[data-card] {
     text-decoration: none !important;
   }
-
 }
 
 /* Improve table spacing in docs prose — outside @layer to override fumadocs */

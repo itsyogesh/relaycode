@@ -33,12 +33,12 @@ class ResolutionSession {
   private checkBudget() {
     if (Date.now() - this.startTime > TOTAL_BUDGET_MS) {
       throw new Error(
-        "Import resolution timed out (30s budget). Compile externally and use Upload mode."
+        "Import resolution timed out (30s budget). Compile externally and use Upload mode.",
       );
     }
     if (this.fileCount >= MAX_FILES) {
       throw new Error(
-        `Too many imports (>${MAX_FILES} files). Compile externally and use Upload mode.`
+        `Too many imports (>${MAX_FILES} files). Compile externally and use Upload mode.`,
       );
     }
   }
@@ -55,7 +55,7 @@ class ResolutionSession {
   } | null {
     // Scoped package: @scope/name/path or @scope/name@version/path
     const scopedMatch = importPath.match(
-      /^(@[^/]+\/[^/@]+)(?:@([^/]+))?\/(.+)$/
+      /^(@[^/]+\/[^/@]+)(?:@([^/]+))?\/(.+)$/,
     );
     if (scopedMatch) {
       return {
@@ -113,8 +113,7 @@ class ResolutionSession {
       throw new Error(`Cannot resolve import path: ${importPath}`);
     }
 
-    const version =
-      parsed.version || (await this.resolveVersion(parsed.pkg));
+    const version = parsed.version || (await this.resolveVersion(parsed.pkg));
     const url = `${UNPKG_BASE}/${parsed.pkg}@${version}/${parsed.filePath}`;
 
     const resp = await fetch(url, {
@@ -126,14 +125,14 @@ class ResolutionSession {
 
     if (!resp.ok) {
       throw new Error(
-        `Failed to resolve import: ${importPath} (HTTP ${resp.status} from ${url})`
+        `Failed to resolve import: ${importPath} (HTTP ${resp.status} from ${url})`,
       );
     }
 
     const text = await resp.text();
     if (text.length > MAX_FILE_SIZE) {
       throw new Error(
-        `Import file too large: ${importPath} (${text.length} bytes, max ${MAX_FILE_SIZE})`
+        `Import file too large: ${importPath} (${text.length} bytes, max ${MAX_FILE_SIZE})`,
       );
     }
 
@@ -145,10 +144,7 @@ class ResolutionSession {
    * Example: from "@openzeppelin/contracts/token/ERC20/ERC20.sol",
    *          "../../utils/Context.sol" → "@openzeppelin/contracts/utils/Context.sol"
    */
-  resolveRelativePath(
-    fromPath: string,
-    relativePath: string
-  ): string | null {
+  resolveRelativePath(fromPath: string, relativePath: string): string | null {
     // Only handle relative paths
     if (!relativePath.startsWith("./") && !relativePath.startsWith("../")) {
       return null; // Not a relative path — treat as npm package import
@@ -181,7 +177,7 @@ function extractMissingImports(
     message: string;
     formattedMessage?: string;
     severity?: string;
-  }>
+  }>,
 ): string[] {
   const missing: string[] = [];
 
@@ -199,7 +195,7 @@ function extractMissingImports(
 
     // resolc: similar format
     const resolcMatch = msg.match(
-      /(?:File not found|not found|cannot find).*?["'](.+?)["']/i
+      /(?:File not found|not found|cannot find).*?["'](.+?)["']/i,
     );
     if (resolcMatch) {
       missing.push(resolcMatch[1]);
@@ -207,7 +203,9 @@ function extractMissingImports(
     }
 
     // Generic: "ParserError: Source ... not found"
-    const genericMatch = msg.match(/Source\s+["']?([^\s"']+\.sol)["']?\s+not found/i);
+    const genericMatch = msg.match(
+      /Source\s+["']?([^\s"']+\.sol)["']?\s+not found/i,
+    );
     if (genericMatch) {
       missing.push(genericMatch[1]);
     }
@@ -222,11 +220,14 @@ function extractMissingImports(
  * The compiler handles relative imports between user files natively.
  */
 export async function resolveAllImportsSources(
-  userSources: Record<string, { content: string }>
+  userSources: Record<string, { content: string }>,
 ): Promise<ResolvedSources> {
   const abortController = new AbortController();
   const session = new ResolutionSession(abortController);
-  const budgetTimer = setTimeout(() => abortController.abort(), TOTAL_BUDGET_MS);
+  const budgetTimer = setTimeout(
+    () => abortController.abort(),
+    TOTAL_BUDGET_MS,
+  );
   const userKeys = new Set(Object.keys(userSources));
 
   try {
@@ -234,13 +235,12 @@ export async function resolveAllImportsSources(
 
     // Quick check: if no source has imports, skip resolution
     const hasAnyImport = Object.values(userSources).some((s) =>
-      s.content.includes("import")
+      s.content.includes("import"),
     );
     if (!hasAnyImport) {
       return { sources, resolvedVersions: {} };
     }
 
-    // eslint-disable-next-line
     const solc = require("solc");
 
     for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
@@ -267,7 +267,10 @@ export async function resolveAllImportsSources(
 
         let resolvedPath: string | null = null;
         for (const existingPath of Object.keys(sources)) {
-          const candidate = session.resolveRelativePath(existingPath, importPath);
+          const candidate = session.resolveRelativePath(
+            existingPath,
+            importPath,
+          );
           if (candidate && !sources[candidate]) {
             resolvedPath = candidate;
             break;
@@ -304,11 +307,14 @@ export async function resolveAllImportsSources(
  */
 export async function resolveAllImports(
   source: string,
-  existingSources?: Record<string, { content: string }>
+  existingSources?: Record<string, { content: string }>,
 ): Promise<ResolvedSources> {
   const abortController = new AbortController();
   const session = new ResolutionSession(abortController);
-  const budgetTimer = setTimeout(() => abortController.abort(), TOTAL_BUDGET_MS);
+  const budgetTimer = setTimeout(
+    () => abortController.abort(),
+    TOTAL_BUDGET_MS,
+  );
 
   try {
     const sources: Record<string, { content: string }> = {
@@ -323,7 +329,6 @@ export async function resolveAllImports(
 
     // Iterative resolution using solc's error output
     // We use solc for resolution (not resolc) because it's faster for parsing
-    // eslint-disable-next-line
     const solc = require("solc"); // Server-side only — used for import resolution parsing
 
     for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
@@ -347,7 +352,7 @@ export async function resolveAllImports(
         for (const existingPath of Object.keys(sources)) {
           const candidate = session.resolveRelativePath(
             existingPath,
-            importPath
+            importPath,
           );
           if (candidate && !sources[candidate]) {
             resolvedPath = candidate;

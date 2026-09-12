@@ -10,6 +10,16 @@ import {
 } from "../../lib/parser";
 import { createMockDedotClient } from "../helpers/mock-client";
 
+type ArgType = ReturnType<typeof getArgType>;
+
+function requireEnum(typeDef: ArgType): Extract<ArgType, { type: "Enum" }> {
+  if (typeDef.type !== "Enum") {
+    throw new Error(`Expected Enum type, received ${typeDef.type}`);
+  }
+
+  return typeDef;
+}
+
 describe("createSectionOptions", () => {
   it("should return null when metadata is null", () => {
     expect(createSectionOptions(null)).toBeNull();
@@ -79,9 +89,7 @@ describe("createSectionOptions", () => {
 
   it("should handle pallets with typeId-based calls", () => {
     const mockMetadata = {
-      pallets: [
-        { index: 0, name: "Test", calls: { typeId: 123 }, docs: [] },
-      ],
+      pallets: [{ index: 0, name: "Test", calls: { typeId: 123 }, docs: [] }],
     } as any;
 
     const result = createSectionOptions(mockMetadata);
@@ -98,9 +106,7 @@ describe("createMethodOptions", () => {
     const client = createMockDedotClient({
       metadata: {
         latest: {
-          pallets: [
-            { index: 5, name: "Balances", calls: 42, docs: [] },
-          ],
+          pallets: [{ index: 5, name: "Balances", calls: 42, docs: [] }],
         },
       },
       registry: {
@@ -160,9 +166,7 @@ describe("createMethodOptions", () => {
     const client = createMockDedotClient({
       metadata: {
         latest: {
-          pallets: [
-            { index: 1, name: "System", calls: 10, docs: [] },
-          ],
+          pallets: [{ index: 1, name: "System", calls: 10, docs: [] }],
         },
       },
       registry: {
@@ -180,9 +184,7 @@ describe("createMethodOptions", () => {
     const client = createMockDedotClient({
       metadata: {
         latest: {
-          pallets: [
-            { index: 1, name: "Timestamp", calls: null, docs: [] },
-          ],
+          pallets: [{ index: 1, name: "Timestamp", calls: null, docs: [] }],
         },
       },
       registry: {
@@ -219,9 +221,7 @@ describe("getArgType", () => {
                 },
                 {
                   name: "Raw",
-                  fields: [
-                    { typeId: 14, typeName: "Vec<u8>", docs: [] },
-                  ],
+                  fields: [{ typeId: 14, typeName: "Vec<u8>", docs: [] }],
                   index: 2,
                   docs: [],
                 },
@@ -234,8 +234,7 @@ describe("getArgType", () => {
       },
     });
 
-    const result = getArgType(client, 113);
-    expect(result.type).toBe("Enum");
+    const result = requireEnum(getArgType(client, 113));
     expect(result.value.members).toHaveLength(2);
     expect(result.value.members[0].name).toBe("Id");
     expect(result.value.members[0].fields[0].typeId).toBe(0);
@@ -265,9 +264,7 @@ describe("getArgType", () => {
           typeDef: {
             type: "Struct",
             value: {
-              fields: [
-                { name: "amount", typeId: 5, typeName: "Balance" },
-              ],
+              fields: [{ name: "amount", typeId: 5, typeName: "Balance" }],
             },
           },
         }),
@@ -309,8 +306,7 @@ describe("getArgType", () => {
       },
     });
 
-    const result = getArgType(client, 1);
-    expect(result.type).toBe("Enum");
+    const result = requireEnum(getArgType(client, 1));
     expect(result.value.members).toEqual([]);
   });
 
@@ -345,7 +341,7 @@ describe("getArgType", () => {
       },
     });
 
-    const result = getArgType(client, 1);
+    const result = requireEnum(getArgType(client, 1));
     const member = result.value.members[0];
     expect(member).toEqual({
       name: "Test",

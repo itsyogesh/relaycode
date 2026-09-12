@@ -12,7 +12,7 @@ jest.mock("@/components/ui/form", () => ({
 // Radix Select uses portals and pointer events that are hard to test.
 // We mock the entire Select component set with simple HTML equivalents.
 jest.mock("@/components/ui/select", () => {
-  const React = require("react");
+  const React = require("react") as typeof import("react");
 
   function Select({
     children,
@@ -25,7 +25,7 @@ jest.mock("@/components/ui/select", () => {
   }) {
     const contextValue = React.useMemo(
       () => ({ onValueChange, disabled }),
-      [onValueChange, disabled]
+      [onValueChange, disabled],
     );
     return (
       <SelectContext.Provider value={contextValue}>
@@ -72,6 +72,7 @@ jest.mock("@/components/ui/select", () => {
     return (
       <button
         role="option"
+        aria-selected={false}
         data-value={value}
         onClick={() => onValueChange?.(value)}
       >
@@ -112,7 +113,7 @@ describe("VoteThreshold", () => {
   it("calls onChange with selected value", () => {
     const onChange = jest.fn();
     render(
-      <VoteThreshold {...baseProps} label="Threshold" onChange={onChange} />
+      <VoteThreshold {...baseProps} label="Threshold" onChange={onChange} />,
     );
     fireEvent.click(screen.getByText("Simple Majority"));
     expect(onChange).toHaveBeenCalledWith("SimpleMajority");
@@ -120,11 +121,7 @@ describe("VoteThreshold", () => {
 
   it("shows error message", () => {
     render(
-      <VoteThreshold
-        {...baseProps}
-        label="Threshold"
-        error="Required field"
-      />
+      <VoteThreshold {...baseProps} label="Threshold" error="Required field" />,
     );
     expect(screen.getByText("Required field")).toBeInTheDocument();
   });
@@ -140,7 +137,7 @@ describe("VoteThreshold", () => {
         {...baseProps}
         label="Threshold"
         description="Choose a threshold type"
-      />
+      />,
     );
     expect(screen.getByText("Choose a threshold type")).toBeInTheDocument();
   });

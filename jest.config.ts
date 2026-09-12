@@ -1,5 +1,5 @@
 import type { Config } from "jest";
-import nextJest from "next/jest";
+import nextJest from "next/jest.js";
 
 const createJestConfig = nextJest({
   dir: "./",
@@ -24,12 +24,14 @@ const esmPackages = [
 
 const config: Config = {
   coverageProvider: "v8",
+  watchman: false,
   testEnvironment: "jsdom",
   setupFiles: ["<rootDir>/jest.polyfills.ts"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
   },
+  modulePathIgnorePatterns: ["<rootDir>/.next/standalone/"],
   testPathIgnorePatterns: ["/node_modules/", "__tests__/helpers/"],
   collectCoverageFrom: [
     "lib/**/*.{ts,tsx}",
@@ -46,7 +48,9 @@ const config: Config = {
 // Use async config to modify transformIgnorePatterns after next/jest builds them
 // This workaround is needed because next/jest overwrites transformIgnorePatterns
 // See: https://github.com/vercel/next.js/issues/35634
-export default async (...args: Parameters<ReturnType<typeof createJestConfig>>) => {
+const resolveJestConfig = async (
+  ...args: Parameters<ReturnType<typeof createJestConfig>>
+) => {
   const fn = createJestConfig(config);
   const resolvedConfig = await fn(...args);
 
@@ -65,3 +69,5 @@ export default async (...args: Parameters<ReturnType<typeof createJestConfig>>) 
 
   return resolvedConfig;
 };
+
+export default resolveJestConfig;
