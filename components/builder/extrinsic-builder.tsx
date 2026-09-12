@@ -129,16 +129,6 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
     }
   }, [builderForm, sectionValue]);
 
-  useEffect(() => {
-    if (sectionValue && methodValue) {
-      const newTx =
-        client.tx[stringCamelCase(sectionValue.split(":")[1])][
-          stringCamelCase(methodValue.split(":")[1])
-        ];
-      onTxChange(newTx);
-    }
-  }, [client, methodValue, onTxChange, sectionValue]);
-
   const onSubmit = async (data: Record<string, any>) => {
     if (!tx || !account) return;
 
@@ -261,7 +251,16 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
                         label: method.text,
                       }))}
                       value={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        if (!sectionValue || !value) return;
+
+                        const nextTx =
+                          client.tx[
+                            stringCamelCase(sectionValue.split(":")[1])
+                          ][stringCamelCase(value.split(":")[1])];
+                        onTxChange(nextTx);
+                      }}
                       placeholder="Select method"
                       searchPlaceholder="Search methods..."
                       disabled={!builderForm.watch("section")}

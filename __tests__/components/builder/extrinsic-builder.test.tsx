@@ -264,12 +264,6 @@ function UnstableTxGetterWrapper({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => form.setValue("method", "0:transferKeepAlive")}
-      >
-        Select method
-      </button>
       <button type="button" onClick={forceRender}>
         Unrelated rerender
       </button>
@@ -386,7 +380,8 @@ describe("ExtrinsicBuilder", () => {
     const onTxChange = jest.fn();
     render(<UnstableTxGetterWrapper onTxChange={onTxChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Select method" }));
+    fireEvent.click(screen.getAllByRole("combobox")[1]);
+    fireEvent.click(screen.getByText("transferKeepAlive"));
     await waitFor(() => expect(onTxChange).toHaveBeenCalledTimes(1));
 
     fireEvent.click(screen.getByRole("button", { name: "Unrelated rerender" }));
