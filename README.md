@@ -44,7 +44,7 @@ SS58, EVM, and hex address converter plus other Substrate utilities.
 
 | Layer | Technology |
 |-------|-----------|
-| **Framework** | Next.js 15 (App Router) |
+| **Framework** | Next.js 16 (App Router) |
 | **Language** | TypeScript (strict mode) |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **Polkadot Client** | [Dedot](https://github.com/dedotdev/dedot) |
@@ -63,7 +63,7 @@ Polkadot, Kusama, Westend, Paseo, Asset Hubs, People chains, Coretime chains.
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 24
 - Yarn 1.x (`npm install -g yarn`)
 
 ### Setup
@@ -155,6 +155,10 @@ OG images are generated dynamically at the edge via `next/og` ImageResponse rout
 3. Commit your changes
 4. Push to the branch (`git push origin feat/my-feature`)
 5. Open a Pull Request
+
+## Releases
+
+See the [changelog](CHANGELOG.md) for the full release history, including the two completed Web3 Foundation grant milestones.
 
 ## License
 

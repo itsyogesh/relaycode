@@ -410,7 +410,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'yarn'
 
       - name: Install dependencies
@@ -420,7 +420,7 @@ jobs:
         run: yarn test --coverage --ci
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage/lcov.info
 ```
