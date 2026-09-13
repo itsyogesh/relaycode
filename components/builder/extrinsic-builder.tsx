@@ -53,7 +53,10 @@ const ExtrinsicBuilder: React.FC<ExtrinsicBuilderProps> = ({
 }) => {
   const sections = createSectionOptions(client.metadata.latest);
   const { account } = useAccount();
-  const { sendTransactionAsync } = useSendTransaction();
+  // Block inclusion is sufficient for the builder's success state. Waiting for
+  // finalization can leave the UI pending when an RPC subscription reconnects
+  // after the transaction has already landed on-chain.
+  const { sendTransactionAsync } = useSendTransaction({ waitFor: "inBlock" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Extract pallet and method names from current selection

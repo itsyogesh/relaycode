@@ -323,6 +323,12 @@ describe("ExtrinsicBuilder", () => {
     expect(screen.getByText("Sign and Submit")).toBeInTheDocument();
   });
 
+  it("completes transaction tracking at block inclusion", () => {
+    render(<TestWrapper />);
+
+    expect(useSendTransaction).toHaveBeenCalledWith({ waitFor: "inBlock" });
+  });
+
   it("shows Sign and Submit when account connected and not submitting", () => {
     (useAccount as jest.Mock).mockReturnValue({
       account: { address: "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY" },
